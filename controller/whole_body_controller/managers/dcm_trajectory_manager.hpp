@@ -3,6 +3,8 @@
 #include "util/util.hpp"
 #include <Eigen/Dense>
 
+#include "planner/locomotion/alip_mpc/include/NewStep_mpc.hpp"
+
 namespace dcm_walking_primitive {
 constexpr int kFwdWalk = 0;
 constexpr int kBwdWalk = 1;
@@ -36,7 +38,9 @@ public:
   void InitializeParameters(const YAML::Node &node);
 
   void GenerateFootSteps();
-
+  //Carlos
+  void GenerateFootStepsAlip();
+  //
   bool Initialize(const double t_walk_start, const int transfer_type,
                   const Eigen::Quaterniond &init_torso_quat,
                   const Eigen::Vector3d &init_dcm_pos,
@@ -50,7 +54,9 @@ public:
   // =====================================================================
   void ForwardWalkMode() {
     walking_primitive_ = dcm_walking_primitive::kFwdWalk;
-    GenerateFootSteps();
+    //GenerateFootSteps();
+    GenerateFootStepsAlip();
+    cout << "end alip ger" << endl;
   }
   void BackwardWalkMode() {
     walking_primitive_ = dcm_walking_primitive::kBwdWalk;
@@ -123,7 +129,14 @@ private:
   double nominal_backward_step_ = -0.25;
   double nominal_turn_radians_ = M_PI / 4.0;
   double nominal_strafe_distance_ = 0.125;
-  int n_steps_ = 3;
+  int n_steps_ = 6;
+
+  // input of alip
+  string step_horizon = "6";
+  string intervals = "4";
+  NewStep_mpc alipMpc;
+  input_data_t indata;
+
 
   // for footstep generation
   void _UpdateFootStepsPreviewList(const int max_foot_steps_preview);

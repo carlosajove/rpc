@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cmath>
 
 #include <configuration.hpp>
 
@@ -457,3 +458,40 @@ Eigen::VectorXd MinJerkCurveVec::EvaluateSecondDerivative(const double t_in) {
   }
   return output_;
 }
+
+
+// Constructor
+QuadraticBezierCurve::QuadraticBezierCurve() {}
+
+// Destructor
+QuadraticBezierCurve::~QuadraticBezierCurve() {}
+
+QuadraticBezierCurve::QuadraticBezierCurve(const Eigen::VectorXd &start_pos_, 
+                                           const Eigen::VectorXd &mid_pos_, 
+                                           const Eigen::VectorXd &end_pos_,
+                                           const double &duration_){
+  
+  start_pos = start_pos_;
+  mid_pos = mid_pos_;
+  end_pos = end_pos_;
+  duration = duration_;
+}
+
+Eigen::VectorXd QuadraticBezierCurve::Evaluate(const double t){
+  double t1 = t/duration;
+  output = mid_pos + pow(1-t1, 2)*(start_pos-mid_pos)+ pow(t1,2)*(end_pos-mid_pos);
+  return output;
+}
+
+Eigen::VectorXd QuadraticBezierCurve::EvaluateFirstDerivative(const double t){
+  double t1 = t/duration;
+  output = 2*(1-t1)*(mid_pos-start_pos) + 2*t1*(end_pos-start_pos);
+  return output;
+}
+
+Eigen::VectorXd QuadraticBezierCurve::EvaluateSecondDerivative(const double t){
+  double t1 = t/duration;
+  output = 2*(end_pos - 2*mid_pos + start_pos);
+  return output;
+}
+

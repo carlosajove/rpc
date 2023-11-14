@@ -158,8 +158,8 @@ void DracoStateEstimator::Update(DracoSensorData *sensor_data) {
       sensor_data->joint_vel_, true);
 
   // TODO:foot contact switch
-  // sp_->b_lf_contact_ = (sensor_data->b_lf_contact_) ? true : false;
-  // sp_->b_rf_contact_ = (sensor_data->b_rf_contact_) ? true : false;
+   sp_->b_lf_contact_ = (sensor_data->b_lf_contact_) ? true : false;
+   sp_->b_rf_contact_ = (sensor_data->b_rf_contact_) ? true : false;
 
   // velocity filtering for com vel (for real experiment)
   Eigen::Vector3d real_com_vel = robot_->GetRobotComLinVel();

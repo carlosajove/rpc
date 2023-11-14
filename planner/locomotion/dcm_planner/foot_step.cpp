@@ -203,3 +203,64 @@ Eigen::Isometry3d FootStep::MakeIsometry(const FootStep &foot_step) {
   ret.linear() = foot_step.GetRotMat();
   return ret;
 }
+
+
+
+//Carlos
+std::vector<FootStep> FootStep::AlipStep(input_data_t &indata, NewStep_mpc & alipMpc){
+    full_horizon_sol fullsol;
+    output_data_t outdata;
+    alipMpc.Update_(indata, outdata, fullsol);
+    std::vector<FootStep> foot_step_list;
+    FootStep new_foot_step;
+    std::cout << std::endl << std:: endl << "DOING ALIP "<< std::endl << std::endl;
+
+    Eigen::Vector3d pos(fullsol.ufp_sol[0], fullsol.ufp_sol[1], indata.kx*fullsol.ufp_sol[0] + indata.ky*fullsol.ufp_sol[1]);
+    Eigen::Quaterniond quat(1,0,0,0);  //we will change this in the future //FIRST THE SCALAR WHEN YOU PRINT THE SCALAR 
+
+    //don't know what to do with orientation and other stuff??
+    if (indata.stance_leg == 1) { //check with test which one it is
+      new_foot_step.SetPosOriSide(pos, quat, end_effector::LFoot);
+    } else {
+      new_foot_step.SetPosOriSide(pos, quat, end_effector::RFoot);
+    }
+    foot_step_list.push_back(new_foot_step);
+
+    indata.stance_leg *= -1;
+
+    for(int i = 1; i < fullsol.ufp_sol.size()/2; i++){
+      fullsol.ufp_sol[2*i] += fullsol.ufp_sol[2*i-2];
+      fullsol.ufp_sol[2*i+1] += fullsol.ufp_sol[2*i-1];
+      //verificar que la z esté bien calculada
+      //Eigen::Vector3d pos(fullsol.ufp_sol[2*i], fullsol.ufp_sol[2*i+1], indata.kx*fullsol.ufp_sol[2*i] + indata.ky*fullsol.ufp_sol[2*i+1]);
+      pos << fullsol.ufp_sol[2*i], fullsol.ufp_sol[2*i+1], 0;//indata.kx*fullsol.ufp_sol[2*i] + indata.ky*fullsol.ufp_sol[2*i+1];
+      
+      //don't know what to do with orientation and other stuff??
+      if (indata.stance_leg == 1) { //check with test which one it is
+        new_foot_step.SetPosOriSide(pos, quat, end_effector::LFoot);
+      }
+      else {
+        new_foot_step.SetPosOriSide(pos, quat, end_effector::RFoot);
+      }
+      indata.stance_leg *= -1;
+
+      foot_step_list.push_back(new_foot_step);
+    }
+    
+    for (int i = 0; i < foot_step_list.size(); i++){
+      cout << " Foot step " << i << ": x-> " ;
+      cout << foot_step_list[i].GetPos()[0] << "; y->" << foot_step_list[i].GetPos()[1] << " ;   ";
+      cout << foot_step_list[i].GetPos()[2] << " stance" << foot_step_list[i].GetFootSide() << endl; 
+    }
+    cout << "end foot step_list" << endl;
+    return foot_step_list;
+}
+//end Carlos
+//maybe add state machine -- continuous walking, fot alip, not double stance etc
+
+
+//new state machine for alip:  
+//update the footposition task  
+//COM task; need a com trajectory; for that a cubic spline with velocity comming from Lx and Ly
+//i need to make a trajectory for the foot: use end effector trajectory manager: set final velocity to 0
+// contact task: using the max force manager decrease the fz max. when swing decreased; when contact to the ground increase to 500 if not to 0, keep 500 when stance foot

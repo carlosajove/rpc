@@ -129,10 +129,10 @@ def get_sensor_data_from_pybullet(robot):
         # add z-component on all points of contact
         _r_normal_force += contact[9]
 
-    b_lf_contact = True if pb.getLinkState(robot, DracoLinkIdx.l_foot_contact,
-                                           1, 1)[0][2] <= 0.05 else False
+    b_lf_contact = True if pb.getLinkState(robot, DracoLinkIdx.l_foot_contact,  #C: have changed the setting
+                                           1, 1)[0][2] <= 0.005 else False
     b_rf_contact = True if pb.getLinkState(robot, DracoLinkIdx.r_foot_contact,
-                                           1, 1)[0][2] <= 0.05 else False
+                                           1, 1)[0][2] <= 0.005 else False
     return imu_frame_quat, imu_ang_vel, imu_dvel, joint_pos, joint_vel, b_lf_contact, \
         b_rf_contact, _l_normal_force, _r_normal_force
 
@@ -267,6 +267,7 @@ def set_init_config_pybullet_robot(robot):
                        np.radians(hip_yaw_angle), 0.)
     pb.resetJointState(robot, DracoJointIdx.l_hip_fe, -np.pi / 4, 0.)
     pb.resetJointState(robot, DracoJointIdx.l_knee_fe_jp, np.pi / 4, 0.)
+
     pb.resetJointState(robot, DracoJointIdx.l_knee_fe_jd, np.pi / 4, 0.)
     pb.resetJointState(robot, DracoJointIdx.l_ankle_fe, -np.pi / 4, 0.)
     pb.resetJointState(robot, DracoJointIdx.l_ankle_ie,
@@ -475,6 +476,8 @@ if __name__ == "__main__":
             rpc_draco_interface.interrupt_.PressEight()
         elif pybullet_util.is_key_triggered(keys, '9'):
             rpc_draco_interface.interrupt_.PressNine()
+        elif pybullet_util.is_key_triggered(keys, 'a'):
+            rpc_draco_interface.interrupt_.Pressa()
 
         #get sensor data
         imu_frame_quat, imu_ang_vel, imu_dvel, joint_pos, joint_vel, b_lf_contact, b_rf_contact, \

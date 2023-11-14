@@ -226,3 +226,27 @@ private:
   std::vector<MinJerkCurve> curves_;
   Eigen::VectorXd output_;
 };
+
+
+class QuadraticBezierCurve{
+public:
+  QuadraticBezierCurve();
+  QuadraticBezierCurve(const Eigen::VectorXd &start_pos_, 
+                         const Eigen::VectorXd &mid_pos_, 
+                         const Eigen::VectorXd &end_pos_,
+                         const double &duration_);
+  ~QuadraticBezierCurve();
+
+  Eigen::VectorXd Evaluate(const double t);
+  Eigen::VectorXd EvaluateFirstDerivative(const double t);
+  Eigen::VectorXd EvaluateSecondDerivative(const double t);
+
+private:
+  Eigen::VectorXd start_pos;
+  Eigen::VectorXd mid_pos;
+  Eigen::VectorXd end_pos;
+
+  double duration;
+
+  Eigen::VectorXd output;
+};

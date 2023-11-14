@@ -25,6 +25,10 @@
 #include "planner/locomotion/dcm_planner/dcm_planner.hpp"
 #include "util/util.hpp"
 
+#include "controller/whole_body_controller/managers/alipmpc_trajectory_manager.hpp"
+#include "controller/draco_controller/draco_state_machines/alip_locomotion.hpp"
+
+
 DracoControlArchitecture::DracoControlArchitecture(PinocchioRobotSystem *robot)
     : ControlArchitecture(robot) {
   util::PrettyConstructor(1, "DracoControlArchitecture");
@@ -46,6 +50,7 @@ DracoControlArchitecture::DracoControlArchitecture(PinocchioRobotSystem *robot)
   state_ =
       b_sim ? draco_states::kDoubleSupportStandUp : draco_states::kInitialize;
 
+
   std::string prefix = b_sim ? "sim" : "exp";
 
   //=============================================================
@@ -55,7 +60,9 @@ DracoControlArchitecture::DracoControlArchitecture(PinocchioRobotSystem *robot)
   controller_ = new DracoController(tci_container_, robot_);
 
   dcm_planner_ = new DCMPlanner();
-
+  std::string step_horizon = "6";
+  std::string intervals = "4";
+  alip_mpc_ = new NewStep_mpc(step_horizon, intervals);
   // mpc handler
   // lmpc_handler_ = new LMPCHandler(
   // dcm_planner_, robot_, tci_container_->com_task_,
@@ -85,6 +92,21 @@ DracoControlArchitecture::DracoControlArchitecture(PinocchioRobotSystem *robot)
   rf_SE3_tm_ = new EndEffectorTrajectoryManager(
       tci_container_->task_map_["rf_pos_task"],
       tci_container_->task_map_["rf_ori_task"], robot_);
+  std::cout << "a" << std::endl;
+  alip_tm_ = new AlipMpcTrajectoryManager(   //initialises the planner also
+      alip_mpc_,
+      tci_container_->task_map_["com_xy_task"],
+      tci_container_->task_map_["com_z_task"],
+      tci_container_->task_map_["torso_ori_task"],
+      tci_container_->task_map_["lf_pos_task"],
+      tci_container_->task_map_["lf_ori_task"],
+      tci_container_->task_map_["rf_pos_task"],
+      tci_container_->task_map_["rf_ori_task"],
+      tci_container_->force_task_map_["lf_force_task"],
+      tci_container_->force_task_map_["rf_force_task"],
+      robot_);
+
+
 
   Eigen::VectorXd weight_at_contact, weight_at_swing;
   try {
@@ -169,6 +191,9 @@ DracoControlArchitecture::DracoControlArchitecture(PinocchioRobotSystem *robot)
   state_machine_container_[draco_states::kRFSingleSupportSwing] =
       new SingleSupportSwing(draco_states::kRFSingleSupportSwing, robot_, this);
 
+  state_machine_container_[draco_states::AlipLocomotion] =
+      new AlipLocomotion(draco_states::AlipLocomotion, robot_, this);
+  alipIter = 0;
   this->_InitializeParameters();
 }
 
@@ -176,6 +201,7 @@ DracoControlArchitecture::~DracoControlArchitecture() {
   delete tci_container_;
   delete controller_;
   delete dcm_planner_;
+  delete  alip_mpc_;
 
   // tm
   delete upper_body_tm_;
@@ -187,6 +213,7 @@ DracoControlArchitecture::~DracoControlArchitecture() {
   delete dcm_tm_;
   delete lf_force_tm_;
   delete rf_force_tm_;
+  delete alip_tm_;
 
   // hm
   delete lf_pos_hm_;
@@ -206,25 +233,57 @@ DracoControlArchitecture::~DracoControlArchitecture() {
   delete state_machine_container_[draco_states::kRFContactTransitionEnd];
   delete state_machine_container_[draco_states::kLFSingleSupportSwing];
   delete state_machine_container_[draco_states::kRFSingleSupportSwing];
+  delete state_machine_container_[draco_states::AlipLocomotion];
 }
 
 void DracoControlArchitecture::GetCommand(void *command) {
-  if (b_state_first_visit_) {
-    state_machine_container_[state_]->FirstVisit();
-    b_state_first_visit_ = false;
+  if(state_ == draco_states::AlipLocomotion){
+  //  util::PrettyConstructor(1,"ctrlarch GetCommand ") ;
+    tci_container_->task_map_["com_xy_task"]->SetWeight(Eigen::Vector2d(0,0));
+    if (alipIter == 0) state_machine_container_[draco_states::AlipLocomotion]->FirstVisit();
+    
+
+
+
+    state_machine_container_[draco_states::AlipLocomotion]->OneStep();
+
+
+    //std::cout << "stance: " << state_machine_container_[draco_states::AlipLocomotion]->GetStance_leg() << " actual rf pos: " << robot_->GetLinkIsometry(draco_link::r_foot_contact).translation() << endl;
+
+
+    upper_body_tm_->UseNominalUpperBodyJointPos(sp_->nominal_jpos_);
+    controller_->GetCommand(command);
+    alipIter++;
+    //if (alipIter == 50) exit(0);
+    //if (alipIter == 10) alipIter = 0;
+
+    if (state_machine_container_[draco_states::AlipLocomotion]->SwitchLeg()) {
+        alipIter = 0;
+    }
+  //  std::cout << "ctroarch end Get Command" << std::endl << std::endl;
+
+
+  }
+  else {
+      if (b_state_first_visit_) {
+        state_machine_container_[state_]->FirstVisit();
+        b_state_first_visit_ = false;
+        }
+
+        state_machine_container_[state_]->OneStep();
+        upper_body_tm_->UseNominalUpperBodyJointPos(
+            sp_->nominal_jpos_);          // state independent upper body traj setting
+        controller_->GetCommand(command); // get control command
+
+        if (state_machine_container_[state_]->EndOfState()) {
+            state_machine_container_[state_]->LastVisit();
+            prev_state_ = state_;
+            state_ = state_machine_container_[state_]->GetNextState();
+            b_state_first_visit_ = true;
+        }   
+
   }
 
-  state_machine_container_[state_]->OneStep();
-  upper_body_tm_->UseNominalUpperBodyJointPos(
-      sp_->nominal_jpos_);          // state independent upper body traj setting
-  controller_->GetCommand(command); // get control command
-
-  if (state_machine_container_[state_]->EndOfState()) {
-    state_machine_container_[state_]->LastVisit();
-    prev_state_ = state_;
-    state_ = state_machine_container_[state_]->GetNextState();
-    b_state_first_visit_ = true;
-  }
 }
 
 void DracoControlArchitecture::_InitializeParameters() {

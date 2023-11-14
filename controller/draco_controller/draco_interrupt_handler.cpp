@@ -130,5 +130,15 @@ void DracoInterruptHandler::Process() {
       std::cout << "Wait Until Balance State" << std::endl;
   }
 
+  if (b_button_a) {
+  std::cout << "-----------------------------------" << std::endl;
+  std::cout << "button a pressed: Alip Locomotion " << std::endl;
+  std::cout << "-----------------------------------" << std::endl;
+  if (ctrl_arch_->state() == draco_states::kDoubleSupportBalance) {
+    ctrl_arch_->changeStateToAlip();
+  } else
+    std::cout << "Wait Until Balance State" << std::endl;
+  }
+
   this->_ResetFlags();
 }
