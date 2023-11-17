@@ -23,7 +23,7 @@ public:
   virtual ~AlipMpcTrajectoryManager()  = default;
 
 
-
+  void firstVisit();
   void MpcSolutions(const double &tr_, const double &st_leg);
   void InertiaToMpcCoordinates();
   void OutputMpcToInertiaCoordinates();
@@ -35,7 +35,7 @@ public:
   void UpdateCurrentPos(Task* task);
 
   void UpdateDesired(const double t);
-
+  void SetParameters(const YAML::Node &node);
   //void RToLstance();
   //void LToRstance();
   double ComputeZpos(const double &x, const double &y, const double &zH_);
@@ -86,11 +86,17 @@ private:
 
 
   Eigen::Vector3d stleg_pos;
+  Eigen::Vector3d stleg_pos_torso_ori;
 
+
+  Eigen::VectorXd des_ori_lfoot;
+  Eigen::VectorXd des_ori_rfoot;
+  Eigen::VectorXd des_ori_torso;
+  bool first_ever;
 
 
   double mass;
-  double swing_height = 0.1;  //will have to change this, also can do a variable swing height
+  double swing_height;  //will have to change this, also can do a variable swing height
                               //can have problems with small steps
 
   std::fstream file1;
@@ -98,6 +104,7 @@ private:
   std::fstream file3;
   std::fstream file4;
   int saveCounter;
+
 
 
 

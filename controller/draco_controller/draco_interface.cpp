@@ -100,7 +100,7 @@ void DracoInterface::GetCommand(void *sensor_data, void *command_data) {
   //} else {
 
   // for simulation without state estimator
-  // se_->UpdateGroundTruthSensorData(draco_sensor_data);
+  //se_->UpdateGroundTruthSensorData(draco_sensor_data);
 
   if (sp_->b_use_kf_state_estimator_) {
     sp_->state_ == draco_states::kInitialize
@@ -108,8 +108,10 @@ void DracoInterface::GetCommand(void *sensor_data, void *command_data) {
         : se_kf_->Update(draco_sensor_data);
   } else {
     sp_->state_ == draco_states::kInitialize
-        ? se_->Initialize(draco_sensor_data)
-        : se_->Update(draco_sensor_data);
+        //? se_->Initialize(draco_sensor_data)
+        //: se_->Update(draco_sensor_data);
+        ? se_->UpdateGroundTruthSensorData(draco_sensor_data)
+        : se_->UpdateGroundTruthSensorData(draco_sensor_data);
   }
 
   // process interrupt & task gains

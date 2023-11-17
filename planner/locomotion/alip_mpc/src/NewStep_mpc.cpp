@@ -54,7 +54,7 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
 
 
     x_lip_current_.assign(input_data.xlip_current, input_data.xlip_current + 4);
-    stance_leg_ = input_data.stance_leg; // -1 -> left stance
+    stance_leg_ = input_data.stance_leg; // -1 -> left stance next currently in right
     zH_ = input_data.zH;
     Ts_ = input_data.Ts;
     Tr_ = input_data.Tr;
@@ -141,7 +141,7 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
 
     // Safety check for bad solutions
     // median of ufpxsol and limits
-    /*
+    
     //  C: FOR NOW KEEP COMMENTED 
     vector<double> ufpx_check{ufp_x_sol, ufp_max[0], ufp_min[0]};
     auto m = ufpx_check.begin() + ufpx_check.size() / 2;
@@ -149,7 +149,7 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
     ufp_x_sol = ufpx_check[ufpx_check.size() / 2];
     // median of ufpysol and limits
     // cout << "stanceleg: " << stance_leg_ << endl;
-    if (stance_leg_ == -1) // left stance
+    if (stance_leg_ == -1) // left stance next left swing
     {
         vector<double> ufpy_check{-ufp_max[1], ufp_y_sol, -ufp_min[1]};
         // cout << "median vector: " << ufpy_check << endl;
@@ -165,7 +165,7 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
         nth_element(ufpy_check.begin(), l, ufpy_check.end());
         ufp_y_sol = ufpy_check[ufpy_check.size() / 2];
     }
-    */
+
 
     /* Foot placement relative to current COM */
     xfp = xlip_sol[0];
@@ -190,6 +190,21 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
     full_sol.ufp_sol = ufp_sol;
 
     return;
+}
+
+
+void NewStep_mpc::SetParameters(const YAML::Node &node) {
+  try {
+    util::ReadParameter(node, "total_mass", mass_);
+    util::ReadParameter(node, "ufp_x_max", ufp_x_max);
+    util::ReadParameter(node, "ufp_y_max", ufp_y_max_);
+    util::ReadParameter(node, "ufp_y_min", ufp_y_min_);
+
+  } catch (const std::runtime_error &e) {
+    std::cerr << "Error reading parameter [" << e.what() << "] at file: ["
+              << __FILE__ << "]" << std::endl;
+    std::exit(EXIT_FAILURE);
+  }
 }
 
 

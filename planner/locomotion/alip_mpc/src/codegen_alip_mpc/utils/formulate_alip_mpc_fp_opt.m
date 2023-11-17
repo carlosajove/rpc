@@ -103,7 +103,7 @@ for n = 1:N_steps_ahead
     
     % Outputs
     for i = 0:N_intervals
-        dt_interval = p_Ts/N_intervals;
+        dt_interval = dt/N_intervals;
         Yk = Ad_ALIP(p_m,p_zH,i*dt_interval)*Xk;        % state output
         
         % slip constraint

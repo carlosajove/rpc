@@ -8,6 +8,7 @@
 
 #include <string.h>
 #include <vector>
+#include "util/util.hpp"
 
 #include <casadi/casadi.hpp>
 
@@ -26,6 +27,8 @@ public:
 
     // Destructor
     virtual ~NewStep_mpc();
+
+    void SetParameters(const YAML::Node &node);
 
     // Update
     void Update_(const input_data_t &input_data,
@@ -59,11 +62,12 @@ private:
     deque<double> mux_traj_;
     deque<double> muy_traj_;
 
-    // Cassie parameters
-    const double mass_ = 31.8852;
-    const double ufp_x_max = 0.5;  // max is 0.8 with ratio = 1
-    const double ufp_y_max_ = 0.6;
-    const double ufp_y_min_ = 0.1;
+
+
+    double mass_;
+    double ufp_x_max;  
+    double ufp_y_max_;
+    double ufp_y_min_;
     int leg_identity_ = -1;             // leg swap parameter
 
     // Casadi fp solver info

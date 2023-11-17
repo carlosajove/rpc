@@ -60,7 +60,7 @@ DracoControlArchitecture::DracoControlArchitecture(PinocchioRobotSystem *robot)
   controller_ = new DracoController(tci_container_, robot_);
 
   dcm_planner_ = new DCMPlanner();
-  std::string step_horizon = "6";
+  std::string step_horizon = "4";
   std::string intervals = "4";
   alip_mpc_ = new NewStep_mpc(step_horizon, intervals);
   // mpc handler
@@ -243,22 +243,23 @@ void DracoControlArchitecture::GetCommand(void *command) {
     if (alipIter == 0) state_machine_container_[draco_states::AlipLocomotion]->FirstVisit();
     
 
+    tci_container_->task_map_["com_z_task"]->SetWeight(Eigen::Vector3d(10000, 8000, 8000));
 
-
-    state_machine_container_[draco_states::AlipLocomotion]->OneStep();
-
-
+    if (alipIter >= 0 ) state_machine_container_[draco_states::AlipLocomotion]->OneStep();
+    
     //std::cout << "stance: " << state_machine_container_[draco_states::AlipLocomotion]->GetStance_leg() << " actual rf pos: " << robot_->GetLinkIsometry(draco_link::r_foot_contact).translation() << endl;
-
 
     upper_body_tm_->UseNominalUpperBodyJointPos(sp_->nominal_jpos_);
     controller_->GetCommand(command);
+
     alipIter++;
     //if (alipIter == 50) exit(0);
-    //if (alipIter == 10) alipIter = 0;
+    //if (alipIter == 25) alipIter = 0;
 
     if (state_machine_container_[draco_states::AlipLocomotion]->SwitchLeg()) {
-        alipIter = 0;
+       //alipIter = 0;
+       alipIter = -10;
+       
     }
   //  std::cout << "ctroarch end Get Command" << std::endl << std::endl;
 
@@ -298,10 +299,17 @@ void DracoControlArchitecture::_InitializeParameters() {
       cfg_["state_machine"]["single_support_swing"]);
   state_machine_container_[draco_states::kDoubleSupportSwaying]->SetParameters(
       cfg_["state_machine"]["com_swaying"]);
+  state_machine_container_[draco_states::AlipLocomotion]->SetParameters(
+      cfg_["alip_mpc_walking"]);
+
+
 
   // state_machine_container_[draco_states::kDoubleSupportSwayingLmpc]
   //->SetParameters(cfg_["state_machine"]["lmpc_com_swaying"]);
 
   // dcm planner params initialization
   dcm_tm_->InitializeParameters(cfg_["dcm_walking"]);
+  alip_tm_->SetParameters(cfg_["alip_mpc_walking"]);
+  alip_mpc_->SetParameters(cfg_["alip_mpc_walking"]);
+
 }

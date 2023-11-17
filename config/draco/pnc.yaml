@@ -132,12 +132,12 @@ wbc:
       exp_lpf_time_constant: 0.03
 
     com_z_task:
-      com_height_target_source: 1 # 0: com height / 1: base height
+      com_height_target_source: 0 # 0: com height / 1: base height
       ########################################################################
       ## sim params
       ########################################################################
      # sim_com_weight : [1000.]  Carlos
-      sim_com_weight : [10000.] #Carlos
+      sim_com_weight : [1000.] #Carlos
 
       sim_com_kp : [100.]
       sim_com_kd : [5.]
@@ -174,7 +174,8 @@ wbc:
       ########################################################################
       ## sim params
       ########################################################################
-      sim_weight : [100., 100., 10.]
+      #sim_weight : [100., 100., 10.]
+      sim_weight : [500., 500., 50.]
       sim_kp : [200., 200., 100.]
       sim_kd : [14., 14., 10.]
 
@@ -364,3 +365,32 @@ lmpc_walking:
   first_swing_leg: 0 ## 0: left leg ## 1: right leg
 
 
+alip_mpc_walking:
+  Ts: 0.3
+  Tr: 0.3  #sets the initial Tr
+  stance_leg: -1 # -1: RIGHT SWING TO START; 1: LEFT SWING TO START
+  swing_height: 0.1
+  leg_width: 0.15
+  zH: 0.658
+  mu: 0.3
+  total_mass: 39.1534
+  ufp_x_max: 0.6
+  ufp_y_max: 0.6
+  ufp_y_min: 0.1
+  Lx_offset: 0
+  Ly_des: 3
+
+#my stance leg is right:
+#   --> COM will have y > 0  (indata.stance = )
+#   --> UFP next left stance will have y > 0 (RS)
+#   --> COM at impact will have y < 0 (indata.stance = 1)
+#   --> if indata.stance = 1 move left
+#my stance leg is left:
+#   --> COM will have y < 0
+#   --> UFP next right stance will have y < 0 (LS)
+#   --> COM at impact will have y > 0 (indata.stance = -1)
+#   --> if indata.stance = -1 move right
+
+
+
+# --> LS solver solves for 

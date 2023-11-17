@@ -178,14 +178,17 @@ trSw2 = all_trajectories('Swing2_trajectory.txt')
 
 trSw = merge_swing_traj(trSw1, trSw2)
 
-#print('tr1', trSw1)
-#print('tr2', trSw2)
-print('\n trSW' , trSw)
+
 
 
 plot_trajectories(trCOM, 'alip_COM_trajectory.txt')
-plot_trajectories(trSw1, 'Swing1_trajectory')
-plot_trajectories(trSw2, 'Swing2_trajectory')
+#plot_trajectories(trSw1, 'Swing1_trajectory')
+#plot_trajectories(trSw2, 'Swing2_trajectory')
 
 
 plot_trajectories(trSw, 'full Swing')
+
+fig4 = plt.figure()
+for trajectory in trCOM:
+    plt.plot(trajectory[:,2], trajectory[:,3])
+    plt.show()
