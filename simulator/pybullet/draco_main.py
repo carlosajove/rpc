@@ -311,7 +311,7 @@ if __name__ == "__main__":
     ## connect pybullet sim server
     pb.connect(pb.GUI)
 
-    pb.resetDebugVisualizerCamera(cameraDistance=5,
+    pb.resetDebugVisualizerCamera(cameraDistance=3,
                                   cameraYaw=120,
                                   cameraPitch=-30,
                                   cameraTargetPosition=[0, 0, 0.5])

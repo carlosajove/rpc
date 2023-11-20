@@ -30,18 +30,18 @@ AlipMpcTrajectoryManager::AlipMpcTrajectoryManager(NewStep_mpc *alipMpc,
   indata.xlip_current[2] = 0;
   indata.xlip_current[3] = 0; 
   saveCounter = 0;
-  ///*
+  /*
   file1.open(THIS_COM "/test/alip/alip_COM_trajectory.txt", std::fstream::in | std::fstream::out | std::fstream::app);
   file2.open(THIS_COM "/test/alip/Swing1_trajectory.txt", std::fstream::in | std::fstream::out | std::fstream::app);
   file3.open(THIS_COM "/test/alip/Swing2_trajectory.txt", std::fstream::in | std::fstream::out | std::fstream::app);
   file4.open(THIS_COM "/test/alip/BezierSwing_trajectory.txt", std::fstream::in | std::fstream::out | std::fstream::app);
-  //*/
-  /*
+  */
+  
   file1.open(THIS_COM "/test/alip/alip_COM_trajectory.txt", std::fstream::out);
   file2.open(THIS_COM "/test/alip/Swing1_trajectory.txt", std::fstream::out);
   file3.open(THIS_COM "/test/alip/Swing2_trajectory.txt", std::fstream::out);
   file4.open(THIS_COM "/test/alip/BezierSwing_trajectory.txt", std::fstream::out);
-*/
+
 
 }  //need to add ori 
 
@@ -307,7 +307,7 @@ void AlipMpcTrajectoryManager::UpdateDesired(const double t){  //have to be care
 
   lfoot_ori->SetWeight(Eigen::Vector3d(500, 100, 10));
   rfoot_ori->SetWeight(Eigen::Vector3d(500, 100, 10));
-  torso_ori->SetWeight(Eigen::Vector3d(10000, 1000, 100));
+  torso_ori->SetWeight(Eigen::Vector3d(9000, 9000, 1000));
 
   Eigen::VectorXd zero3 = Eigen::VectorXd::Zero(3);
   torso_ori->UpdateDesired(des_ori_torso, zero3, zero3);

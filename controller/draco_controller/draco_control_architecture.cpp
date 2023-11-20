@@ -254,10 +254,10 @@ void DracoControlArchitecture::GetCommand(void *command) {
 
     alipIter++;
     //if (alipIter == 50) exit(0);
-    //if (alipIter == 25) alipIter = 0;
+    //if (alipIter == 6) alipIter = 0;
 
     if (state_machine_container_[draco_states::AlipLocomotion]->SwitchLeg()) {
-       //alipIter = 0;
+       alipIter = 0;
        alipIter = -10;
        
     }

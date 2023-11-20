@@ -20,6 +20,7 @@ AlipLocomotion::AlipLocomotion(StateId state_id, PinocchioRobotSystem *robot,
 
 
     first_ever = true;
+    new_leg = false;
 
 }
 
@@ -33,6 +34,12 @@ void AlipLocomotion::FirstVisit(){
     ctrl_arch_->alip_tm_->firstVisit();
 
   }
+  /*
+  else if (new_leg) {
+    new_leg = false;
+    state_machine_start_time_ = sp_->current_time_;
+  }
+  */
 
   state_machine_time_ = sp_->current_time_ - state_machine_start_time_;
 
@@ -45,6 +52,7 @@ void AlipLocomotion::FirstVisit(){
   ctrl_arch_->alip_tm_->GenerateSwingFtraj();
   ctrl_arch_->alip_tm_->saveTrajectories(0, Tr/20, Tr);
   util::PrettyConstructor(3, "Trajectories saved");
+
   if (stance_leg == 1) {
     sp_->b_lf_contact_ = false;
     sp_->b_rf_contact_ = true;
@@ -95,8 +103,11 @@ bool AlipLocomotion::SwitchLeg(){  //ahora asume que tocamos en Tr o antes. Que 
       //ctrl_arch_->alip_tm_->RToLstance();
       //update the force managers
       switch_leg = true;
-      state_machine_start_time_ = sp_->current_time_;
+
+      state_machine_start_time_ = sp_->current_time_; //this should go to new leg
+
       ctrl_arch_->tci_container_->contact_map_["lf_contact"]->SetMaxFz(500);
+      new_leg = true;
 
 
       //ctrl_arch_->tci_container_->task_map_["rf_pos"]->SetMaxFz(0.01);
@@ -107,12 +118,15 @@ bool AlipLocomotion::SwitchLeg(){  //ahora asume que tocamos en Tr o antes. Que 
 
       std::cout << "Left stance to right" << " | Tr:" << Tr << "  | state machine time:" << state_machine_time_ <<std::endl;
 
-      stance_leg*=-1;
+      stance_leg *=-1;
       //ctrl_arch_->alip_tm_->LToRstance();
       //update the force managers
       switch_leg = true;
-      state_machine_start_time_ = sp_->current_time_;
+
+      state_machine_start_time_ = sp_->current_time_; //same thing than before
+
       ctrl_arch_->tci_container_->contact_map_["rf_contact"]->SetMaxFz(500);
+      new_leg = true;
 
 
     }
@@ -122,7 +136,6 @@ bool AlipLocomotion::SwitchLeg(){  //ahora asume que tocamos en Tr o antes. Que 
     std::cout << robot_->GetLinkIsometry(draco_link::l_foot_contact).translation() ;
     std::cout << "  l foot" << std::endl;
     std::cout << robot_->GetLinkIsometry(draco_link::r_foot_contact).translation() << "  r foot" << std::endl;
-
   }
   return switch_leg;
 

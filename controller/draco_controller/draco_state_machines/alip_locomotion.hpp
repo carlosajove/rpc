@@ -45,6 +45,7 @@ private:
   double Tr;
   double Ts;
   bool first_ever;
+  bool new_leg;
 
   // set nominal desired position/orientation (e.g., for zero acceleration cmd)
 
