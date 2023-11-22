@@ -495,3 +495,145 @@ Eigen::VectorXd QuadraticBezierCurve::EvaluateSecondDerivative(const double t){
   return output;
 }
 
+
+//x and y with cosinus reference
+//z will be a hermite curve
+//in this case the start position will reamin the same, we will be just changing the end position
+//so there is always a full trajectory
+//the duration should always be Ts
+//Constructor
+AlipSwing::AlipSwing() {}
+//Destructor
+AlipSwing::~AlipSwing() {}
+
+AlipSwing::AlipSwing(const Eigen::Vector3d &start_pos_, 
+                     const Eigen::Vector3d &end_pos_,
+                     const double &mid_z_pos_, 
+                     const double &duration_){
+
+  start_pos = start_pos_;
+  end_pos = end_pos_;
+  duration = duration_;
+  first_z = new HermiteCurve(start_pos_(2), 1, mid_z_pos_, 0, duration/2);
+  second_z = new HermiteCurve(mid_z_pos_, 0, end_pos_(2), -1, duration/2);                  
+}
+
+Eigen::Vector3d AlipSwing::Evaluate(const double t){
+  s = t/duration;
+  x = 0.5*((1+cos(M_PI*s))*start_pos(0) + (1-cos(M_PI*s))*end_pos(0));
+  y = 0.5*((1+cos(M_PI*s))*start_pos(1) + (1-cos(M_PI*s))*end_pos(1));
+  if(t > duration/2){
+    z = second_z->Evaluate(t-duration/2);
+  }
+  else {
+    z = first_z->Evaluate(t);
+  }
+  output = Eigen::Vector3d(x,y,z);
+  return output;
+}
+
+Eigen::Vector3d AlipSwing::EvaluateFirstDerivative(const double t){
+  s = (duration-t)/duration;
+  x = 0.5*M_PI*sin(M_PI*s)/duration * (end_pos(0) - start_pos(0));
+  y = 0.5*M_PI*sin(M_PI*s)/duration * (end_pos(1) - start_pos(1));
+  if(t > duration/2){
+    z = second_z->EvaluateFirstDerivative(t-duration/2);
+  }
+  else {
+    z = first_z->EvaluateFirstDerivative(t);
+  }
+  output = Eigen::Vector3d(x,y,z);
+  return output;
+}
+
+Eigen::Vector3d AlipSwing::EvaluateSecondDerivative(const double t){
+  s = (duration-t)/duration;
+  x = 0.5*M_PI*M_PI*cos(M_PI*s)/duration/duration * (end_pos(0) - start_pos(0));
+  y = 0.5*M_PI*M_PI*cos(M_PI*s)/duration/duration * (end_pos(1) - start_pos(1));
+  if(t > duration/2){
+    z = second_z->EvaluateSecondDerivative(t-duration/2);
+  }
+  else {
+    z = first_z->EvaluateSecondDerivative(t);
+  }
+  output = Eigen::Vector3d(x,y,z);
+  return output;
+}
+
+
+
+
+AlipSwing2::AlipSwing2() {}
+//Destructor
+AlipSwing2::~AlipSwing2() {}
+
+AlipSwing2::AlipSwing2(const Eigen::Vector3d &start_pos_, 
+                     const Eigen::Vector3d &end_pos_,
+                     const double &mid_z_pos_, 
+                     const double &duration_){
+
+  start_pos = start_pos_;
+  end_pos = end_pos_;
+  duration = duration_;
+  z_curve = new QuadraticLagrangePol(start_pos_(2), 0, 
+                                   mid_z_pos_, duration_/2, 
+                                   end_pos_(2), duration_);
+}
+
+Eigen::Vector3d AlipSwing2::Evaluate(const double t){
+  s = t/duration;
+  x = 0.5*((1+cos(M_PI*s))*start_pos(0) + (1-cos(M_PI*s))*end_pos(0));
+  y = 0.5*((1+cos(M_PI*s))*start_pos(1) + (1-cos(M_PI*s))*end_pos(1));
+  z = z_curve->Evaluate(t);
+  output = Eigen::Vector3d(x,y,z);
+  return output;
+}
+
+Eigen::Vector3d AlipSwing2::EvaluateFirstDerivative(const double t){
+  s = (duration-t)/duration;
+  x = 0.5*M_PI*sin(M_PI*s)/duration * (end_pos(0) - start_pos(0));
+  y = 0.5*M_PI*sin(M_PI*s)/duration * (end_pos(1) - start_pos(1));
+  z = z_curve->EvaluateFirstDerivative(t);
+  output = Eigen::Vector3d(x,y,z);
+  return output;
+}
+
+Eigen::Vector3d AlipSwing2::EvaluateSecondDerivative(const double t){
+  s = (duration-t)/duration;
+  x = 0.5*M_PI*M_PI*cos(M_PI*s)/duration/duration * (end_pos(0) - start_pos(0));
+  y = 0.5*M_PI*M_PI*cos(M_PI*s)/duration/duration * (end_pos(1) - start_pos(1));
+  z = z_curve->EvaluateSecondDerivative(t);
+  output = Eigen::Vector3d(x,y,z);
+  return output;
+}
+
+
+
+QuadraticLagrangePol::QuadraticLagrangePol(){}
+QuadraticLagrangePol::~QuadraticLagrangePol(){}
+
+QuadraticLagrangePol::QuadraticLagrangePol(const double &z0, const double &t0, 
+                                           const double &z1, const double &t1,
+                                           const double &z2, const double &t2){
+  Eigen::Vector3d z = Eigen::Vector3d(z0, z1, z2);
+  Eigen::Matrix3d T;
+  T << t0*t0, t0, 1,
+       t1*t1, t1, 1,
+       t2*t2, t2, 1;
+  std::cout << T << " Tttt" << std::endl;
+
+  Eigen::Vector3d coefs  = T.householderQr().solve(z);
+  a = coefs(0);
+  b = coefs(1);
+  c = coefs(2);
+}
+
+double QuadraticLagrangePol::Evaluate(const double t){
+  return a*t*t + b*t + c;
+}
+double QuadraticLagrangePol::EvaluateFirstDerivative(const double t){
+  return 2*a*t + b;
+}
+double QuadraticLagrangePol::EvaluateSecondDerivative(const double t){
+  return 2*a;
+}

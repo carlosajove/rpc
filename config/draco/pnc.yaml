@@ -366,19 +366,29 @@ lmpc_walking:
 
 
 alip_mpc_walking:
-  Ts: 0.2
+  Ts: 0.25    #0.25
   Tr: 0.2  #sets the initial Tr
   stance_leg: -1 # -1: RIGHT SWING TO START; 1: LEFT SWING TO START
-  swing_height: 0.05
-  leg_width: 0.1
-  zH: 0.658
+  swing_height: 0.07    #0.07
+  leg_width: 0.1 #0.1
+  zH: 0.68   #0.658
   mu: 0.3
   total_mass: 39.1534
-  ufp_x_max: 0.5
-  ufp_y_max: 0.25
-  ufp_y_min: 0.1
-  Lx_offset: 0
-  Ly_des: 11
+  ufp_x_max: 0.6  #0.6
+  ufp_y_max: 0.4  #0.4
+  ufp_y_min: 0.1 #0.05
+  Lx_offset: 0  #0
+  Ly_des: 5 #3
+  step_horizon: "4"
+  #swing types
+  Bezier: 0
+  Alip: 0
+  Alip2: 1
+  task: #not implemente yet
+    com_z_pos: [7000, 7000, 7000]
+    com_xy_pos: [0,0]
+
+
 
 #my stance leg is right:
 #   --> COM will have y > 0  (indata.stance = )

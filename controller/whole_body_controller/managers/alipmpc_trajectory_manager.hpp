@@ -40,7 +40,8 @@ public:
   //void LToRstance();
   double ComputeZpos(const double &x, const double &y, const double &zH_);
 
-
+  void SetSwingFootStart(Eigen::Vector3d pos){Swingfoot_start = pos;}
+  void SetLydes(double des){indata.Ly_des = des;}
   //for testing
   void saveTrajectories(const double start_time, const double dt,const double end_time);
 
@@ -72,7 +73,14 @@ private:
   HermiteCurveVec *first_half_curve_SwingPos;
   HermiteCurveVec *second_half_curve_SwingPos;
 
-  QuadraticBezierCurve *SwingPos;
+  QuadraticBezierCurve *BezierSwingPos;
+  int Bezier;
+
+  AlipSwing *AlipSwingPos;
+  int Alip;
+
+  AlipSwing2 *AlipSwingPos2;
+  int Alip2;
 
   full_horizon_sol fullsol;  //refrence frame wrt current stance leg
   input_data_t indata;       //reference frame wrt current stance leg
@@ -80,6 +88,8 @@ private:
 
   Eigen::Vector3d COM_end;
   Eigen::Vector3d COMvel_end;
+
+  Eigen::Vector3d Swingfoot_start;
 
   Eigen::Vector3d Swingfoot_end;
   Eigen::Vector3d Swingfootvel_end = Eigen::Vector3d::Zero();
@@ -103,6 +113,10 @@ private:
   std::fstream file2;
   std::fstream file3;
   std::fstream file4;
+  std::fstream file5;
+  std::fstream file6;
+
+
   int saveCounter;
 
 

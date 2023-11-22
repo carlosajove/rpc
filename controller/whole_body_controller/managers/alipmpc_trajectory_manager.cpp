@@ -30,6 +30,7 @@ AlipMpcTrajectoryManager::AlipMpcTrajectoryManager(NewStep_mpc *alipMpc,
   indata.xlip_current[2] = 0;
   indata.xlip_current[3] = 0; 
   saveCounter = 0;
+
   /*
   file1.open(THIS_COM "/test/alip/alip_COM_trajectory.txt", std::fstream::in | std::fstream::out | std::fstream::app);
   file2.open(THIS_COM "/test/alip/Swing1_trajectory.txt", std::fstream::in | std::fstream::out | std::fstream::app);
@@ -41,6 +42,8 @@ AlipMpcTrajectoryManager::AlipMpcTrajectoryManager(NewStep_mpc *alipMpc,
   file2.open(THIS_COM "/test/alip/Swing1_trajectory.txt", std::fstream::out);
   file3.open(THIS_COM "/test/alip/Swing2_trajectory.txt", std::fstream::out);
   file4.open(THIS_COM "/test/alip/BezierSwing_trajectory.txt", std::fstream::out);
+  file5.open(THIS_COM "/test/alip/AlipSwing_trajectory.txt", std::fstream::out);
+  file6.open(THIS_COM "/test/alip/Alip2Swing_trajectory.txt", std::fstream::out);
 
 
 }  //need to add ori 
@@ -69,7 +72,6 @@ void AlipMpcTrajectoryManager::MpcSolutions(const double &tr_, const double &st_
   indata.mu = 0.3;
   indata.stance_leg = st_leg;
   //I need to calculate indata.Tr so I would need a current time
-  cout << "indata stance_leg : " <<indata.stance_leg << endl;
   util::PrettyConstructor(3, "AlipMpc tm : Mpc Solutions");
 
   this->InertiaToMpcCoordinates();
@@ -147,7 +149,6 @@ void AlipMpcTrajectoryManager::OutputMpcToInertiaCoordinates(){
   double sw_end_x = outdata.ufp_wrt_st[0];
   double sw_end_y = outdata.ufp_wrt_st[1];
   double sw_end_z = this->ComputeZpos(sw_end_x, sw_end_y, 0); 
-
   Swingfoot_end << sw_end_x, sw_end_y, sw_end_z;
 
 
@@ -160,13 +161,6 @@ void AlipMpcTrajectoryManager::OutputMpcToInertiaCoordinates(){
   Swingfoot_end = Swingfoot_end + stleg_pos;
 
   Swingfoot_end(2) = this->ComputeZpos(Swingfoot_end(0), Swingfoot_end(1), 0);
-
-  cout << "st leg pos" << stleg_pos << endl;
-  cout << "swing leg start" << robot_->GetLinkIsometry(draco_link::l_foot_contact).translation() << endl;
-  cout << "SWINg foot end " << Swingfoot_end << endl;
-  cout << "sol ufp " << outdata.ufp_wrt_st[0] << " " << outdata.ufp_wrt_st[1] << endl;
-  cout << "sol com " << fullsol.xlip_sol[0] << " " << fullsol.xlip_sol[1] << endl;
-
 }
 
 
@@ -198,11 +192,15 @@ void AlipMpcTrajectoryManager::GenerateSwingFtraj(){
   }
 
   Eigen::Vector3d curr_swfoot_pos = curr_swfoot_iso.translation();
-  cout << "curr swfooot pos generation " << endl << curr_swfoot_pos << endl;
 
   Eigen::Vector3d curr_swfoot_linearVel = robot_->GetLinkSpatialVel(draco_link::l_foot_contact).tail<3>();
   //for now we will assume that the feet moves at an horizontal velocity that is constant in time
   //so we can compute the middle foot position proportionally to the time remaining
+  
+  AlipSwingPos = new AlipSwing(Swingfoot_start, Swingfoot_end, swing_height, indata.Ts);
+  AlipSwingPos2 = new AlipSwing2(Swingfoot_start, Swingfoot_end, swing_height, indata.Ts);
+
+  
   if(indata.Tr > 0.5*indata.Ts){  //pensar en como calcular la midfoot position
 
     Eigen::Vector3d mid_pos;
@@ -214,8 +212,9 @@ void AlipMpcTrajectoryManager::GenerateSwingFtraj(){
     mid_linearVel = (Swingfoot_end-curr_swfoot_pos)/indata.Tr;
     mid_linearVel(2) = 0;
     //Bezier is just a test for know, will have to change plenty of things
-    //can have a problem when Tr < 0.5, i don't want to do hermite  
-    SwingPos = new QuadraticBezierCurve(curr_swfoot_pos, mid_pos, Swingfoot_end, indata.Tr);
+    //can have a problem when Tr < 0.5, i don't want to do hermite 
+
+    BezierSwingPos = new QuadraticBezierCurve(curr_swfoot_pos, mid_pos, Swingfoot_end, indata.Tr);
 
     first_half_curve_SwingPos = 
       new HermiteCurveVec(curr_swfoot_pos, curr_swfoot_linearVel, mid_pos, mid_linearVel, t1);
@@ -229,9 +228,7 @@ void AlipMpcTrajectoryManager::GenerateSwingFtraj(){
 }
 
 
-double AlipMpcTrajectoryManager::ComputeZpos(const double &x, const double &y, const double &zH_){
-  return indata.kx*x + indata.ky*y + zH_;
-}
+
 
 
 void AlipMpcTrajectoryManager::UpdateDesired(const double t){  //have to be carefull when choosing t
@@ -242,41 +239,53 @@ void AlipMpcTrajectoryManager::UpdateDesired(const double t){  //have to be care
   assert(first_half_curve_SwingPos != nullptr);
   assert(second_half_curve_SwingPos != nullptr);
   assert(COMpos != nullptr); 
-  //assert(ori_curve_ != nullptr);
 
   Eigen::VectorXd des_COM_pos = COMpos->Evaluate(t);
   Eigen::VectorXd des_COM_vel = COMpos->EvaluateFirstDerivative(t);
   Eigen::VectorXd des_COM_acc = COMpos->EvaluateSecondDerivative(t);
   //Eigen::VectorXd des_COM_acc = Eigen::VectorXd::Zero(3);
-  //look why i have a task for xy and another for z
-  //do update
 
 
   Eigen::VectorXd des_swfoot_pos;
   Eigen::VectorXd des_swfoot_vel;
   Eigen::VectorXd des_swfoot_acc;
 
-  if (indata.Tr > 0.5*indata.Ts){
-    if (indata.Tr-t > 0.5*indata.Ts){
-        des_swfoot_pos = first_half_curve_SwingPos->Evaluate(t);
-        des_swfoot_vel = first_half_curve_SwingPos->EvaluateFirstDerivative(t);
-        des_swfoot_acc = first_half_curve_SwingPos->EvaluateSecondDerivative(t);
+  if (Alip){ //xy sinusoid; z is two splines
+    des_swfoot_pos = AlipSwingPos->Evaluate(t);
+    des_swfoot_vel = AlipSwingPos->EvaluateFirstDerivative(t);
+    des_swfoot_acc = AlipSwingPos->EvaluateSecondDerivative(t);  
+  }
+  else if (Alip2){ //xy sinusoid; z is quadratic interpolation
+    des_swfoot_pos = AlipSwingPos2->Evaluate(t);
+    des_swfoot_vel = AlipSwingPos2->EvaluateFirstDerivative(t);
+    des_swfoot_acc = AlipSwingPos2->EvaluateSecondDerivative(t);
+  }
+  else if(Bezier){ 
+    des_swfoot_pos = BezierSwingPos->Evaluate(t);
+    des_swfoot_vel = BezierSwingPos->EvaluateFirstDerivative(t);
+    des_swfoot_acc = BezierSwingPos->EvaluateSecondDerivative(t);
+  }
+  else { //two splines 
+    if (indata.Tr > 0.5*indata.Ts){
+      if (indata.Tr-t > 0.5*indata.Ts){
+          des_swfoot_pos = first_half_curve_SwingPos->Evaluate(t);
+          des_swfoot_vel = first_half_curve_SwingPos->EvaluateFirstDerivative(t);
+          des_swfoot_acc = first_half_curve_SwingPos->EvaluateSecondDerivative(t);
 
+      }
+      else {
+          des_swfoot_pos = second_half_curve_SwingPos->Evaluate(t-(indata.Tr-0.5*indata.Ts));
+          des_swfoot_vel = second_half_curve_SwingPos->EvaluateFirstDerivative(t-(indata.Tr-0.5*indata.Ts));
+          des_swfoot_acc = second_half_curve_SwingPos->EvaluateSecondDerivative(t-(indata.Tr-0.5*indata.Ts));
+      }
     }
     else {
-        des_swfoot_pos = second_half_curve_SwingPos->Evaluate(t-(indata.Tr-0.5*indata.Ts));
-        des_swfoot_vel = second_half_curve_SwingPos->EvaluateFirstDerivative(t-(indata.Tr-0.5*indata.Ts));
-        des_swfoot_acc = second_half_curve_SwingPos->EvaluateSecondDerivative(t-(indata.Tr-0.5*indata.Ts));
+      des_swfoot_pos = second_half_curve_SwingPos->Evaluate(t);
+      des_swfoot_vel = second_half_curve_SwingPos->EvaluateFirstDerivative(t);
+      des_swfoot_acc = second_half_curve_SwingPos->EvaluateSecondDerivative(t);
     }
+
   }
-  else {
-    des_swfoot_pos = second_half_curve_SwingPos->Evaluate(t);
-    des_swfoot_vel = second_half_curve_SwingPos->EvaluateFirstDerivative(t);
-    des_swfoot_acc = second_half_curve_SwingPos->EvaluateSecondDerivative(t);
-  }
-
-
-
 
   //in single_support_swing update both the tasks
   //for the stance leg they use UseCurrent. Is it really necessary
@@ -285,29 +294,35 @@ void AlipMpcTrajectoryManager::UpdateDesired(const double t){  //have to be care
  
     lfoot_task->UpdateDesired(des_swfoot_pos, des_swfoot_vel, des_swfoot_acc);
     this->UpdateCurrentPos(rfoot_task);
+
     rfoot_task->SetWeight(Eigen::Vector3d(5000, 5000,5000));
-    lfoot_task->SetWeight(Eigen::Vector3d(8000, 8000,8000));
+    lfoot_task->SetWeight(Eigen::Vector3d(8000, 8000, 8000));
+
+    lfoot_ori->SetWeight(Eigen::Vector3d(8000, 5000, 5000));
+    rfoot_ori->SetWeight(Eigen::Vector3d(3000, 3000, 3000));
   }
   else { //update right
     rfoot_task->UpdateDesired(des_swfoot_pos, des_swfoot_vel, des_swfoot_acc);
     this->UpdateCurrentPos(lfoot_task);
-    rfoot_task->SetWeight(Eigen::Vector3d(8000, 8000,8000));
+
+    rfoot_task->SetWeight(Eigen::Vector3d(8000, 8000, 8000));
     lfoot_task->SetWeight(Eigen::Vector3d(5000, 5000,5000));
 
+    rfoot_ori->SetWeight(Eigen::Vector3d(8000, 5000, 5000));
+    lfoot_ori->SetWeight(Eigen::Vector3d(3000, 3000, 3000));
   }
 
   
   com_z_task->UpdateDesired(des_COM_pos.tail<1>(), Eigen::VectorXd::Zero(1),
                             Eigen::VectorXd::Zero(1));  //CHECK FOR this. should stay at same height. 
 
+  com_xy_task->UpdateDesired(stleg_pos.head<2>(), Eigen::VectorXd::Zero(2), Eigen::VectorXd(2));
   
 
   //ori for now use the current orientation. Don't change it
 
 
-  lfoot_ori->SetWeight(Eigen::Vector3d(500, 100, 10));
-  rfoot_ori->SetWeight(Eigen::Vector3d(500, 100, 10));
-  torso_ori->SetWeight(Eigen::Vector3d(9000, 9000, 1000));
+  torso_ori->SetWeight(Eigen::Vector3d(8000, 8000, 5000));
 
   Eigen::VectorXd zero3 = Eigen::VectorXd::Zero(3);
   torso_ori->UpdateDesired(des_ori_torso, zero3, zero3);
@@ -341,27 +356,51 @@ void AlipMpcTrajectoryManager::UpdateCurrentPos(Task* task){
   task->UpdateDesired(des_pos, des_vel, des_acc);
 }
 
-/*
-void AlipMpcTrajectoryManager::RToLstance(){
-      //left force to 500 and right to 0
-      Eigen::VectorXd wrong;
-      wrong << 0,0,0,0,0,mass*9.8;
-      Eigen::VectorXd wrong2 = Eigen::VectorXd::Zero(6);
-      rg_force_task->UpdateDesired(wrong2);
-      lf_force_task->UpdateDesired(wrong);
+
+double AlipMpcTrajectoryManager::ComputeZpos(const double &x, const double &y, const double &zH_){
+  return indata.kx*x + indata.ky*y + zH_;
 }
 
 
-void AlipMpcTrajectoryManager::LToRstance(){
-        //left force to 500 and right to 0
-      Eigen::VectorXd wrong;
-      wrong << 0,0,0,0,0,mass*9.8;
-      Eigen::VectorXd wrong2 = Eigen::VectorXd::Zero(6);
-      rg_force_task->UpdateDesired(wrong);
-      lf_force_task->UpdateDesired(wrong2);
-}
 
-*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 void AlipMpcTrajectoryManager::saveTrajectories(const double start_time, const double dt,const double end_time){
@@ -378,7 +417,7 @@ void AlipMpcTrajectoryManager::saveTrajectories(const double start_time, const d
   file4.open(THIS_COM "/test/alip/BezierSwing_trajectory.txt", ios::out);
 */
   saveCounter++;
-  if (!file1.is_open() || !file2.is_open() || !file3.is_open() || !file4.is_open()) {
+  if (!file1.is_open() || !file2.is_open() || !file3.is_open() || !file4.is_open() || !file5.is_open() || !file6.is_open()) {
       std::cerr << "Error: Unable to open one or more files for writing." << std::endl;
       return;
   }
@@ -386,23 +425,35 @@ void AlipMpcTrajectoryManager::saveTrajectories(const double start_time, const d
   file2 <<"start------"<< saveCounter << "------------------------" << std::endl;
   file3 <<"start------"<< saveCounter << "------------------------" << std::endl;
   file4 <<"start------"<< saveCounter << "------------------------" << std::endl;
+  file5 <<"start------"<< saveCounter << "------------------------" << std::endl;
+  file6 <<"start------"<< saveCounter << "------------------------" << std::endl;
+
 
   for (double t = start_time; t < end_time; t += dt){
     Eigen::VectorXd COM = COMpos->Evaluate(t);
     Eigen::VectorXd Swing_part1 = first_half_curve_SwingPos->Evaluate(t/2);
     Eigen::VectorXd Swing_part2 = second_half_curve_SwingPos->Evaluate(t/2);
-    Eigen::VectorXd BezierSwing = SwingPos->Evaluate(t);
+    Eigen::VectorXd BezierSwing = BezierSwingPos->Evaluate(t);
+    Eigen::Vector3d SwingAlip = AlipSwingPos->Evaluate(t);
+    Eigen::Vector3d SwingAlip2 = AlipSwingPos2->Evaluate(t);
+
 
     file1 << COM.transpose() << "  " << t << std::endl;
     file2 << Swing_part1.transpose() << "  " << t << std::endl;
     file3 << Swing_part2.transpose() << "  " << t <<  std::endl;
     file4 << BezierSwing.transpose() << "  " << t <<  std::endl;
+    file5 << SwingAlip.transpose() << "  " << t <<  std::endl;
+    file6 << SwingAlip2.transpose() << "  " << t <<  std::endl;
+
+
 
   }
   file1 <<"end------"<< saveCounter << "------------------------" << std::endl;
   file2 <<"end------"<< saveCounter << "------------------------" << std::endl;
   file3 <<"end------"<< saveCounter << "------------------------" << std::endl;
   file4 <<"end------"<< saveCounter << "------------------------" << std::endl;
+  file5 <<"end------"<< saveCounter << "------------------------" << std::endl;
+  file6 <<"end------"<< saveCounter << "------------------------" << std::endl;
 
 /*
   file1.close();
@@ -413,6 +464,8 @@ void AlipMpcTrajectoryManager::saveTrajectories(const double start_time, const d
 
 }
 
+
+
 void AlipMpcTrajectoryManager::SetParameters(const YAML::Node &node) {
   try {
     util::ReadParameter(node, "swing_height", swing_height);
@@ -422,6 +475,9 @@ void AlipMpcTrajectoryManager::SetParameters(const YAML::Node &node) {
     util::ReadParameter(node, "total_mass", mass);
     util::ReadParameter(node, "Lx_offset", indata.Lx_offset);
     util::ReadParameter(node, "Ly_des", indata.Ly_des);
+    util::ReadParameter(node, "Bezier", Bezier);
+    util::ReadParameter(node, "Alip", Alip);
+    util::ReadParameter(node, "Alip2", Alip2);
 
 
   } catch (const std::runtime_error &e) {

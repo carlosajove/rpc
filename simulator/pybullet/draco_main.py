@@ -312,7 +312,7 @@ if __name__ == "__main__":
     pb.connect(pb.GUI)
 
     pb.resetDebugVisualizerCamera(cameraDistance=3,
-                                  cameraYaw=120,
+                                  cameraYaw=120,   #120
                                   cameraPitch=-30,
                                   cameraTargetPosition=[0, 0, 0.5])
     ## sim physics setting

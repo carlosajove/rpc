@@ -60,7 +60,9 @@ DracoControlArchitecture::DracoControlArchitecture(PinocchioRobotSystem *robot)
   controller_ = new DracoController(tci_container_, robot_);
 
   dcm_planner_ = new DCMPlanner();
-  std::string step_horizon = "4";
+
+  std::string step_horizon;
+  util::ReadParameter(cfg_["alip_mpc_walking"], "step_horizon", step_horizon);
   std::string intervals = "4";
   alip_mpc_ = new NewStep_mpc(step_horizon, intervals);
   // mpc handler
@@ -239,11 +241,14 @@ DracoControlArchitecture::~DracoControlArchitecture() {
 void DracoControlArchitecture::GetCommand(void *command) {
   if(state_ == draco_states::AlipLocomotion){
   //  util::PrettyConstructor(1,"ctrlarch GetCommand ") ;
+    //tci_container_->task_map_["com_xy_task"]->SetWeight(Eigen::Vector2d(4000,4000));
     tci_container_->task_map_["com_xy_task"]->SetWeight(Eigen::Vector2d(0,0));
-    if (alipIter == 0) state_machine_container_[draco_states::AlipLocomotion]->FirstVisit();
-    
 
-    tci_container_->task_map_["com_z_task"]->SetWeight(Eigen::Vector3d(10000, 8000, 8000));
+
+    if (alipIter == 0) state_machine_container_[draco_states::AlipLocomotion]->FirstVisit();
+
+
+    tci_container_->task_map_["com_z_task"]->SetWeight(Eigen::Vector3d(7000, 7000, 7000));
 
     if (alipIter >= 0 ) state_machine_container_[draco_states::AlipLocomotion]->OneStep();
     
@@ -254,11 +259,12 @@ void DracoControlArchitecture::GetCommand(void *command) {
 
     alipIter++;
     //if (alipIter == 50) exit(0);
-    //if (alipIter == 6) alipIter = 0;
+    //if (alipIter == 10) alipIter = 0;
 
     if (state_machine_container_[draco_states::AlipLocomotion]->SwitchLeg()) {
        alipIter = 0;
-       alipIter = -10;
+       alipIter = -3;
+       //exit(0);
        
     }
   //  std::cout << "ctroarch end Get Command" << std::endl << std::endl;
