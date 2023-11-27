@@ -57,6 +57,17 @@ void AlipMpcTrajectoryManager::setOri(){
     */
     Eigen::Isometry3d torso_iso = robot_->GetLinkIsometry(draco_link::torso_link);
     FootStep::MakeHorizontal(torso_iso);  
+    std::cout << "torso_iso " << std::endl;
+    cout << torso_iso.linear() << endl;
+    if (com_yaw != 0){
+      Eigen::Matrix3d rotation; 
+      rotation << cos(com_yaw), -sin(com_yaw), 0, 
+                  sin(com_yaw), cos(com_yaw) , 0,
+                  0           , 0            , 1;
+      torso_iso.linear() = rotation*torso_iso.linear();
+    }
+    std::cout << "torso_iso 2" << std::endl;
+    cout << torso_iso.linear() << endl;
     Eigen::Quaterniond des_torso_ori_quat(torso_iso.linear());
     des_ori_torso = des_torso_ori_quat.normalized().coeffs();
     des_ori_lfoot = des_torso_ori_quat.normalized().coeffs();
@@ -67,6 +78,7 @@ void AlipMpcTrajectoryManager::outsideCommand(const YAML::Node &node){
     util::ReadParameter(node, "Lx_offset", indata.Lx_offset);
     util::ReadParameter(node, "Ly_des", indata.Ly_des);
     util::ReadParameter(node, "com_yaw", com_yaw);
+    com_yaw *= M_PI/180;
 
 }
 
