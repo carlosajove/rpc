@@ -31,7 +31,6 @@ void AlipLocomotion::FirstVisit(){
   if(first_ever) {
     state_machine_start_time_ = sp_->current_time_;
     first_ever = false;
-    ctrl_arch_->alip_tm_->firstVisit();
     if (stance_leg == 1) {
       ctrl_arch_->alip_tm_->SetSwingFootStart(robot_->GetLinkIsometry(draco_link::l_foot_contact).translation());
     } else {
@@ -45,6 +44,8 @@ void AlipLocomotion::FirstVisit(){
     state_machine_start_time_ = sp_->current_time_;
   }
   
+  
+  ctrl_arch_->alip_tm_->setOri();
 
   state_machine_time_ = sp_->current_time_ - state_machine_start_time_;
 
@@ -103,6 +104,8 @@ bool AlipLocomotion::SwitchLeg(){  //ahora asume que tocamos en Tr o antes. Que 
   if (sp_->current_time_ - state_machine_start_time_ > 0.5*Ts){
     //if ((stance_leg == 1) && (sp_->b_lf_contact_)){  //right stance, left swing
     if((stance_leg == 1) && (robot_->GetLinkIsometry(draco_link::l_foot_contact).translation()(2) < 0.00005)){
+      util::PrettyConstructor(2, "Switch Leg AlipLocomotion true ");
+
       std::cout << "Right stance to left" << " | Tr:" << Tr << "  | state machine time:" << state_machine_time_  <<std::endl;
       stance_leg *= -1;
       //ctrl_arch_->alip_tm_->RToLstance();
@@ -121,6 +124,7 @@ bool AlipLocomotion::SwitchLeg(){  //ahora asume que tocamos en Tr o antes. Que 
 
     }   // else if((stance_leg == -1) && (sp_->b_rf_contact_)){
     else if((stance_leg == -1) && (robot_->GetLinkIsometry(draco_link::r_foot_contact).translation()(2) < 0.00005)){
+      util::PrettyConstructor(2, "Switch Leg AlipLocomotion true ");
 
       std::cout << "Left stance to right" << " | Tr:" << Tr << "  | state machine time:" << state_machine_time_ <<std::endl;
 
@@ -139,10 +143,9 @@ bool AlipLocomotion::SwitchLeg(){  //ahora asume que tocamos en Tr o antes. Que 
     }
   }
   if (switch_leg){ 
-    util::PrettyConstructor(2, "Switch Leg AlipLocomotion true ");
-    std::cout << robot_->GetLinkIsometry(draco_link::l_foot_contact).translation() ;
+    std::cout << robot_->GetLinkIsometry(draco_link::l_foot_contact).translation()(2) ;
     std::cout << "  l foot" << std::endl;
-    std::cout << robot_->GetLinkIsometry(draco_link::r_foot_contact).translation() << "  r foot" << std::endl;
+    std::cout << robot_->GetLinkIsometry(draco_link::r_foot_contact).translation()(2) << "  r foot" << std::endl;
   }
   return switch_leg;
 
@@ -156,7 +159,7 @@ void AlipLocomotion::SetParameters(const YAML::Node &node) {
     util::ReadParameter(node, "swing_height", swing_height_);
     util::ReadParameter(node, "Ts", Ts);
     util::ReadParameter(node, "stance_leg", stance_leg);
-    util::ReadParameter(node, "Tr", Tr);
+    //util::ReadParameter(node, "Tr", Tr);
 
 
 

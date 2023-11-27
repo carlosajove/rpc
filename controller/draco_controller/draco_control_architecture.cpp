@@ -245,7 +245,12 @@ void DracoControlArchitecture::GetCommand(void *command) {
     tci_container_->task_map_["com_xy_task"]->SetWeight(Eigen::Vector2d(0,0));
 
 
-    if (alipIter == 0) state_machine_container_[draco_states::AlipLocomotion]->FirstVisit();
+    if (alipIter == 0) {
+        cfg_ = YAML::LoadFile(THIS_COM "config/draco/pnc.yaml");
+
+        alip_tm_->outsideCommand(cfg_["alip_mpc_walking"]);
+        state_machine_container_[draco_states::AlipLocomotion]->FirstVisit();
+    }
 
 
     tci_container_->task_map_["com_z_task"]->SetWeight(Eigen::Vector3d(7000, 7000, 7000));

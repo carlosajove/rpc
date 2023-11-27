@@ -48,22 +48,27 @@ AlipMpcTrajectoryManager::AlipMpcTrajectoryManager(NewStep_mpc *alipMpc,
 
 }  //need to add ori 
 
-void AlipMpcTrajectoryManager::firstVisit(){
-  if (not first_ever) {
+void AlipMpcTrajectoryManager::setOri(){
+    /*
     Eigen::Quaterniond des_ori_quat_lfoot(robot_->GetLinkIsometry(draco_link::l_foot_contact).linear());
     Eigen::Quaterniond des_ori_quat_rfoot(robot_->GetLinkIsometry(draco_link::r_foot_contact).linear());
     des_ori_lfoot = des_ori_quat_lfoot.normalized().coeffs();
     des_ori_rfoot = des_ori_quat_rfoot.normalized().coeffs();
-    Eigen::Quaterniond des_torso_ori_quat(robot_->GetLinkIsometry(draco_link::torso_com_link).linear());
+    */
+    Eigen::Isometry3d torso_iso = robot_->GetLinkIsometry(draco_link::torso_link);
+    FootStep::MakeHorizontal(torso_iso);  
+    Eigen::Quaterniond des_torso_ori_quat(torso_iso.linear());
     des_ori_torso = des_torso_ori_quat.normalized().coeffs();
-
-
-
-    first_ever = true;
-  }
+    des_ori_lfoot = des_torso_ori_quat.normalized().coeffs();
+    des_ori_rfoot = des_torso_ori_quat.normalized().coeffs();
 }
 
+void AlipMpcTrajectoryManager::outsideCommand(const YAML::Node &node){
+    util::ReadParameter(node, "Lx_offset", indata.Lx_offset);
+    util::ReadParameter(node, "Ly_des", indata.Ly_des);
+    util::ReadParameter(node, "com_yaw", com_yaw);
 
+}
 
 void AlipMpcTrajectoryManager::MpcSolutions(const double &tr_, const double &st_leg) {  //generate footsteps and COM pos
   indata.Tr = tr_;
@@ -71,6 +76,8 @@ void AlipMpcTrajectoryManager::MpcSolutions(const double &tr_, const double &st_
   indata.ky = 0;
   indata.mu = 0.3;
   indata.stance_leg = st_leg;
+  cout << "Ly_des  " << indata.Ly_des << endl;
+
   //I need to calculate indata.Tr so I would need a current time
   util::PrettyConstructor(3, "AlipMpc tm : Mpc Solutions");
 
@@ -197,6 +204,20 @@ void AlipMpcTrajectoryManager::GenerateSwingFtraj(){
   //for now we will assume that the feet moves at an horizontal velocity that is constant in time
   //so we can compute the middle foot position proportionally to the time remaining
   
+
+  if(variable_height){
+    Eigen::Vector2d vectdist = (Swingfoot_end - Swingfoot_start).head<2>();
+    double step_distance = vectdist.norm();
+    cout << vectdist <<" vectdist "<< endl;
+    cout << "step dist " << step_distance << endl;
+    swing_height = step_distance*reference_swing_height/0.5;
+    cout << "Swing height " << swing_height << endl;
+    if (swing_height < 0.025) {
+      swing_height = 0.025;
+      cout << "new " << swing_height << endl;
+    }
+  }
+
   AlipSwingPos = new AlipSwing(Swingfoot_start, Swingfoot_end, swing_height, indata.Ts);
   AlipSwingPos2 = new AlipSwing2(Swingfoot_start, Swingfoot_end, swing_height, indata.Ts);
 
@@ -468,7 +489,6 @@ void AlipMpcTrajectoryManager::saveTrajectories(const double start_time, const d
 
 void AlipMpcTrajectoryManager::SetParameters(const YAML::Node &node) {
   try {
-    util::ReadParameter(node, "swing_height", swing_height);
     util::ReadParameter(node, "Ts", indata.Ts);
     util::ReadParameter(node, "zH", indata.zH);
     util::ReadParameter(node, "leg_width", indata.leg_width);
@@ -478,6 +498,11 @@ void AlipMpcTrajectoryManager::SetParameters(const YAML::Node &node) {
     util::ReadParameter(node, "Bezier", Bezier);
     util::ReadParameter(node, "Alip", Alip);
     util::ReadParameter(node, "Alip2", Alip2);
+    util::ReadParameter(node, "variable_height", variable_height);
+    util::ReadParameter(node, "reference_swing_height", reference_swing_height);
+    util::ReadParameter(node, "swing_height", swing_height);
+
+
 
 
   } catch (const std::runtime_error &e) {
