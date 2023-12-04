@@ -46,7 +46,10 @@ mpc_info.symbolics = struct(...
 
 %% Formulate LIP foot placement Optimization
 N_steps_ahead_list = [2, 4, 6, 8];
+nx = 4;
 
+Q = eye(nx,nx);
+Q(4,4) = 10
 disp("Begin Formulation of ALIP-based FP Optimization Problem...");
 for i = 1:length(N_steps_ahead_list)
     nx = 4;

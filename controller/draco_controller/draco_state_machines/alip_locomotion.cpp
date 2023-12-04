@@ -5,6 +5,7 @@
 #include "controller/draco_controller/draco_definition.hpp"
 #include "controller/whole_body_controller/managers/alipmpc_trajectory_manager.hpp"
 #include "controller/draco_controller/draco_tci_container.hpp"
+#include <fstream>
 
 //the state will be the following; 
 //First visit: the thing would be do a single step since so i start moving
@@ -22,12 +23,13 @@ AlipLocomotion::AlipLocomotion(StateId state_id, PinocchioRobotSystem *robot,
     first_ever = true;
     new_leg = false;
 
+    file1.open(THIS_COM "/test/alip/LandTime.txt", std::fstream::out);
+
+
 }
 
 
 void AlipLocomotion::FirstVisit(){
-  std::cout << "First visit AlipLocomotion" << std::endl;
-
   if(first_ever) {
     state_machine_start_time_ = sp_->current_time_;
     first_ever = false;
@@ -36,6 +38,7 @@ void AlipLocomotion::FirstVisit(){
     } else {
       ctrl_arch_->alip_tm_->SetSwingFootStart(robot_->GetLinkIsometry(draco_link::r_foot_contact).translation());
     }
+    ctrl_arch_->alip_tm_->initializeOri();
     
   }
   
@@ -45,7 +48,7 @@ void AlipLocomotion::FirstVisit(){
   }
   
   
-  ctrl_arch_->alip_tm_->setOri();
+  ctrl_arch_->alip_tm_->setNewOri();
 
   state_machine_time_ = sp_->current_time_ - state_machine_start_time_;
 
@@ -53,10 +56,8 @@ void AlipLocomotion::FirstVisit(){
 
   ctrl_arch_->alip_tm_->MpcSolutions(Tr, stance_leg);
 
-  ctrl_arch_->alip_tm_->GenerateCOMtraj(Tr);
-
-  ctrl_arch_->alip_tm_->GenerateSwingFtraj();
-  ctrl_arch_->alip_tm_->saveTrajectories(0, Tr/20, Tr);
+  ctrl_arch_->alip_tm_->GenerateSwingFtraj(Tr);
+  ctrl_arch_->alip_tm_->saveTrajectories(0, Ts/20, Ts);
   util::PrettyConstructor(3, "Trajectories saved");
 
   if (stance_leg == 1) {
@@ -76,7 +77,6 @@ void AlipLocomotion::FirstVisit(){
 
 }
 void AlipLocomotion::OneStep(){
-    //std::cout << "One Step AlipLocomotion" << std::endl;
     state_machine_time_ = sp_->current_time_ -state_machine_start_time_;
     double t = state_machine_time_+ Tr - Ts;
     ctrl_arch_->alip_tm_->UpdateDesired(t);
@@ -142,11 +142,18 @@ bool AlipLocomotion::SwitchLeg(){  //ahora asume que tocamos en Tr o antes. Que 
 
     }
   }
+  
   if (switch_leg){ 
+    file1 << sp_->current_time_ << endl; 
+
+    //ctrl_arch_->alip_tm_->saveCurrentCOMstate();
+    /*
     std::cout << robot_->GetLinkIsometry(draco_link::l_foot_contact).translation()(2) ;
     std::cout << "  l foot" << std::endl;
     std::cout << robot_->GetLinkIsometry(draco_link::r_foot_contact).translation()(2) << "  r foot" << std::endl;
+    */
   }
+  
   return switch_leg;
 
 }
@@ -159,9 +166,6 @@ void AlipLocomotion::SetParameters(const YAML::Node &node) {
     util::ReadParameter(node, "swing_height", swing_height_);
     util::ReadParameter(node, "Ts", Ts);
     util::ReadParameter(node, "stance_leg", stance_leg);
-    //util::ReadParameter(node, "Tr", Tr);
-
-
 
   } catch (const std::runtime_error &e) {
     std::cerr << "Error reading parameter [" << e.what() << "] at file: ["

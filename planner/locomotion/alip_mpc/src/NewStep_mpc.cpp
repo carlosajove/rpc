@@ -107,6 +107,7 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
     /* Terminal cost parameter */
     casadi::DM Q_term = casadi::DM::eye(n_xlip_);
     Q_term *= 100;
+    Q_term(3,3) = 1000;
 
     /* MPC Solution */
     double ufp_x_sol, ufp_y_sol;

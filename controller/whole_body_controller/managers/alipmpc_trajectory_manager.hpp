@@ -22,22 +22,20 @@ public:
 
   virtual ~AlipMpcTrajectoryManager()  = default;
 
-
-  void setOri();
+  void initializeOri();
+  void setNewOri();
   void outsideCommand(const YAML::Node &node);
 
   void MpcSolutions(const double &tr_, const double &st_leg);
   void InertiaToMpcCoordinates();
   void OutputMpcToInertiaCoordinates();
 
-  void GenerateCOMtraj(const double &tr_);  //mirar si devolver el resultado directo o la hermite curve
-  void GenerateSwingFtraj();
+  void GenerateSwingFtraj(const double &tr_);
 
   void UpdateCurrentOri(Task* task);
   void UpdateCurrentPos(Task* task);
 
   void UpdateDesired(const double t);
-  void SetParameters(const YAML::Node &node);
 
   double ComputeZpos(const double &x, const double &y, const double &zH_);
 
@@ -45,12 +43,20 @@ public:
   void SetLydes(double des){indata.Ly_des = des;}
   //for testing
   void saveTrajectories(const double start_time, const double dt,const double end_time);
+  void saveCurrentCOMstate(const double t);
   
+  void saveMpcCOMstate(const double t);
+
+  void saveRobotCommand(const double t);
   //Getters
   input_data_t GetIndata() {return indata;}
   output_data_t GetOutdata() {return outdata;}
   full_horizon_sol GetFullsol(){return fullsol;}
 
+
+  void SetParameters(const YAML::Node &node);
+  void SetTaskWeights(const YAML::Node &node);
+  
   int printCounter;
 
 private:
@@ -66,7 +72,6 @@ private:
   ForceTask *rg_force_task;
   PinocchioRobotSystem *robot_;
 
-  HermiteCurveVec *COMpos;
   HermiteCurveVec *first_half_curve_SwingPos;
   HermiteCurveVec *second_half_curve_SwingPos;
 
@@ -100,6 +105,7 @@ private:
   Eigen::VectorXd des_ori_lfoot;
   Eigen::VectorXd des_ori_rfoot;
   Eigen::VectorXd des_ori_torso;
+  Eigen::Isometry3d des_torso_iso;
   bool first_ever;
 
 
@@ -114,11 +120,34 @@ private:
   std::fstream file4;
   std::fstream file5;
   std::fstream file6;
+  std::fstream file7;
+  std::fstream file8;
+  std::fstream file9;
 
 
   int saveCounter;
+  double refzH;
+  Eigen::Vector3d terrain;   //normalised (-kx, -ky, 1)
+
+  //task weights
+  Eigen::Vector3d com_z_task_weight;
+  Eigen::Vector2d com_xy_task_weight;
+  Eigen::Vector3d torso_ori_weight;
+  Eigen::Vector3d swing_foot_weight;
+  Eigen::Vector3d stance_foot_weight;
+  Eigen::Vector3d stance_foot_ori_weight;
+  Eigen::Vector3d swing_foot_ori_weight;
+  //swing foot task
+  Eigen::VectorXd des_swfoot_pos;
+  Eigen::VectorXd des_swfoot_vel;
+  Eigen::VectorXd des_swfoot_acc;
 
 
+  double indataLz;
 
 
 };
+/* TODO: 
+- change the way we update the task weights not necessary to do at every loop
+
+*/

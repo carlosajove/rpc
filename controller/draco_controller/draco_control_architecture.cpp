@@ -94,7 +94,6 @@ DracoControlArchitecture::DracoControlArchitecture(PinocchioRobotSystem *robot)
   rf_SE3_tm_ = new EndEffectorTrajectoryManager(
       tci_container_->task_map_["rf_pos_task"],
       tci_container_->task_map_["rf_ori_task"], robot_);
-  std::cout << "a" << std::endl;
   alip_tm_ = new AlipMpcTrajectoryManager(   //initialises the planner also
       alip_mpc_,
       tci_container_->task_map_["com_xy_task"],
@@ -242,8 +241,6 @@ void DracoControlArchitecture::GetCommand(void *command) {
   if(state_ == draco_states::AlipLocomotion){
   //  util::PrettyConstructor(1,"ctrlarch GetCommand ") ;
     //tci_container_->task_map_["com_xy_task"]->SetWeight(Eigen::Vector2d(4000,4000));
-    tci_container_->task_map_["com_xy_task"]->SetWeight(Eigen::Vector2d(0,0));
-
 
     if (alipIter == 0) {
         cfg_ = YAML::LoadFile(THIS_COM "config/draco/pnc.yaml");
@@ -252,22 +249,20 @@ void DracoControlArchitecture::GetCommand(void *command) {
         state_machine_container_[draco_states::AlipLocomotion]->FirstVisit();
     }
 
-
-    tci_container_->task_map_["com_z_task"]->SetWeight(Eigen::Vector3d(7000, 7000, 7000));
-
     if (alipIter >= 0 ) state_machine_container_[draco_states::AlipLocomotion]->OneStep();
     
     //std::cout << "stance: " << state_machine_container_[draco_states::AlipLocomotion]->GetStance_leg() << " actual rf pos: " << robot_->GetLinkIsometry(draco_link::r_foot_contact).translation() << endl;
 
     upper_body_tm_->UseNominalUpperBodyJointPos(sp_->nominal_jpos_);
     controller_->GetCommand(command);
-
     alipIter++;
-    //if (alipIter == 50) exit(0);
-    //if (alipIter == 10) alipIter = 0;
+    //if (alipIter == 2) alipIter = 0;
+    alip_tm_->saveRobotCommand(sp_->current_time_);
+    alip_tm_->saveCurrentCOMstate(sp_->current_time_);
+    alip_tm_->saveMpcCOMstate(sp_->current_time_);
 
     if (state_machine_container_[draco_states::AlipLocomotion]->SwitchLeg()) {
-       alipIter = 0;
+       //alipIter = 0;
        alipIter = -3;
        //exit(0);
        
@@ -321,6 +316,7 @@ void DracoControlArchitecture::_InitializeParameters() {
   // dcm planner params initialization
   dcm_tm_->InitializeParameters(cfg_["dcm_walking"]);
   alip_tm_->SetParameters(cfg_["alip_mpc_walking"]);
+  alip_tm_->SetTaskWeights(cfg_["alip_mpc_walking"]["task"]);
   alip_mpc_->SetParameters(cfg_["alip_mpc_walking"]);
 
 }

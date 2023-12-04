@@ -87,7 +87,7 @@ controller:
 wbc:
   task:
     com_xy_task:
-      com_feedback_source: 1 # 0: com feedback / 1: icp feedback
+      com_feedback_source: 0 # 0: com feedback / 1: icp feedback
       icp_integrator_type: 0 # 0: exponential smoother / 1: leaky integrator
 
       ########################################################################
@@ -95,9 +95,9 @@ wbc:
       ########################################################################
       sim_weight : [1000., 1000.]
       sim_kp : [200., 200.]
-      sim_kd : [0., 0.]
+      sim_kd : [20., 20.]
       sim_icp_weight : [40000., 40000.] # only used when feedback source : 1
-      sim_icp_kp : [0.6, 1.4]
+      sim_icp_kp : [1, 1.0]
       sim_icp_kd : [0., 0.,] # x, y will be ignored
       sim_icp_ki : [0., 0.]
 
@@ -139,8 +139,8 @@ wbc:
      # sim_com_weight : [1000.]  Carlos
       sim_com_weight : [1000.] #Carlos
 
-      sim_com_kp : [100.]
-      sim_com_kd : [5.]
+      sim_com_kp : [12000.]
+      sim_com_kd : [500.]
 
       sim_base_weight : [10000.] # only used when target source : 1
       sim_base_kp : [500.]
@@ -191,7 +191,7 @@ wbc:
       ## l_shoulder_fe(0), l_shoulder_aa(1), l_shoulder_ie(2), l_elbow_fe(3), l_wrist_ps_(4),
       ## l_wrist_pitch(5), neck_pitch(6), r_shoulder_fe(7), r_shoulder_aa(8), r_shoulder_ie(9),
       ## r_shoulder_ie(10), r_elbow_fe(11), r_wrist_ps(12), r_wrist_pitch(13)
-      sim_weight : [40., 40., 40., 40., 40., 40., 40., 40., 40., 40., 40., 40., 40.]
+      sim_weight : [1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000.]
       sim_kp : [100., 100., 100., 50., 40., 40., 100., 100., 100., 100., 50., 40., 40.]
       sim_kd : [8., 8., 8., 3., 2., 2., 10., 8., 8., 8., 3., 2., 2.]
 
@@ -208,8 +208,8 @@ wbc:
       ########################################################################
       sim_weight : [5000., 5000., 5000.]
       sim_weight_at_swing : [8000., 8000., 8000.]
-      sim_kp : [300., 300., 300.]
-      sim_kd : [30., 30., 30.]
+      sim_kp : [800., 800., 500.]
+      sim_kd : [25., 20., 50.]
 
       ########################################################################
       ## exp params
@@ -217,7 +217,7 @@ wbc:
       exp_weight : [6000., 6000., 5000.]
       exp_weight_at_swing : [8000., 8500., 8000.]
       exp_kp : [150., 200., 250.]
-      exp_kd : [3.0, 0.8, 7.0]
+      exp_kd : [3.0, 3, 3]
 
     foot_ori_task:
       ########################################################################
@@ -225,8 +225,8 @@ wbc:
       ########################################################################
       sim_weight : [5000., 5000., 5000.]
       sim_weight_at_swing : [5000., 5000., 5000.]
-      sim_kp : [80., 80., 80.]
-      sim_kd : [4., 4., 4.]
+      sim_kp : [800., 800., 800.]  #good change 800
+      sim_kd : [40., 40., 40.]  #40
 
       ########################################################################
       ## exp params
@@ -257,7 +257,7 @@ wbc:
     ########################################################################
     sim_max_rf_z: 600.
 
-    sim_mu: 0.3
+    sim_mu: 0.6
     sim_foot_half_length: 0.08
     sim_foot_half_width: 0.04 ## 0.04
 #    sim_foot_half_length: 0.125
@@ -299,7 +299,7 @@ state_machine:
 
     stand_up:
       standup_duration: 1.
-      target_com_height: 0.658
+      target_com_height: 0.67
       target_base_height: 0.90
 
       rf_z_max_interp_duration: 0.1
@@ -370,25 +370,33 @@ alip_mpc_walking:
   Ts: 0.25    #0.25
   stance_leg: -1 # -1: RIGHT SWING TO START; 1: LEFT SWING TO START
   leg_width: 0.13 #0.1
-  zH: 0.68   #0.658
-  mu: 0.3
-  total_mass: 39.1534
+  zH: 0.67   #this will be the reference height target. The height for the mpc will be another
+  mu: 0.4
+  total_mass: 39.15342
   ufp_x_max: 0.6  #0.6
   ufp_y_max: 0.4  #0.4
-  ufp_y_min: 0.13 #0.05
+  ufp_y_min: 0.1 #0.05
   Lx_offset: 0  #0
-  Ly_des: 3 #3
-  com_yaw: 1   #degrees
+  Ly_des: 10 #3
+  com_yaw: 0    #degrees
 
-  variable_height: 1
-  swing_height: 0.07    #0.07
+  variable_height: 0
+  swing_height: 0.05   #0.07
   reference_swing_height: 0.1 #0.08   #for a swing of 0.5m
   Bezier: 0
   Alip: 0
   Alip2: 1
   task: #not implemente yet
-    com_z_pos: [7000, 7000, 7000]
-    com_xy_pos: [0,0]
+    com_z_pos: [85000, 8000, 8000]  
+    com_xy_pos: [0,0] 
+    torso_ori: [8000, 8000, 5000]
+    swing_foot_weight: [9000, 9000, 9000] #8000
+    stance_foot_weight: [5000, 5000, 5000]
+    stance_foot_ori_weight: [8000, 5000, 5000]
+    swing_foot_ori_weight: [5000, 5000, 5000]
+
+
+
 
 
 

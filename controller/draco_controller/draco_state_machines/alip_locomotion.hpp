@@ -47,6 +47,7 @@ private:
   bool first_ever;
   bool new_leg;
 
+  std::fstream file1;
   // set nominal desired position/orientation (e.g., for zero acceleration cmd)
 
 };

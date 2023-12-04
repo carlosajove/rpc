@@ -111,8 +111,7 @@ int main() {
  
   double Tr = 0.3; //Ts = 0
   alip_tm.MpcSolutions(Tr, 1);  //stance leg right leg
-  alip_tm.GenerateCOMtraj(Tr);
-  alip_tm.GenerateSwingFtraj();
+  alip_tm.GenerateSwingFtraj(Tr);
 
   alip_tm.saveTrajectories(0, 0.01, Tr);
 

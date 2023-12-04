@@ -620,7 +620,6 @@ QuadraticLagrangePol::QuadraticLagrangePol(const double &z0, const double &t0,
   T << t0*t0, t0, 1,
        t1*t1, t1, 1,
        t2*t2, t2, 1;
-  std::cout << T << " Tttt" << std::endl;
 
   Eigen::Vector3d coefs  = T.householderQr().solve(z);
   a = coefs(0);
