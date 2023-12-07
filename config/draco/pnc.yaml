@@ -208,8 +208,8 @@ wbc:
       ########################################################################
       sim_weight : [5000., 5000., 5000.]
       sim_weight_at_swing : [8000., 8000., 8000.]
-      sim_kp : [800., 800., 500.]
-      sim_kd : [25., 20., 50.]
+      sim_kp : [800., 800., 700.]
+      sim_kd : [25., 25., 20.]
 
       ########################################################################
       ## exp params
@@ -257,7 +257,7 @@ wbc:
     ########################################################################
     sim_max_rf_z: 600.
 
-    sim_mu: 0.6
+    sim_mu: 0.4
     sim_foot_half_length: 0.08
     sim_foot_half_width: 0.04 ## 0.04
 #    sim_foot_half_length: 0.125
@@ -367,7 +367,7 @@ lmpc_walking:
 
 alip_mpc_walking:
   step_horizon: "4"
-  Ts: 0.25    #0.25
+  Ts: 0.25    #0.25  #Greater Ts makes offset increase also
   stance_leg: -1 # -1: RIGHT SWING TO START; 1: LEFT SWING TO START
   leg_width: 0.13 #0.1
   zH: 0.67   #this will be the reference height target. The height for the mpc will be another
@@ -377,17 +377,17 @@ alip_mpc_walking:
   ufp_y_max: 0.4  #0.4
   ufp_y_min: 0.1 #0.05
   Lx_offset: 0  #0
-  Ly_des: 10 #3
+  Ly_des: 1 #3
   com_yaw: 0    #degrees
 
   variable_height: 0
-  swing_height: 0.05   #0.07
+  swing_height: 0.07   #0.07
   reference_swing_height: 0.1 #0.08   #for a swing of 0.5m
   Bezier: 0
   Alip: 0
   Alip2: 1
   task: #not implemente yet
-    com_z_pos: [85000, 8000, 8000]  
+    com_z_pos: [8500, 8000, 8000]  
     com_xy_pos: [0,0] 
     torso_ori: [8000, 8000, 5000]
     swing_foot_weight: [9000, 9000, 9000] #8000
