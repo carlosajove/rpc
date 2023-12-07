@@ -41,13 +41,14 @@ public:
 
   void SetSwingFootStart(Eigen::Vector3d pos){Swingfoot_start = pos;}
   void SetLydes(double des){indata.Ly_des = des;}
+
   //for testing
   void saveTrajectories(const double start_time, const double dt,const double end_time);
   void saveCurrentCOMstate(const double t);
-  
   void saveMpcCOMstate(const double t);
-
+  void saveSwingState(const double t);
   void saveRobotCommand(const double t);
+  
   //Getters
   input_data_t GetIndata() {return indata;}
   output_data_t GetOutdata() {return outdata;}

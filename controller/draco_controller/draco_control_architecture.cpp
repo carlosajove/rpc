@@ -260,7 +260,8 @@ void DracoControlArchitecture::GetCommand(void *command) {
     alip_tm_->saveRobotCommand(sp_->current_time_);
     alip_tm_->saveCurrentCOMstate(sp_->current_time_);
     alip_tm_->saveMpcCOMstate(sp_->current_time_);
-
+    alip_tm_->saveSwingState(sp_->current_time_);
+    
     if (state_machine_container_[draco_states::AlipLocomotion]->SwitchLeg()) {
        //alipIter = 0;
        alipIter = -3;

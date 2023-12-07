@@ -91,7 +91,6 @@ def plot_trajectories_with_robfoot(trajectories, rtraj, file_path):
             ax.plot(x[0],y[0], z[0], marker='x', color='r')
             ax.plot(x[-1], y[-1], z[-1], marker = 'x', color='y')
         counter +=1
-    print(rtraj[:][0])
     ax.plot(rtraj[:,0], rtraj[:,1], rtraj[:,2], marker = 'x')
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
@@ -149,18 +148,17 @@ with open('LandTime.txt', 'r') as file:
 
 
 #COM at change swing foot
-xCOM = CurrentComstate[:,0]
-yCOM = CurrentComstate[:,1]
-zCOM = CurrentComstate[:,2]
+xCOMstance = CurrentComstate[:,0]
+yCOMstance = CurrentComstate[:,1]
+zCOMstance = CurrentComstate[:,2]
 LxCOM= CurrentComstate[:,3]
 LyCOM = CurrentComstate[:,4]
 LzCOM = CurrentComstate[:,5]
 timeCOM = CurrentComstate[:,6]
-xCOMworld = CurrentComstate[:,7]
-yCOMworld = CurrentComstate[:,8]
-zCOMworld = CurrentComstate[:,9]
+stleg_xWorld = CurrentComstate[:,10]
+stleg_yWorld = CurrentComstate[:,11]
+stleg_zWorld = CurrentComstate[:,12]
 
-#Compute desired state x,y,Lx:
 
 
 MpcxCOM = MpcComState[:,0]
@@ -176,10 +174,17 @@ MpcMu = MpcComState[:,9]
 MpcLegWidth = MpcComState[:,10]
 MpczH = MpcComState[:,11]
 MpcMassCom = MpcComState[:,12]
+MpcTs = MpcComState[:,13]
 
 swingXCommand = RobotCommand[:,0]
 swingYCommand = RobotCommand[:,1]
 swingZCommand = RobotCommand[:,2]
+
+#Compute desired state x,y,Lx:
+l = np.sqrt(9.81/MpczH)
+Lx_plus = 0.5*MpcMassCom*MpczH*MpcLegWidth*l*np.tanh(0.5*MpcTs*l) + MpcLx_off
+Lx_minus = -0.5*MpcMassCom*MpczH*MpcLegWidth*l*np.tanh(0.5*MpcTs*l) + MpcLx_off
+
 
 
 plt.figure()
@@ -214,44 +219,81 @@ for t in landingTime:
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
-ax.scatter(swingXCommand, swingYCommand, swingZCommand, marker='x', label = 'Command')
-ax.scatter(trRobotSwing[:,0], trRobotSwing[:,1], trRobotSwing[:,2], marker = 'x', color = 'red', label = 'pos')
+ax.plot(swingXCommand, swingYCommand, swingZCommand, marker='x', label = 'Command')
+ax.plot(trRobotSwing[:,0], trRobotSwing[:,1], trRobotSwing[:,2], marker = 'x', color = 'red', label = 'pos')
 ax.legend()
+
+plt.figure()
+plt.plot(swingXCommand, trRobotSwing[:,0])
+plt.title('x Command vs Swing')
+
+plt.figure()
+plt.scatter(timeCOM, trRobotSwing[:,0], label = 'pos')
+plt.scatter(timeCOM, swingXCommand, label =  'command')
+plt.title('time vs x')
+plt.legend()
+
+
+plt.figure()
+plt.plot(swingYCommand, trRobotSwing[:,1])
+plt.title('y Command vs Swing')
+
+plt.figure()
+plt.scatter(timeCOM, trRobotSwing[:,1], label = 'pos')
+plt.scatter(timeCOM, swingYCommand, label =  'command')
+plt.title('time vs y')
+plt.legend()
+
+plt.figure()
+plt.plot(swingZCommand, trRobotSwing[:,2])
+plt.title('z Command vs Swing')
+
+plt.figure()
+plt.scatter(timeCOM, trRobotSwing[:,2], label = 'pos')
+plt.scatter(timeCOM, swingZCommand, label =  'command')
+plt.title('time vs Z')
+plt.legend()
 
 
 
 #alip paper plots
 #compute desired state
-lbound_time = 12
-ubound_time = 150
+lbound_time = 2
+ubound_time = 16.5
 if lbound_time not in timeCOM or ubound_time not in timeCOM:
     print("Error: lbound_time or ubound_time not found in timeCOM vector.")
     print("min time: ", timeCOM[0])
     print("max time: " , timeCOM[-1])
+    plt.show()
     exit()
     
 else:
     lbound_idx = np.searchsorted(timeCOM, lbound_time, side='left')
     ubound_idx = np.searchsorted(timeCOM, ubound_time, side='right')
 
+inter = slice(lbound_idx, ubound_idx)
+
 landingTimes_in_range = [t for t in landingTime if lbound_time <= t <= ubound_time]
 
 
-normal3Dplot(xCOMworld[lbound_idx:ubound_idx], yCOMworld[lbound_idx:ubound_idx], zCOMworld[lbound_idx:ubound_idx], 'COM world ref')
+#normal3Dplot(xCOMworld[inter], yCOMworld[inter], zCOMworld[inter], 'COM world ref')
 
 
 # Extracting a subset of data within the specified time range
-inter = slice(lbound_idx, ubound_idx)
 x = timeCOM[inter]
 y = LxCOM[inter]/(MpcMassCom[inter]*MpczH[inter])
 
+yy = Lx_plus[inter]/(MpcMassCom[inter]*MpczH[inter])
+yyy = Lx_minus[inter]/(MpcMassCom[inter]*MpczH[inter])
 plt.figure()
 plt.plot(x, y)
 #plt.plot(MpctimeCOM, MpcLxCOM/(MpcMassCom*MpczH))
+plt.plot(x,yy , label='Lx_plus')
+plt.plot(x, yyy, label='Lx_minus')
 for t in landingTimes_in_range:
     plt.axvline(x=t, color='black', linestyle='-', linewidth=0.1)
-
 plt.title('Lx/mzH paper plot')
+
 
 y = LyCOM[inter]/(MpcMassCom[inter]*MpczH[inter])
 ydes = MpcLy_des[inter]/(MpcMassCom[inter]*MpczH[inter])
@@ -264,5 +306,63 @@ for t in landingTimes_in_range:
     plt.axvline(x=t, color='black', linestyle='-', linewidth=0.1)
 plt.title('Ly/mzH paper plot')
 plt.legend()
-plt.show()  
 
+y = xCOMworld[inter]
+plt.figure()
+plt.plot(x, y)
+plt.title('COM x world')
+
+y = yCOMworld[inter]
+plt.figure()
+plt.plot(x, y)
+plt.title('COM y world')
+
+y = zCOMworld[inter]
+plt.figure()
+plt.plot(x, y)
+plt.title('COM z world')
+
+
+#stance has discontinuities at change of stance
+
+x = timeCOM[inter]
+y = zCOMstance[inter]
+
+plt.figure()
+plt.plot(x, y)
+plt.title('COM z')
+for t in landingTime:
+    plt.axvline(x=t, color='black', linestyle='-', linewidth=0.1)
+
+
+x = timeCOM[inter]
+y = yCOMstance[inter]
+discontinuity_indices = np.where(np.abs(np.diff(y)) > 0.05)[0]
+x[discontinuity_indices] = np.nan
+y[discontinuity_indices] = np.nan
+
+plt.figure()
+plt.plot(x, y)
+plt.title('COM y')
+for t in landingTime:
+    plt.axvline(x=t, color='black', linestyle='-', linewidth=0.1)
+
+
+
+x = timeCOM[inter]
+y = xCOMstance[inter]
+discontinuity_indices = np.where(np.abs(np.diff(y)) > 0.05)[0]
+x[discontinuity_indices] = np.nan
+y[discontinuity_indices] = np.nan
+
+plt.figure()
+plt.plot(x, y)
+plt.title('COM x')
+for t in landingTime:
+    plt.axvline(x=t, color='black', linestyle='-', linewidth=0.1)
+
+
+
+
+
+plt.show()
