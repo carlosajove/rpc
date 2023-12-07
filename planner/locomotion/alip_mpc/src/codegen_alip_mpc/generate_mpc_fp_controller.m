@@ -63,3 +63,15 @@ for i = 1:length(N_steps_ahead_list)
 end
 disp("Formulated ALIP-based FP Optimization (" + toc + " sec)");
 
+disp("Begin Formulation of draco ALIP-based FP Optimization Problem...");
+for i = 1:length(N_steps_ahead_list)
+    nx = 4;
+    N_steps_ahead = N_steps_ahead_list(i);
+    mpc_info.opt = struct(...
+        'N_steps_ahead',    N_steps_ahead,...   % 2 steps makes the friction constraint get invalidated
+        'N_intervals',      4,...               % Number of output intervals
+        'Q',                eye(nx,nx),...      % state penalty matrix
+        'qpsolver',         "qrqp");            % qp solver    
+    formulate_draco_alip_mpc_fp_opt(mpc_info);
+end
+disp("Formulated ALIP-based FP Optimization (" + toc + " sec)");

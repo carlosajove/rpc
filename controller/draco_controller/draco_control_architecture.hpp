@@ -68,6 +68,7 @@ private:
   DracoController *controller_;
   DracoStateProvider *sp_;
   DCMPlanner *dcm_planner_;
+  int solver;
   NewStep_mpc *alip_mpc_;
 
   int alipIter;

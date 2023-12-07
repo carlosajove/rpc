@@ -46,6 +46,7 @@ public:
   void saveCurrentCOMstate(const double t);
   
   void saveMpcCOMstate(const double t);
+  void saveSwingState(const double t);
 
   void saveRobotCommand(const double t);
   //Getters

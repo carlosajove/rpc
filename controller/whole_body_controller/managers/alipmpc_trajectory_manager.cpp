@@ -96,8 +96,6 @@ void AlipMpcTrajectoryManager::MpcSolutions(const double &tr_, const double &st_
   indata.stance_leg = st_leg;
 
   //I need to calculate indata.Tr so I would need a current time
-  util::PrettyConstructor(3, "AlipMpc tm : Mpc Solutions");
-
   this->InertiaToMpcCoordinates();
 
    //after we will put Lx and Ly as inputs of the function
@@ -187,9 +185,6 @@ void AlipMpcTrajectoryManager::OutputMpcToInertiaCoordinates(){
 
   double sw_end_x = outdata.ufp_wrt_st[0];
   double sw_end_y = outdata.ufp_wrt_st[1];
-
-  cout << "sw end x: " << sw_end_x << endl;
-  cout << "sw_end y: " << sw_end_y << endl;
 
   double sw_end_z = this->ComputeZpos(sw_end_x, sw_end_y, 0); 
   Swingfoot_end << sw_end_x, sw_end_y, sw_end_z;
@@ -284,7 +279,7 @@ void AlipMpcTrajectoryManager::UpdateDesired(const double t){  //have to be care
     curr_swfoot_iso = robot_->GetLinkIsometry(draco_link::r_foot_contact);
     FootStep::MakeHorizontal(curr_swfoot_iso);
   }
-  file7 << curr_swfoot_iso.translation().transpose() << "  " << std::endl;
+ // file7 << curr_swfoot_iso.translation().transpose() << "  " << std::endl;
 
   if (Alip){ //xy sinusoid; z is two splines
     des_swfoot_pos = AlipSwingPos->Evaluate(t);
@@ -414,7 +409,9 @@ void AlipMpcTrajectoryManager::saveMpcCOMstate(const double t){
   file1 << indata.xlip_current[2] << " " << indata.xlip_current[3] << " " << indataLz << " ";
   file1 << t << " " << indata.Lx_offset << " " << indata.Ly_des << " ";
   file1 << indata.mu << " "  << indata.leg_width << " " << indata.zH << " ";
-  file1 << mass <<  endl; 
+  file1 << mass << " " << indata.Ts <<  " ";
+  file1 << fullsol.xlip_sol[0] << " " << fullsol.xlip_sol[1] << " " << fullsol.xlip_sol[2] << " ";
+  file1 << fullsol.xlip_sol[3] << endl; 
 }
 
 
@@ -429,16 +426,30 @@ void AlipMpcTrajectoryManager::saveCurrentCOMstate(const double t){
   pos = torso_iso.linear().transpose() * pos;
   Eigen::Vector3d stleg_pos_torso_ori =  torso_iso.linear().transpose() * stleg_pos;
 
+
   pos -= stleg_pos_torso_ori;
   vel = torso_iso.linear().transpose() * vel;
   Eigen::Vector3d L = pos.cross(mass*vel);
 
-  file8 << pos.transpose() << "  ";
+  file8 << pos.transpose() << " ";
   file8 << L.transpose() << " ";
-  file8 << t <<  " " << posWorld.transpose() << endl;
-
-
+  file8 << t <<  " " << posWorld.transpose() << " ";
+  file8 << stleg_pos.transpose() << endl;
 }
+
+void AlipMpcTrajectoryManager::saveSwingState(const double t){
+  Eigen::Isometry3d curr_swfoot_iso;
+  if (indata.stance_leg == 1){  //LF is swing foot
+    curr_swfoot_iso = robot_->GetLinkIsometry(draco_link::l_foot_contact);  //chequear si contact solo funciona cuando es stance foot
+    FootStep::MakeHorizontal(curr_swfoot_iso);          
+  }
+  else {
+    curr_swfoot_iso = robot_->GetLinkIsometry(draco_link::r_foot_contact);
+    FootStep::MakeHorizontal(curr_swfoot_iso);
+  }
+  file7 << curr_swfoot_iso.translation().transpose() << "  " << t << std::endl;
+}
+  
 
 
 
@@ -534,12 +545,6 @@ void AlipMpcTrajectoryManager::SetTaskWeights(const YAML::Node &node){
     util::ReadParameter(node, "stance_foot_weight", stance_foot_weight);
     util::ReadParameter(node, "stance_foot_ori_weight", stance_foot_ori_weight);
     util::ReadParameter(node, "swing_foot_ori_weight", swing_foot_ori_weight);
-
-
-    cout << "com z pos " << endl;
-    cout << com_z_task_weight << endl;
-    cout << torso_ori_weight << endl;
-    cout << stance_foot_weight << endl;
 
   } catch (const std::runtime_error &e) {
     std::cerr << "Error reading parameter [" << e.what() << "] at file: ["

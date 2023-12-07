@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     // Initialize foot placement controller
     string step_horizon = "4";
     string intervals = "4";
-    NewStep_mpc newStep_mpc(step_horizon, intervals);
+    NewStep_mpc newStep_mpc(step_horizon, intervals, 0);
     cout << "--> ALIP-MPC Foot Placement Controller Initialized!\n";
 
     // Timing Variables

@@ -312,8 +312,8 @@ if __name__ == "__main__":
     pb.connect(pb.GUI)
 
     pb.resetDebugVisualizerCamera(cameraDistance=3,
-                                  cameraYaw=140,   #120
-                                  cameraPitch=-10,  #-30
+                                  cameraYaw=90,   #120
+                                  cameraPitch=-30,  #-30
                                   cameraTargetPosition=[2   , 0, 0.68])
     ## sim physics setting
     pb.setPhysicsEngineParameter(fixedTimeStep=Config.CONTROLLER_DT,

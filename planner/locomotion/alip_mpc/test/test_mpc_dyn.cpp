@@ -39,20 +39,20 @@ void func_to_test(test_data_t ** tdata, input_data_t indata, output_data_t outda
 
 void initialize_data(input_data_t &indata, output_data_t &outdata, double Lx, double Ly){
     indata.xlip_current[0]= 0;
-    indata.xlip_current[1]= 0;
+    indata.xlip_current[1]= 0.2;
     indata.xlip_current[2]= 0;
     indata.xlip_current[3]= 0;
 
     indata.stance_leg = 1;
-    indata.zH = 0.5;
-    indata.Ts = 0.3;
-    indata.Tr = 0.3 ;
-    indata.leg_width= 0.2;
+    indata.zH = 0.67;
+    indata.Ts = 0.25;
+    indata.Tr = 0.25;
+    indata.leg_width= 0.13;
     indata.Lx_offset = Lx;
     indata.Ly_des = Ly;
     indata.kx = 0;
     indata.ky = 0;
-    indata.mu = 0.3;
+    indata.mu = 0.4;
 
     outdata.ufp_wrt_st[0] = 0;
     outdata.ufp_wrt_st[1] = 0;
@@ -115,23 +115,37 @@ int main(){
     string step_horizon = "6";
     string intervals = "4";
     //choose duration of test, number of iterations
-    NewStep_mpc newStep_mpc(step_horizon, intervals);
+    NewStep_mpc newStep_mpc(step_horizon, intervals, false);
 
     initialize_data(indata, outdata, 0 , 10);
 
-
     func_to_test(tdata, indata, outdata, 0);
+    printTestData(tdata[0]);
 
     for (int i = 0; i < test_it; i++){
         newStep_mpc.Update_(indata,outdata, fullmpcdata);
-        func_to_test(tdata, indata,outdata, 1);
+        func_to_test(tdata, indata, outdata, 1);
+        printTestData(tdata[1]);
         newinputData(indata, fullmpcdata);
     }
 
+    //print some data
+    cout << fullmpcdata.xlip_sol.size() << " size " << "hey" << endl;
+    cout << "ufp sol:" << endl;
+    for (int i = 0; i < stoi(step_horizon); i++) cout << fullmpcdata.ufp_sol[2*i] << " " << fullmpcdata.ufp_sol[2*i+1] << endl;
+    cout << endl;
+    cout << "x + ufp" << endl;
+    for (int i = 0; i < stoi(step_horizon); i++){
+        cout << fullmpcdata.xlip_sol[4*i]+fullmpcdata.ufp_sol[2*i];
+        cout << "  " << fullmpcdata.xlip_sol[4*i+1]+fullmpcdata.ufp_sol[2*i+1] << endl;
+    }
+    cout << " L: " << endl;
+    for (int i = 0; i < stoi(step_horizon) ;i++){
+        cout << fullmpcdata.xlip_sol[4*i+2];
+        cout << " " << fullmpcdata.xlip_sol[4*i+3] << endl;
+    }
 
 
-    printTestData(tdata[0]);
-    printTestData(tdata[1]);
 
     // Open and write the binary to plot in python for input/output data
     pd = fopen("Update_test.bin", "wb");
@@ -149,7 +163,6 @@ int main(){
     }
     printf("Data saved to Update_test.bin\n");
 
-    printTestData(tdata[0]);
 
     //works for test it = 1, if not the data will e for the last mpc iteration
     ofstream file("Full_Mpc_sol.bin", ios::binary);
@@ -170,23 +183,9 @@ int main(){
         cerr << "Failed to open the file.\n";
     }
    
-/*
-    //print some data
-    cout << fullmpcdata.xlip_sol.size() << " size " << "hey" << endl;
-    cout << "ufp sol:" << endl;
-    for (int i = 0; i < stoi(step_horizon); i++) cout << fullmpcdata.ufp_sol[2*i] << " " << fullmpcdata.ufp_sol[2*i+1] << endl;
-    cout << endl;
-    cout << "x + ufp" << endl;
-    for (int i = 0; i < stoi(step_horizon); i++){
-        cout << fullmpcdata.xlip_sol[4*i]+fullmpcdata.ufp_sol[2*i];
-        cout << "  " << fullmpcdata.xlip_sol[4*i+1]+fullmpcdata.ufp_sol[2*i+1] << endl;
-    }
-    cout << " L: " << endl;
-    for (int i = 0; i < stoi(step_horizon) ;i++){
-        cout << fullmpcdata.xlip_sol[4*i+2];
-        cout << " " << fullmpcdata.xlip_sol[4*i+3] << endl;
-    }
-*/
+
+
+
 
     return 0;
 }

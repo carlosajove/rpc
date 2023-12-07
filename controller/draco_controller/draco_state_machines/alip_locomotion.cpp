@@ -58,7 +58,6 @@ void AlipLocomotion::FirstVisit(){
 
   ctrl_arch_->alip_tm_->GenerateSwingFtraj(Tr);
   ctrl_arch_->alip_tm_->saveTrajectories(0, Ts/20, Ts);
-  util::PrettyConstructor(3, "Trajectories saved");
 
   if (stance_leg == 1) {
     sp_->b_lf_contact_ = false;
@@ -76,9 +75,11 @@ void AlipLocomotion::FirstVisit(){
   }
 
 }
+
 void AlipLocomotion::OneStep(){
     state_machine_time_ = sp_->current_time_ -state_machine_start_time_;
-    double t = state_machine_time_+ Tr - Ts;
+    //double t = state_machine_time_+ Tr - Ts;
+    double t = state_machine_time_;
     ctrl_arch_->alip_tm_->UpdateDesired(t);
 }
 void AlipLocomotion::LastVisit(){

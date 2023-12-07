@@ -5,23 +5,31 @@ using namespace std;
 
 
 // Constructor
-NewStep_mpc::NewStep_mpc(string & horizon, string & intervals)
+NewStep_mpc::NewStep_mpc(string & horizon, string & intervals, int solver_)  //need to be done after initialise parameters
 {
-    util::PrettyConstructor(2, "Alip Mpc");
-
+    util::PrettyConstructor(2, "Alip Mpc");  
+    solver = solver_;
     // Casadi function definitions
     N_steps_ = stoi(horizon); //C: ver que significa stoi
     //N_xsol_ = n_xlip_ * N_steps_;
     //N_ufpsol_ = n_ufp_ * N_steps_;
+    if (solver == 1){ //solver = true --> draco
+        solver_LS_ = "draco_LS_simplempc_Ns" + horizon + "_Ni" + intervals + "_qrqp";
+        f_solver_LS_ = casadi::external(solver_LS_);
 
-    solver_LS_ = "cassie_LS_simplempc_Ns" + horizon + "_Ni" + intervals + "_qrqp";
-    f_solver_LS_ = casadi::external(solver_LS_);
+        solver_RS_ = "draco_RS_simplempc_Ns" + horizon + "_Ni" + intervals + "_qrqp";
+        f_solver_RS_ = casadi::external(solver_RS_);
+    }
+    else if (solver == 0) {
+        solver_LS_ = "cassie_LS_simplempc_Ns" + horizon + "_Ni" + intervals + "_qrqp";
+        f_solver_LS_ = casadi::external(solver_LS_);
 
-    solver_RS_ = "cassie_RS_simplempc_Ns" + horizon + "_Ni" + intervals + "_qrqp";
-    f_solver_RS_ = casadi::external(solver_RS_);
+        solver_RS_ = "cassie_RS_simplempc_Ns" + horizon + "_Ni" + intervals + "_qrqp";
+        f_solver_RS_ = casadi::external(solver_RS_);
+    }
 
-    // cout << "--> Casadi Solvers Generated\n";
-
+    //cout << "--> Casadi Solvers Generated\n";
+    
     // Initialize terrain deques
 
 
@@ -75,8 +83,17 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
     // vector<double> xlip_init = {xc_this_, yc_this_, Lx_this_, Ly_this_};   // x_init is 4 x 1
 
     // C: haber que hacer con estos limites, los puedo poner en hpp?
-    vector<double> ufp_max = {ufp_x_max / 2, ufp_y_max_};  // Max distance of step length x
-    vector<double> ufp_min = {-ufp_x_max / 2, ufp_y_min_}; // Max distance of step length y
+    vector<double> ufp_max;
+    vector<double> ufp_min;
+
+    if (solver == 1) {
+        vector<double> ufp_max = {ufp_x_max, ufp_y_max_}; 
+        vector<double> ufp_min = {-ufp_x_max, ufp_y_min_};
+    }
+    else if (solver == 0){
+        vector<double> ufp_max = {ufp_x_max / 2, ufp_y_max_};  // Max distance of step length x
+        vector<double> ufp_min = {-ufp_x_max / 2, ufp_y_min_}; // Max distance of step length y
+    }
 
     // Update Terrain traj parameters
     kx_traj_.assign(N_steps_, kx_new_);
@@ -142,14 +159,19 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
 
     // Safety check for bad solutions
     // median of ufpxsol and limits
-    
+
     //  C: FOR NOW KEEP COMMENTED 
+/*
+    cout << "check ufp_x_sol: " << ufp_x_sol << endl;
     vector<double> ufpx_check{ufp_x_sol, ufp_max[0], ufp_min[0]};
     auto m = ufpx_check.begin() + ufpx_check.size() / 2;
     nth_element(ufpx_check.begin(), m, ufpx_check.end());
     ufp_x_sol = ufpx_check[ufpx_check.size() / 2];
     // median of ufpysol and limits
     // cout << "stanceleg: " << stance_leg_ << endl;
+    cout << "check ufp_x_sol: " << ufp_x_sol << endl;
+    cout << "check ufp_y_sol: " << ufp_y_sol << endl;
+
     if (stance_leg_ == -1) // left stance next left swing
     {
         vector<double> ufpy_check{-ufp_max[1], ufp_y_sol, -ufp_min[1]};
@@ -166,8 +188,11 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
         nth_element(ufpy_check.begin(), l, ufpy_check.end());
         ufp_y_sol = ufpy_check[ufpy_check.size() / 2];
     }
+    cout << "check ufp_y_sol: " << ufp_y_sol << endl;
+*/
 
-
+    cout << "ufp_x-_sol: " << ufp_x_sol << endl;
+    cout << "ufp_y_sol: " <<  ufp_y_sol << endl;
     /* Foot placement relative to current COM */
     xfp = xlip_sol[0];
     yfp = xlip_sol[1];
@@ -189,7 +214,8 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
     //new output data full solver solution
     full_sol.xlip_sol = xlip_sol;
     full_sol.ufp_sol = ufp_sol;
-
+    std::cout << "SOLUTIONS ARE DONE" << std::endl;
+    cout << ufp_x_sol << endl;
     return;
 }
 
@@ -197,9 +223,17 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
 void NewStep_mpc::SetParameters(const YAML::Node &node) {
   try {
     util::ReadParameter(node, "total_mass", mass_);
-    util::ReadParameter(node, "ufp_x_max", ufp_x_max);
-    util::ReadParameter(node, "ufp_y_max", ufp_y_max_);
-    util::ReadParameter(node, "ufp_y_min", ufp_y_min_);
+    if (solver == 1){ 
+        util::ReadParameter(node["draco"], "ufp_x_max", ufp_x_max);
+        util::ReadParameter(node["draco"], "ufp_y_max", ufp_y_max_);
+        util::ReadParameter(node["draco"], "ufp_y_min", ufp_y_min_);
+    }
+    else if (solver == 0){
+        util::ReadParameter(node["cassie"], "ufp_x_max", ufp_x_max);
+        util::ReadParameter(node["cassie"], "ufp_y_max", ufp_y_max_);
+        util::ReadParameter(node["cassie"], "ufp_y_min", ufp_y_min_);
+    }
+    
 
   } catch (const std::runtime_error &e) {
     std::cerr << "Error reading parameter [" << e.what() << "] at file: ["

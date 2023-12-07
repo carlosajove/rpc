@@ -1,1 +1,2 @@
 add_subdirectory(cassie_mpc_fp_solvers)
+add_subdirectory(draco_mpc_fp_solvers)

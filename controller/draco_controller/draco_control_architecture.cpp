@@ -63,8 +63,10 @@ DracoControlArchitecture::DracoControlArchitecture(PinocchioRobotSystem *robot)
 
   std::string step_horizon;
   util::ReadParameter(cfg_["alip_mpc_walking"], "step_horizon", step_horizon);
+  cout << "hey " << endl;
+  util::ReadParameter(cfg_["alip_mpc_walking"], "solver", solver);
   std::string intervals = "4";
-  alip_mpc_ = new NewStep_mpc(step_horizon, intervals);
+  alip_mpc_ = new NewStep_mpc(step_horizon, intervals,solver);
   // mpc handler
   // lmpc_handler_ = new LMPCHandler(
   // dcm_planner_, robot_, tci_container_->com_task_,
@@ -256,10 +258,11 @@ void DracoControlArchitecture::GetCommand(void *command) {
     upper_body_tm_->UseNominalUpperBodyJointPos(sp_->nominal_jpos_);
     controller_->GetCommand(command);
     alipIter++;
-    //if (alipIter == 2) alipIter = 0;
+    //if (alipIter == 25) alipIter = 0;
     alip_tm_->saveRobotCommand(sp_->current_time_);
     alip_tm_->saveCurrentCOMstate(sp_->current_time_);
     alip_tm_->saveMpcCOMstate(sp_->current_time_);
+    alip_tm_->saveSwingState(sp_->current_time_);
 
     if (state_machine_container_[draco_states::AlipLocomotion]->SwitchLeg()) {
        //alipIter = 0;

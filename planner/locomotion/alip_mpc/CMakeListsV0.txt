@@ -45,9 +45,9 @@ target_link_libraries(ctrl_lib solverslib)
 message("CONTROL LIB: ${ctrl_lib}")
 
 
-add_library(rpc-dcm-alip-planner ${sources} ${headers} ${solverslib})
-target_link_libraries(rpc-dcm-alip-planner PUBLIC rpc-util ctrl_lib)
+add_library(rpc-alip-planner ${sources} ${headers} ${solverslib})
+target_link_libraries(rpc-alip-planner PUBLIC rpc-util ctrl_lib)
 
-install(TARGETS rpc-dcm-alip-planner DESTINATION "${INSTALL_LIB_DIR}")
+install(TARGETS rpc-alip-planner DESTINATION "${INSTALL_LIB_DIR}")
 install(FILES ${headers} DESTINATION
     "${INSTALL_INCLUDE_DIR}/planner/locomotion/alip_mpc")

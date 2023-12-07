@@ -23,7 +23,7 @@ class NewStep_mpc
 public:
     // Constructor
     NewStep_mpc();
-    NewStep_mpc(string & horizon, string & intervals);
+    NewStep_mpc(string & horizon, string & intervals, int solver_);
 
     // Destructor
     virtual ~NewStep_mpc();
@@ -62,7 +62,7 @@ private:
     deque<double> mux_traj_;
     deque<double> muy_traj_;
 
-
+    int solver;
 
     double mass_;
     double ufp_x_max;  

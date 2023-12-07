@@ -13,7 +13,7 @@ DCMTrajectoryManager::DCMTrajectoryManager(DCMPlanner *dcm_planner,
       com_z_task_(com_z_task), torso_ori_task_(torso_ori_task), robot_(robot),
       lfoot_idx_(lfoot_idx), rfoot_idx_(rfoot_idx), current_foot_step_idx_(0),
       first_swing_leg_(end_effector::LFoot), /*b_first_visit_(true),*/
-      walking_primitive_(-1), alipMpc(step_horizon, intervals) {
+      walking_primitive_(-1), alipMpc(step_horizon, intervals, 0) {
   util::PrettyConstructor(2, "DCMTrajectoryManager");
 
   indata.zH = 0.6;         //from yaml file? or maybe calculate at each iteration with current height
@@ -33,7 +33,7 @@ DCMTrajectoryManager::DCMTrajectoryManager(
       com_z_task_(com_z_task), torso_ori_task_(torso_ori_task), robot_(robot),
       lfoot_idx_(lfoot_idx), rfoot_idx_(rfoot_idx), current_foot_step_idx_(0),
       first_swing_leg_(end_effector::LFoot), /*b_first_visit_(true),*/
-      walking_primitive_(-1), b_use_base_height_(b_use_base_height), alipMpc(step_horizon, intervals) {
+      walking_primitive_(-1), b_use_base_height_(b_use_base_height), alipMpc(step_horizon, intervals, 0) {
   util::PrettyConstructor(2, "DCMTrajectoryManager");
 
   indata.zH = 0.5;
