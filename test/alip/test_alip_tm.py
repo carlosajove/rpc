@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
+lbound_time = 6
+ubound_time = 14
+
 script_directory = os.path.dirname(os.path.abspath(__file__))
 file_path1 = os.path.join(script_directory, 'alip_COM_trajectory.txt')
 
@@ -261,8 +264,7 @@ plt.legend()
 
 #alip paper plots
 #compute desired state
-lbound_time = 2
-ubound_time = 15
+
 if lbound_time not in timeCOM or ubound_time not in timeCOM:
     print("Error: lbound_time or ubound_time not found in timeCOM vector.")
     print("min time: ", timeCOM[0])
