@@ -155,6 +155,9 @@ LxCOM= CurrentComstate[:,3]
 LyCOM = CurrentComstate[:,4]
 LzCOM = CurrentComstate[:,5]
 timeCOM = CurrentComstate[:,6]
+xCOMworld = CurrentComstate[:,7]
+yCOMworld = CurrentComstate[:,8]
+zCOMworld = CurrentComstate[:,9]
 stleg_xWorld = CurrentComstate[:,10]
 stleg_yWorld = CurrentComstate[:,11]
 stleg_zWorld = CurrentComstate[:,12]
@@ -259,7 +262,7 @@ plt.legend()
 #alip paper plots
 #compute desired state
 lbound_time = 2
-ubound_time = 16.5
+ubound_time = 15
 if lbound_time not in timeCOM or ubound_time not in timeCOM:
     print("Error: lbound_time or ubound_time not found in timeCOM vector.")
     print("min time: ", timeCOM[0])
