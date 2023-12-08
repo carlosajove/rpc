@@ -4,7 +4,7 @@ add_executable(pin_robot_system_test pin_robot_system_test.cpp)
 target_link_libraries(pin_robot_system_test rpc-pin-robot-system)
 
 add_executable(dcm_planner_test dcm_planner_test.cpp)
-target_link_libraries(dcm_planner_test rpc-wbc rpc-dcm-alip-planner)
+target_link_libraries(dcm_planner_test rpc-wbc)
 
 #add_executable(lmpc_handler_test lmpc_handler_test.cpp)
 #target_link_libraries(lmpc_handler_test rpc-lmpc-handler)

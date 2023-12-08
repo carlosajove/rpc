@@ -4,7 +4,7 @@ FILE(GLOB headers "*.hpp")
 #FILE(GLOB headers2 "../allip_mpc/include/*.hpp")
 
 add_library(rpc-dcm-planner ${sources} ${headers}) #${sources2} ${headers2})
-target_link_libraries(rpc-dcm-planner PUBLIC rpc-util rpc-dcm-alip-planner)
+target_link_libraries(rpc-dcm-planner PUBLIC rpc-util rpc-alip-planner)
 
 install(TARGETS rpc-dcm-planner DESTINATION "${INSTALL_LIB_DIR}")
 install(FILES ${headers} DESTINATION
