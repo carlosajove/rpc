@@ -13,13 +13,9 @@ DCMTrajectoryManager::DCMTrajectoryManager(DCMPlanner *dcm_planner,
       com_z_task_(com_z_task), torso_ori_task_(torso_ori_task), robot_(robot),
       lfoot_idx_(lfoot_idx), rfoot_idx_(rfoot_idx), current_foot_step_idx_(0),
       first_swing_leg_(end_effector::LFoot), /*b_first_visit_(true),*/
-      walking_primitive_(-1), alipMpc(step_horizon, intervals) {
+      walking_primitive_(-1) {
   util::PrettyConstructor(2, "DCMTrajectoryManager");
 
-  indata.zH = 0.6;         //from yaml file? or maybe calculate at each iteration with current height
-  indata.Ts = 0.3;
-  indata.Tr = 0.3;
-  indata.leg_width = 0.2;  //from yaml file?
 
   foot_step_list_.clear();
   foot_step_preview_list_.clear();
@@ -33,13 +29,9 @@ DCMTrajectoryManager::DCMTrajectoryManager(
       com_z_task_(com_z_task), torso_ori_task_(torso_ori_task), robot_(robot),
       lfoot_idx_(lfoot_idx), rfoot_idx_(rfoot_idx), current_foot_step_idx_(0),
       first_swing_leg_(end_effector::LFoot), /*b_first_visit_(true),*/
-      walking_primitive_(-1), b_use_base_height_(b_use_base_height), alipMpc(step_horizon, intervals) {
+      walking_primitive_(-1), b_use_base_height_(b_use_base_height) {
   util::PrettyConstructor(2, "DCMTrajectoryManager");
 
-  indata.zH = 0.5;
-  indata.Ts = 0.3;
-  indata.Tr = 0.3;
-  indata.leg_width = 0.2;
   foot_step_list_.clear();
   foot_step_preview_list_.clear();
 }
@@ -239,66 +231,3 @@ void DCMTrajectoryManager::_AlternateLeg() {
 }
 
 
-
-
-
-void DCMTrajectoryManager::GenerateFootStepsAlip() {
-  //---------------------------------------------------------
-  // foot step setup
-  //---------------------------------------------------------
-  // update current stance feet
-  Eigen::Isometry3d lfoot_iso = robot_->GetLinkIsometry(lfoot_idx_);
-  FootStep::MakeHorizontal(lfoot_iso);
-  init_left_foot_.SetPosOriSide(lfoot_iso.translation(),
-                                Eigen::Quaterniond(lfoot_iso.linear()),
-                                end_effector::LFoot);
-
-  Eigen::Isometry3d rfoot_iso = robot_->GetLinkIsometry(rfoot_idx_);
-  FootStep::MakeHorizontal(rfoot_iso);
-  init_right_foot_.SetPosOriSide(rfoot_iso.translation(),
-                                 Eigen::Quaterniond(rfoot_iso.linear()),
-                                 end_effector::RFoot);
-  //
-  indata.kx = 0;
-  indata.ky = 0;
-  indata.mu = 0.3;
-  indata.stance_leg = 1;
-  if (indata.stance_leg == -1){
-    first_swing_leg_ = end_effector::LFoot;
-  }
-  else {
-    first_swing_leg_ = end_effector::RFoot;
-  }
-  Eigen::Vector3d pos = robot_->GetRobotComPos();
-  Eigen::Vector3d vel = robot_->GetRobotComLinVel();
-  
-  indata.xlip_current[0]= pos[0];   //problems, what happens if z is not actually in the plane?
-  indata.xlip_current[1]= pos[1];   //what are the coordinate frame. Probably will have to susbtract position of stance leg
-  double mass = robot_->GetTotalMass();
-  Eigen::Vector3d L = pos.cross(mass*vel);
-
-  indata.xlip_current[2]= L[0];             //maybe write a getter function in PInocchioRobotSystem to compute L = rxmv
-  indata.xlip_current[3]= L[1];
-  for (int i = 0; i <4; i++) cout << "xlip_current " << indata.xlip_current[i] << endl;
-
-  FootStep init_mid_foot;
-
-
-  // generate foot step list depening on walking primitives //for now just going to change forward walsk with alip
-  switch (walking_primitive_) {
-  case dcm_walking_primitive::kFwdWalk:
-    _ResetIndexAndClearFootSteps();
-    indata.Lx_offset = 0;
-    indata.Ly_des = 10;
-    foot_step_list_ = FootStep::AlipStep(indata, alipMpc);
-    swing_leg_ =
-        first_swing_leg_; // for getter function(GetSwingLeg()) in state machine
-    break;
-
-
-  default:
-    std::cerr << "[DCMTrajectoryManagerWalip] ERROR. Walking Primitives are not set"
-              << std::endl;
-    std::exit(EXIT_FAILURE);
-  }
-}

@@ -74,10 +74,6 @@ public:
   static void MakeHorizontal(Eigen::Isometry3d &pose);
 
   static Eigen::Isometry3d MakeIsometry(const FootStep &foot_step);
-  
-  //CARLOS
-  static std::vector<FootStep> AlipStep(input_data_t &indata, NewStep_mpc & alipMpc);
-  //END CARLOS
 
 private:
   Eigen::Vector3d pos_;
