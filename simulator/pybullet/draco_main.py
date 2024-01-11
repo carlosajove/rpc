@@ -37,6 +37,8 @@ l_contact_volt_noise = 0.001
 r_contact_volt_noise = 0.001
 imu_ang_vel_noise_std_dev = 0.      # based on real IMU: 0.0052
 
+counter = 0
+
 def get_sensor_data_from_pybullet(robot):
 
     #follow pinocchio robotsystem urdf reading convention
@@ -128,11 +130,23 @@ def get_sensor_data_from_pybullet(robot):
     for contact in contacts:
         # add z-component on all points of contact
         _r_normal_force += contact[9]
-
-    b_lf_contact = True if pb.getLinkState(robot, DracoLinkIdx.l_foot_contact,  #C: have changed the setting
+    """
+    b_lf_contact = True if pb.getLinkState(robot, DracoLinkIdx.l_foot_contact,  #C: change the contact setting from distance to force
                                            1, 1)[0][2] <= 0.005 else False
     b_rf_contact = True if pb.getLinkState(robot, DracoLinkIdx.r_foot_contact,
                                            1, 1)[0][2] <= 0.005 else False
+    """
+    b_lf_contact = True if _l_normal_force > 0 else False
+    b_rf_contact = True if _r_normal_force > 0 else False
+
+    global counter
+
+    counter += 1
+    if counter == 50:
+        print(b_lf_contact, "left ")
+        print(b_rf_contact, "right ")
+        counter = 0
+
     return imu_frame_quat, imu_ang_vel, imu_dvel, joint_pos, joint_vel, b_lf_contact, \
         b_rf_contact, _l_normal_force, _r_normal_force
 
@@ -256,11 +270,17 @@ def apply_control_input_to_pybullet(robot, command):
 
 def set_init_config_pybullet_robot(robot):
     # Upperbody
+    
     pb.resetJointState(robot, DracoJointIdx.l_shoulder_aa, np.pi / 6, 0.)
     pb.resetJointState(robot, DracoJointIdx.l_elbow_fe, -np.pi / 2, 0.)
     pb.resetJointState(robot, DracoJointIdx.r_shoulder_aa, -np.pi / 6, 0.)
     pb.resetJointState(robot, DracoJointIdx.r_elbow_fe, -np.pi / 2, 0.)
-
+    """
+    pb.resetJointState(robot, DracoJointIdx.l_shoulder_aa, -np.pi / 6, 0.)
+    pb.resetJointState(robot, DracoJointIdx.l_elbow_fe, np.pi / 2, 0.)
+    pb.resetJointState(robot, DracoJointIdx.r_shoulder_aa, np.pi / 6, 0.)
+    pb.resetJointState(robot, DracoJointIdx.r_elbow_fe, np.pi / 2, 0.)
+    """
     # Lowerbody
     hip_yaw_angle = 0
     pb.resetJointState(robot, DracoJointIdx.l_hip_aa,
@@ -311,10 +331,10 @@ if __name__ == "__main__":
     ## connect pybullet sim server
     pb.connect(pb.GUI)
 
-    pb.resetDebugVisualizerCamera(cameraDistance=3,
-                                  cameraYaw=140,   #120
-                                  cameraPitch=-10,  #-30
-                                  cameraTargetPosition=[2   , 0, 0.68])
+    pb.resetDebugVisualizerCamera(cameraDistance=4,
+                                  cameraYaw=180,   #120
+                                  cameraPitch=0,  #-30
+                                  cameraTargetPosition=[1, 0, 0.68])
     ## sim physics setting
     pb.setPhysicsEngineParameter(fixedTimeStep=Config.CONTROLLER_DT,
                                  numSubSteps=Config.N_SUBSTEP)
@@ -334,6 +354,9 @@ if __name__ == "__main__":
 
     ground = pb.loadURDF(cwd + "/robot_model/ground/plane.urdf",
                          useFixedBase=1)
+    """ground = pb.loadURDF(cwd + "/robot_model/ground/plane100.urdf",
+                         [0, 0, 0], pb.getQuaternionFromEuler([0, 0, 0]))"""
+    ground = pb.loadURDF(cwd + "/robot_model/ground/model.urdf")             
     pb.configureDebugVisualizer(pb.COV_ENABLE_RENDERING, 1)
 
     #TODO:modify this function without dictionary container
@@ -410,6 +433,7 @@ if __name__ == "__main__":
 
     previous_torso_velocity = np.array([0., 0., 0.])
     rate = RateLimiter(frequency=1. / dt)
+
     while (True):
         l_normal_volt_noise = np.random.normal(0, l_contact_volt_noise)
         r_normal_volt_noise = np.random.normal(0, r_contact_volt_noise)

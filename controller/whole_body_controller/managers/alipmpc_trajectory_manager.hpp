@@ -36,7 +36,7 @@ public:
   void UpdateCurrentPos(Task* task);
 
   void UpdateDesired(const double t);
-
+  void MakeParallelToGround(Eigen::Isometry3d &pose);
   double ComputeZpos(const double &x, const double &y, const double &zH_);
 
   void SetSwingFootStart(Eigen::Vector3d pos){Swingfoot_start = pos;}
@@ -107,6 +107,8 @@ private:
   Eigen::VectorXd des_ori_rfoot;
   Eigen::VectorXd des_ori_torso;
   Eigen::Isometry3d des_torso_iso;
+  Eigen::Isometry3d des_lfoot_iso;
+  Eigen::Isometry3d des_rfoot_iso;
   bool first_ever;
 
 

@@ -256,6 +256,12 @@ void DracoStateEstimator::_ComputeDCM() {
                   (1 - alpha) * sp_->dcm_vel_; // not being used in controller
 }
 
+void DracoStateEstimator::UpdateFootContact(DracoSensorData *sensor_data){
+    sp_->b_lf_contact_ = (sensor_data->b_lf_contact_) ? true : false;
+    sp_->b_rf_contact_ = (sensor_data->b_rf_contact_) ? true : false;
+}
+
+
 void DracoStateEstimator::UpdateGroundTruthSensorData(
     DracoSensorData *sensor_data) {
   Eigen::Vector4d base_joint_ori = sensor_data->base_joint_quat_;
@@ -268,6 +274,7 @@ void DracoStateEstimator::UpdateGroundTruthSensorData(
       sensor_data->joint_pos_, sensor_data->joint_vel_, true);
 
   this->_ComputeDCM();
+  this->UpdateFootContact(sensor_data);
 
 #if B_USE_ZMQ
   // DracoDataManager *dm = DracoDataManager::GetDataManager();

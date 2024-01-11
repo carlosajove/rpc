@@ -31,6 +31,7 @@ public:
 
   // simulation only
   void UpdateGroundTruthSensorData(DracoSensorData *sensor_data);
+  void UpdateFootContact(DracoSensorData *sensor_data);
 
 private:
   void _ComputeDCM();

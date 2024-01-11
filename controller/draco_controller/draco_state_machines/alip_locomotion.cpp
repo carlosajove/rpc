@@ -61,8 +61,8 @@ void AlipLocomotion::FirstVisit(){
   util::PrettyConstructor(3, "Trajectories saved");
 
   if (stance_leg == 1) {
-    sp_->b_lf_contact_ = false;
-    sp_->b_rf_contact_ = true;
+    //sp_->b_lf_contact_ = false;
+    //sp_->b_rf_contact_ = true;
 
     ctrl_arch_->tci_container_->contact_map_["rf_contact"]->SetMaxFz(500);
     ctrl_arch_->tci_container_->contact_map_["lf_contact"]->SetMaxFz(0);
@@ -70,8 +70,8 @@ void AlipLocomotion::FirstVisit(){
   else {
     ctrl_arch_->tci_container_->contact_map_["lf_contact"]->SetMaxFz(500);
     ctrl_arch_->tci_container_->contact_map_["rf_contact"]->SetMaxFz(0);
-    sp_->b_rf_contact_ = false;
-    sp_->b_lf_contact_ = true;
+    //sp_->b_rf_contact_ = false;
+    //sp_->b_lf_contact_ = true;
 
   }
 
@@ -99,11 +99,19 @@ StateId AlipLocomotion::GetNextState() {
 
 bool AlipLocomotion::SwitchLeg(){  //ahora asume que tocamos en Tr o antes. Que pasa si se atrasa?
   bool switch_leg = false;
+  counter ++;
+  if (counter == 50){
+    cout << sp_->current_time_ - state_machine_start_time_ << endl;
+    cout << sp_->b_lf_contact_ << "left contact " << endl;
+    cout << sp_->b_rf_contact_ << "right contact " << endl;
+    counter = 0;
+  }
+
 
   //if (Tr < 0.5*Ts) {   //have to add a restriction to not have consecutives
   if (sp_->current_time_ - state_machine_start_time_ > 0.5*Ts){
-    //if ((stance_leg == 1) && (sp_->b_lf_contact_)){  //right stance, left swing
-    if((stance_leg == 1) && (robot_->GetLinkIsometry(draco_link::l_foot_contact).translation()(2) < 0.00005)){
+    if ((stance_leg == 1) && (sp_->b_lf_contact_)){  //right stance, left swing
+    //if((stance_leg == 1) && (robot_->GetLinkIsometry(draco_link::l_foot_contact).translation()(2) < 0.00005)){
       util::PrettyConstructor(2, "Switch Leg AlipLocomotion true ");
 
       std::cout << "Right stance to left" << " | Tr:" << Tr << "  | state machine time:" << state_machine_time_  <<std::endl;
@@ -122,8 +130,9 @@ bool AlipLocomotion::SwitchLeg(){  //ahora asume que tocamos en Tr o antes. Que 
       ctrl_arch_->alip_tm_->SetSwingFootStart(robot_->GetLinkIsometry(draco_link::r_foot_contact).translation());
 
 
-    }   // else if((stance_leg == -1) && (sp_->b_rf_contact_)){
-    else if((stance_leg == -1) && (robot_->GetLinkIsometry(draco_link::r_foot_contact).translation()(2) < 0.00005)){
+    }   
+    else if((stance_leg == -1) && (sp_->b_rf_contact_)){
+    //else if((stance_leg == -1) && (robot_->GetLinkIsometry(draco_link::r_foot_contact).translation()(2) < 0.00005)){
       util::PrettyConstructor(2, "Switch Leg AlipLocomotion true ");
 
       std::cout << "Left stance to right" << " | Tr:" << Tr << "  | state machine time:" << state_machine_time_ <<std::endl;

@@ -53,11 +53,17 @@ AlipMpcTrajectoryManager::AlipMpcTrajectoryManager(NewStep_mpc *alipMpc,
 void AlipMpcTrajectoryManager::initializeOri(){
   des_torso_iso = robot_->GetLinkIsometry(draco_link::torso_link);
   FootStep::MakeHorizontal(des_torso_iso);
+  des_lfoot_iso = des_torso_iso;
+  des_rfoot_iso = des_torso_iso;
+  MakeParallelToGround(des_lfoot_iso);
+  MakeParallelToGround(des_rfoot_iso);
   Eigen::Quaterniond des_torso_ori_quat(des_torso_iso.linear());
+  Eigen::Quaterniond des_lfoot_ori_quat(des_lfoot_iso.linear());
+  Eigen::Quaterniond des_rfoot_ori_quat(des_rfoot_iso.linear());
 
   des_ori_torso = des_torso_ori_quat.normalized().coeffs();
-  des_ori_lfoot = des_torso_ori_quat.normalized().coeffs();
-  des_ori_rfoot = des_torso_ori_quat.normalized().coeffs();
+  des_ori_lfoot = des_lfoot_ori_quat.normalized().coeffs();
+  des_ori_rfoot = des_rfoot_ori_quat.normalized().coeffs();
 }
 
 
@@ -70,10 +76,17 @@ void AlipMpcTrajectoryManager::setNewOri(){
                   sin(com_yaw), cos(com_yaw) , 0,
                   0           , 0            , 1;
       des_torso_iso.linear() = rotation*des_torso_iso.linear();
+      des_lfoot_iso = des_torso_iso;
+      des_rfoot_iso = des_torso_iso;
+      MakeParallelToGround(des_lfoot_iso);
+      MakeParallelToGround(des_rfoot_iso);
       Eigen::Quaterniond des_torso_ori_quat(des_torso_iso.linear());
+      Eigen::Quaterniond des_lfoot_ori_quat(des_lfoot_iso.linear());
+      Eigen::Quaterniond des_rfoot_ori_quat(des_rfoot_iso.linear());
+
       des_ori_torso = des_torso_ori_quat.normalized().coeffs();
-      des_ori_lfoot = des_torso_ori_quat.normalized().coeffs();
-      des_ori_rfoot = des_torso_ori_quat.normalized().coeffs();
+      des_ori_lfoot = des_lfoot_ori_quat.normalized().coeffs();
+      des_ori_rfoot = des_rfoot_ori_quat.normalized().coeffs();
     }
 
 }
@@ -83,6 +96,10 @@ void AlipMpcTrajectoryManager::outsideCommand(const YAML::Node &node){
     util::ReadParameter(node, "Ly_des", indata.Ly_des);
     util::ReadParameter(node, "com_yaw", com_yaw);
     util::ReadParameter(node, "swing_height", swing_height);
+    util::ReadParameter(node, "mu", indata.mu);
+    util::ReadParameter(node, "kx", indata.kx);
+    util::ReadParameter(node, "ky", indata.ky);
+
 
     com_yaw *= M_PI/180;
 
@@ -391,6 +408,23 @@ void AlipMpcTrajectoryManager::UpdateCurrentPos(Task* task){
   task->UpdateDesired(des_pos, des_vel, des_acc);
 }
 
+//will assume that kx and ky are true in the actual frame of reference 
+//need a high level controller or perception to adjust kx and ky when turning on incline plane
+//normal vector to ground is (-kx, -ky, 1)
+void AlipMpcTrajectoryManager::MakeParallelToGround(Eigen::Isometry3d &pose){
+  FootStep::MakeHorizontal(pose);
+  const Eigen::Matrix3d R = pose.linear();
+  //const Eigen::Vector3d p = pose.translation(); don't change
+  double kx = indata.kx;
+  double ky = indata.ky;
+  double c1 = 1/sqrt(1 + kx*kx);
+  double c2 = 1/sqrt(1 + kx*kx + ky*ky);
+  Eigen::Matrix3d T;
+  T <<  c1  ,   -c1*c2*kx*ky   , -c2*kx,
+         0  , c1*c2*(kx*kx + 1), -c2*ky,
+       c1*kx,     c1*c2*ky     ,   c2;
+  pose.linear() = T*R;
+}
 
 double AlipMpcTrajectoryManager::ComputeZpos(const double &x, const double &y, const double &zH_){
   return indata.kx*x + indata.ky*y + zH_;
@@ -434,7 +468,8 @@ void AlipMpcTrajectoryManager::saveCurrentCOMstate(const double t){
   file8 << pos.transpose() << "  ";
   file8 << L.transpose() << " ";
   file8 << t <<  " " << posWorld.transpose() << " ";
-  file8 << stleg_pos.transpose() << endl;
+  file8 << stleg_pos.transpose() << " ";
+  file8 << vel.transpose() << endl;
 }
 
 void AlipMpcTrajectoryManager::saveSwingState(const double t){

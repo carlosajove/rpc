@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
-lbound_time = 6
-ubound_time = 14
+lbound_time = 10
+ubound_time = 70
 
 script_directory = os.path.dirname(os.path.abspath(__file__))
 file_path1 = os.path.join(script_directory, 'alip_COM_trajectory.txt')
@@ -164,6 +164,9 @@ zCOMworld = CurrentComstate[:,9]
 stleg_xWorld = CurrentComstate[:,10]
 stleg_yWorld = CurrentComstate[:,11]
 stleg_zWorld = CurrentComstate[:,12]
+COMvelx = CurrentComstate[:,13]
+COMvely = CurrentComstate[:,14]
+COMvelz = CurrentComstate[:,15]
 
 
 
@@ -336,7 +339,7 @@ y = zCOMstance[inter]
 plt.figure()
 plt.plot(x, y)
 plt.title('COM z')
-for t in landingTime:
+for t in landingTimes_in_range:
     plt.axvline(x=t, color='black', linestyle='-', linewidth=0.1)
 
 
@@ -349,7 +352,7 @@ y[discontinuity_indices] = np.nan
 plt.figure()
 plt.plot(x, y)
 plt.title('COM y')
-for t in landingTime:
+for t in landingTimes_in_range:
     plt.axvline(x=t, color='black', linestyle='-', linewidth=0.1)
 
 
@@ -363,11 +366,57 @@ y[discontinuity_indices] = np.nan
 plt.figure()
 plt.plot(x, y)
 plt.title('COM x')
-for t in landingTime:
+for t in landingTimes_in_range:
     plt.axvline(x=t, color='black', linestyle='-', linewidth=0.1)
 
 
 
 
+#plot COM velocities
+x = timeCOM[inter]
+y = COMvelx[inter]
+plt.figure()
+plt.plot(x, y)
+plt.title('COM vel x world')
+for t in landingTimes_in_range:
+    plt.axvline(x=t, color='black', linestyle='-', linewidth=0.1)
 
+
+y = COMvely[inter]
+plt.figure()
+plt.plot(x, y)
+plt.title('COM vel y world')
+for t in landingTimes_in_range:
+    plt.axvline(x=t, color='black', linestyle='-', linewidth=0.1)
+y = COMvelz[inter]
+plt.figure()
+plt.plot(x, y)
+plt.title('COM vel z world')
+for t in landingTimes_in_range:
+    plt.axvline(x=t, color='black', linestyle='-', linewidth=0.1)
+
+
+
+x = timeCOM[inter]
+y = stleg_xWorld[inter]
+plt.figure()
+plt.plot(x, y)
+plt.title('stleg x world')
+for t in landingTimes_in_range:
+    plt.axvline(x=t, color='black', linestyle='-', linewidth=0.1)
+
+
+y = stleg_yWorld[inter]
+plt.figure()
+plt.plot(x, y)
+plt.title('stleg y world')
+for t in landingTimes_in_range:
+    plt.axvline(x=t, color='black', linestyle='-', linewidth=0.1)
+
+y = stleg_zWorld[inter]
+plt.figure()
+plt.plot(x, y)
+plt.title('stleg z world')
+for t in landingTimes_in_range:
+    plt.axvline(x=t, color='black', linestyle='-', linewidth=0.1)
 plt.show()
