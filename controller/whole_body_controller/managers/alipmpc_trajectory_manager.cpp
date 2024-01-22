@@ -62,8 +62,10 @@ void AlipMpcTrajectoryManager::initializeOri(){
   Eigen::Quaterniond des_rfoot_ori_quat(des_rfoot_iso.linear());
 
   des_ori_torso = des_torso_ori_quat.normalized().coeffs();
-  des_ori_lfoot = des_lfoot_ori_quat.normalized().coeffs();
-  des_ori_rfoot = des_rfoot_ori_quat.normalized().coeffs();
+  //des_ori_lfoot = des_lfoot_ori_quat.normalized().coeffs();
+  //des_ori_rfoot = des_rfoot_ori_quat.normalized().coeffs();
+  des_ori_lfoot = des_ori_torso;
+  des_ori_rfoot = des_ori_torso;
 }
 
 
@@ -84,9 +86,11 @@ void AlipMpcTrajectoryManager::setNewOri(){
       Eigen::Quaterniond des_lfoot_ori_quat(des_lfoot_iso.linear());
       Eigen::Quaterniond des_rfoot_ori_quat(des_rfoot_iso.linear());
 
-      des_ori_torso = des_torso_ori_quat.normalized().coeffs();
-      des_ori_lfoot = des_lfoot_ori_quat.normalized().coeffs();
+      //des_ori_torso = des_torso_ori_quat.normalized().coeffs();
+      //des_ori_lfoot = des_lfoot_ori_quat.normalized().coeffs();
       des_ori_rfoot = des_rfoot_ori_quat.normalized().coeffs();
+      des_ori_lfoot = des_ori_torso;
+      des_ori_rfoot = des_ori_torso;
     }
 
 }
@@ -107,9 +111,9 @@ void AlipMpcTrajectoryManager::outsideCommand(const YAML::Node &node){
 
 void AlipMpcTrajectoryManager::MpcSolutions(const double &tr_, const double &st_leg) {  //generate footsteps and COM pos
   indata.Tr = tr_;
-  indata.kx = 0;
-  indata.ky = 0;
-  indata.mu = 0.3;
+  //indata.kx = 0;
+  //indata.ky = 0;
+  //indata.mu = 0.3;
   indata.stance_leg = st_leg;
 
 

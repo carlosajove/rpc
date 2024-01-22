@@ -4,7 +4,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
 lbound_time = 10
-ubound_time = 70
+ubound_time = 25
 
 script_directory = os.path.dirname(os.path.abspath(__file__))
 file_path1 = os.path.join(script_directory, 'alip_COM_trajectory.txt')

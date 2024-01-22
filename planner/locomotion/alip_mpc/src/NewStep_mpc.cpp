@@ -38,7 +38,11 @@ NewStep_mpc::NewStep_mpc(string & horizon, string & intervals)
         muy_traj_.push_back(mu_init_);
     }
     */
-    
+   //this values will be used if not changed by SetParameters
+    mass_ = 39.15342;
+    ufp_x_max = 0.6;
+    ufp_y_max_ = 0.4;
+    ufp_y_min_ = 0.1;
 }
 
 // Destructor
@@ -178,7 +182,8 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
 
     /* Increase solver loop iteration */
     iter_++;
-
+    cout << "x_sol " << ufp_x_sol << endl;
+    cout << "y_sol " << ufp_y_sol << endl;
 
     // Update output data struct
     output_data.ufp_wrt_st[0] = ufp_x_sol;

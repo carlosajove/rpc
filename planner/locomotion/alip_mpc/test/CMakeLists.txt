@@ -15,7 +15,7 @@
 add_library(test_lib test_mpc_dyn.cpp test_mpc_dyn.hpp)
 
 
-add_executable(TEST0 test_mpc_dyn.cpp)
-target_link_libraries(TEST0 test_lib rpc-alip-planner)
+add_executable(TEST0_alip_mpc test_mpc_dyn.cpp)
+target_link_libraries(TEST0_alip_mpc test_lib rpc-alip-planner rpc-util)
 
 

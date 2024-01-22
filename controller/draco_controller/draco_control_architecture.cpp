@@ -250,7 +250,7 @@ void DracoControlArchitecture::GetCommand(void *command) {
     }
 
     if (alipIter >= 0 ) state_machine_container_[draco_states::AlipLocomotion]->OneStep();
-    
+    //if (alipIter < 0 ) state_machine_container_[draco_states::AL]
     //std::cout << "stance: " << state_machine_container_[draco_states::AlipLocomotion]->GetStance_leg() << " actual rf pos: " << robot_->GetLinkIsometry(draco_link::r_foot_contact).translation() << endl;
 
     upper_body_tm_->UseNominalUpperBodyJointPos(sp_->nominal_jpos_);

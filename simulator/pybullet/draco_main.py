@@ -37,7 +37,6 @@ l_contact_volt_noise = 0.001
 r_contact_volt_noise = 0.001
 imu_ang_vel_noise_std_dev = 0.      # based on real IMU: 0.0052
 
-counter = 0
 
 def get_sensor_data_from_pybullet(robot):
 
@@ -130,7 +129,7 @@ def get_sensor_data_from_pybullet(robot):
     for contact in contacts:
         # add z-component on all points of contact
         _r_normal_force += contact[9]
-    """
+    
     b_lf_contact = True if pb.getLinkState(robot, DracoLinkIdx.l_foot_contact,  #C: change the contact setting from distance to force
                                            1, 1)[0][2] <= 0.005 else False
     b_rf_contact = True if pb.getLinkState(robot, DracoLinkIdx.r_foot_contact,
@@ -138,14 +137,7 @@ def get_sensor_data_from_pybullet(robot):
     """
     b_lf_contact = True if _l_normal_force > 0 else False
     b_rf_contact = True if _r_normal_force > 0 else False
-
-    global counter
-
-    counter += 1
-    if counter == 50:
-        print(b_lf_contact, "left ")
-        print(b_rf_contact, "right ")
-        counter = 0
+    """
 
     return imu_frame_quat, imu_ang_vel, imu_dvel, joint_pos, joint_vel, b_lf_contact, \
         b_rf_contact, _l_normal_force, _r_normal_force
@@ -213,7 +205,6 @@ def apply_control_input_to_pybullet(robot, command):
                              DracoJointIdx.neck_pitch,
                              controlMode=mode,
                              force=command[13])
-
     #RF
     pb.setJointMotorControl2(robot,
                              DracoJointIdx.r_hip_ie,
@@ -332,9 +323,9 @@ if __name__ == "__main__":
     pb.connect(pb.GUI)
 
     pb.resetDebugVisualizerCamera(cameraDistance=4,
-                                  cameraYaw=180,   #120
-                                  cameraPitch=0,  #-30
-                                  cameraTargetPosition=[1, 0, 0.68])
+                                  cameraYaw=120,   #120
+                                  cameraPitch=-30,  #-30
+                                  cameraTargetPosition=[2, 0, 0.68])
     ## sim physics setting
     pb.setPhysicsEngineParameter(fixedTimeStep=Config.CONTROLLER_DT,
                                  numSubSteps=Config.N_SUBSTEP)
@@ -356,7 +347,7 @@ if __name__ == "__main__":
                          useFixedBase=1)
     """ground = pb.loadURDF(cwd + "/robot_model/ground/plane100.urdf",
                          [0, 0, 0], pb.getQuaternionFromEuler([0, 0, 0]))"""
-    ground = pb.loadURDF(cwd + "/robot_model/ground/model.urdf")             
+    """ground = pb.loadURDF(cwd + "/robot_model/ground/model.urdf") """            
     pb.configureDebugVisualizer(pb.COV_ENABLE_RENDERING, 1)
 
     #TODO:modify this function without dictionary container

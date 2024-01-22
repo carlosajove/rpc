@@ -274,7 +274,7 @@ void DracoStateEstimator::UpdateGroundTruthSensorData(
       sensor_data->joint_pos_, sensor_data->joint_vel_, true);
 
   this->_ComputeDCM();
-  this->UpdateFootContact(sensor_data);
+  //this->UpdateFootContact(sensor_data);
 
 #if B_USE_ZMQ
   // DracoDataManager *dm = DracoDataManager::GetDataManager();

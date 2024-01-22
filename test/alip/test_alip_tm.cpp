@@ -73,7 +73,7 @@ int main() {
   Task *rfoot_ori(NULL);
   ForceTask *rg_force_task(NULL);
   ForceTask *lf_force_task(NULL);
-  std::string step_horizon = "6";
+  std::string step_horizon = "4";
   std::string intervals = "4";
   NewStep_mpc alipMpc(step_horizon, intervals);
 

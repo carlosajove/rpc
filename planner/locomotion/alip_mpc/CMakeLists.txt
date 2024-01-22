@@ -18,4 +18,4 @@ target_link_libraries(rpc-alip-planner PUBLIC casadi)
 install(TARGETS rpc-alip-planner DESTINATION ${INSTALL_LIB_DIR})
 install(FILES ${headers} DESTINATION "${INSTALL_INCLUDE_DIR}/planner/locomotion/alip_mpc")
 
-
+add_subdirectory("test")
