@@ -46,5 +46,5 @@ RLData
 note.txt
 
 test/alip/*.txt
-!test/alip/CMakeList.txt
+!test/alip/CMakeLists.txt
 
