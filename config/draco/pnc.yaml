@@ -20,7 +20,7 @@ contact_detection:
   sim_contact_time_constant: 0.005
 
   exp_schmitt_thresholds: [40, 60]    # [N] 10% and 15% of robot's weight
-  exp_foot_height_tol: 0.001          # [m] tolerance before determining touchdown
+  exp_foot_height_tol: 0.005          # [m] tolerance before determining touchdown
   exp_contact_time_constant: 0.01
 
 state_estimator:
@@ -87,7 +87,7 @@ controller:
 wbc:
   task:
     com_xy_task:
-      com_feedback_source: 0 # 0: com feedback / 1: icp feedback
+      com_feedback_source: 1 # 0: com feedback / 1: icp feedback
       icp_integrator_type: 0 # 0: exponential smoother / 1: leaky integrator
 
       ########################################################################
@@ -95,9 +95,9 @@ wbc:
       ########################################################################
       sim_weight : [1000., 1000.]
       sim_kp : [200., 200.]
-      sim_kd : [20., 20.]
+      sim_kd : [10., 10.]
       sim_icp_weight : [40000., 40000.] # only used when feedback source : 1
-      sim_icp_kp : [1, 1.0]
+      sim_icp_kp : [0.6, 1.4]
       sim_icp_kd : [0., 0.,] # x, y will be ignored
       sim_icp_ki : [0., 0.]
 
@@ -138,13 +138,16 @@ wbc:
       ########################################################################
      # sim_com_weight : [1000.]  Carlos
       sim_com_weight : [1000.] #Carlos
-
-      sim_com_kp : [12000.]
+      sim_com_kp : [10000.]
       sim_com_kd : [500.]
 
-      sim_base_weight : [10000.] # only used when target source : 1
-      sim_base_kp : [500.]
-      sim_base_kd : [50.] # x, y will be ignored
+      #sim_com_weight : [1000.]
+      #sim_com_kp : [100.]
+      #sim_com_kd : [5.]
+
+      sim_base_weight : [1000.] # only used when target source : 1
+      sim_base_kp : [100.]
+      sim_base_kd : [5.] # x, y will be ignored
 
       ########################################################################
       ## exp params
@@ -191,7 +194,8 @@ wbc:
       ## l_shoulder_fe(0), l_shoulder_aa(1), l_shoulder_ie(2), l_elbow_fe(3), l_wrist_ps_(4),
       ## l_wrist_pitch(5), neck_pitch(6), r_shoulder_fe(7), r_shoulder_aa(8), r_shoulder_ie(9),
       ## r_shoulder_ie(10), r_elbow_fe(11), r_wrist_ps(12), r_wrist_pitch(13)
-      sim_weight : [1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000., 1000.]
+      sim_weight : [400., 400., 400., 400., 400., 400., 400., 400., 400., 400., 400., 400., 400.]
+      #sim_weight : [40., 40., 40., 40., 40., 40., 40., 40., 40., 40., 40., 40., 40.]
       sim_kp : [100., 100., 100., 50., 40., 40., 100., 100., 100., 100., 50., 40., 40.]
       sim_kd : [8., 8., 8., 3., 2., 2., 10., 8., 8., 8., 3., 2., 2.]
 
@@ -210,6 +214,8 @@ wbc:
       sim_weight_at_swing : [8000., 8000., 8000.]
       sim_kp : [800., 800., 700.]
       sim_kd : [25., 25., 20.]
+      #sim_kp : [300., 300., 300.]
+      #sim_kd : [30., 30., 30.]
 
       ########################################################################
       ## exp params
@@ -225,6 +231,8 @@ wbc:
       ########################################################################
       sim_weight : [5000., 5000., 5000.]
       sim_weight_at_swing : [5000., 5000., 5000.]
+      #sim_kp : [80., 80., 80.]
+      #sim_kd : [4., 4., 4.]
       sim_kp : [800., 800., 800.]  #good change 800
       sim_kd : [40., 40., 40.]  #40
 
@@ -255,7 +263,7 @@ wbc:
     ########################################################################
     ## sim params
     ########################################################################
-    sim_max_rf_z: 600.
+    sim_max_rf_z: 400.
 
     sim_mu: 0.4
     sim_foot_half_length: 0.08
@@ -293,16 +301,13 @@ state_machine:
     initialize:
       init_duration: 5.
       #target_joint_pos: [0., 0.040, -0.785, 0.785, 0.785, -0.785, -0.040, 0., 0.523, 0., -1.57, 0., 0., 0., 0., -0.040, -0.785, 0.785, 0.785, -0.785, 0.040, 0., -0.523, 0., -1.57, 0., 0.] #pinocchio robotsystem joint order
-      #ORIGINAL :
       target_joint_pos: [0., 0.160, -0.785, 0.785, 0.785, -0.785, -0.160, 0., 0.523, 0., -1.57, 0., 0., 0., 0., -0.160, -0.785, 0.785, 0.785, -0.785, 0.160, 0., -0.523, 0., -1.57, 0., 0.] #pinocchio robotsystem joint order
-      #arms at the back: 
-      #target_joint_pos: [0., 0.160, -0.785, 0.785, 0.785, -0.785, -0.160, 0., -0.523, 0., 1.57, 0., 0., 0., 0., -0.160, -0.785, 0.785, 0.785, -0.785, 0.160, 0., 0.523, 0., 1.57, 0., 0.] 
       b_only_joint_pos_control: false
       wait_time: 15.
 
     stand_up:
       standup_duration: 1.
-      target_com_height: 0.70
+      target_com_height: 0.685
       target_base_height: 0.90
 
       rf_z_max_interp_duration: 0.1
@@ -373,14 +378,14 @@ alip_mpc_walking:
   Ts: 0.25    #0.25  #Greater Ts makes offset increase also
   stance_leg: -1 # -1: RIGHT SWING TO START; 1: LEFT SWING TO START
   leg_width: 0.13 #0.1
-  zH: 0.70   #this will be the reference height target. The height for the mpc will be another
+  zH: 0.685   #this will be the reference height target. The height for the mpc will be another
   mu: 0.3
   total_mass: 39.15342    
   ufp_x_max: 0.6  #0.6
   ufp_y_max: 0.4  #0.4
   ufp_y_min: 0.1 #0.05
-  Lx_offset: 0  #0
-  Ly_des:  5 #3
+  Lx_offset: 5 #0
+  Ly_des: 0 #3
   com_yaw: 0   #degrees
   kx: 0
   ky: 0
@@ -389,10 +394,10 @@ alip_mpc_walking:
   swing_height: 0.05   #0.07  higher swing_height can work for lower zH
   reference_swing_height: 0.1 #0.08   #for a swing of 0.5m
   Bezier: 0
-  Alip: 0
-  Alip2: 1
+  Alip: 1
+  Alip2: 0
   task: #not implemente yet
-    com_z_pos: [8500, 8000, 8000]  
+    com_z_pos: [900, 8000, 8000]  
     com_xy_pos: [0,0] 
     torso_ori: [8000, 8000, 8000]
     swing_foot_weight: [9000, 9000, 9000] #8000
