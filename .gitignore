@@ -44,3 +44,7 @@ octave-workspace
 RLData
 *.json
 note.txt
+
+test/alip/*.txt
+!test/alip/CMakeList.txt
+
