@@ -117,7 +117,7 @@ int main(){
     //choose duration of test, number of iterations
     NewStep_mpc newStep_mpc(step_horizon, intervals);
 
-    initialize_data(indata, outdata, 0 , 1);
+    initialize_data(indata, outdata, 2 , 5);
 
 
     func_to_test(tdata, indata, outdata, 0);

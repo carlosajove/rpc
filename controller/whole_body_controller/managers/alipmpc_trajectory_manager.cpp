@@ -288,9 +288,10 @@ void AlipMpcTrajectoryManager::GenerateSwingFtraj(const double &tr_){
 
 
 
-void AlipMpcTrajectoryManager::UpdateDesired(const double t){  //have to be carefull when choosing t  
-  //t will be the time from Tr. Tr is the remaining time when the curve was computing
-  //so Tr-t is the remaining time when the curve is evaluated
+void AlipMpcTrajectoryManager::UpdateDesired(const double t){  
+  //t is the time since last evaluation of Mpc and trajectory was generated so it's the time since Tr was coomputed
+  //not sure works fine for every trajectory right now
+  //only works for alip2swing
 
   Eigen::Isometry3d curr_swfoot_iso;
   if (indata.stance_leg == 1){  //LF is swing foot

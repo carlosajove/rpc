@@ -77,8 +77,8 @@ void AlipLocomotion::FirstVisit(){
 
 }
 void AlipLocomotion::OneStep(){
-    state_machine_time_ = sp_->current_time_ -state_machine_start_time_;
-    double t = state_machine_time_ + Tr - Ts;
+    state_machine_time_ = sp_->current_time_ - state_machine_start_time_;
+    double t = state_machine_time_ + Tr - Ts; //time since Tr was computed (mpc solution and trajectory generated)
     ctrl_arch_->alip_tm_->UpdateDesired(t);
 }
 void AlipLocomotion::LastVisit(){

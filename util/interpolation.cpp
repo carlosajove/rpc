@@ -590,7 +590,8 @@ Eigen::Vector3d AlipSwing2::Evaluate(const double t){
 }
 
 Eigen::Vector3d AlipSwing2::EvaluateFirstDerivative(const double t){
-  s = (duration-t)/duration;
+  //s = (duration-t)/duration;
+  s = t/duration;
   x = 0.5*M_PI*sin(M_PI*s)/duration * (end_pos(0) - start_pos(0));
   y = 0.5*M_PI*sin(M_PI*s)/duration * (end_pos(1) - start_pos(1));
   z = z_curve->EvaluateFirstDerivative(t);
@@ -599,7 +600,8 @@ Eigen::Vector3d AlipSwing2::EvaluateFirstDerivative(const double t){
 }
 
 Eigen::Vector3d AlipSwing2::EvaluateSecondDerivative(const double t){
-  s = (duration-t)/duration;
+  //s = (duration-t)/duration;
+  s = t/duration;
   x = 0.5*M_PI*M_PI*cos(M_PI*s)/duration/duration * (end_pos(0) - start_pos(0));
   y = 0.5*M_PI*M_PI*cos(M_PI*s)/duration/duration * (end_pos(1) - start_pos(1));
   z = z_curve->EvaluateSecondDerivative(t);
