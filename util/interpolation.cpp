@@ -519,9 +519,12 @@ AlipSwing::AlipSwing(const Eigen::Vector3d &start_pos_,
 }
 
 Eigen::Vector3d AlipSwing::Evaluate(const double t){
-  s = t/duration;
-  x = 0.5*((1+cos(M_PI*s))*start_pos(0) + (1-cos(M_PI*s))*end_pos(0));
-  y = 0.5*((1+cos(M_PI*s))*start_pos(1) + (1-cos(M_PI*s))*end_pos(1));
+  //s = t/duration;
+  s = (duration-t)/duration;
+  //x = 0.5*((1+cos(M_PI*s))*start_pos(0) + (1-cos(M_PI*s))*end_pos(0));
+  //y = 0.5*((1+cos(M_PI*s))*start_pos(1) + (1-cos(M_PI*s))*end_pos(1));
+  x = 0.5*((1+cos(M_PI*s))*end_pos(0) + (1-cos(M_PI*s))*start_pos(0));
+  y = 0.5*((1+cos(M_PI*s))*end_pos(1) + (1-cos(M_PI*s))*start_pos(1));
   if(t > duration/2){
     z = second_z->Evaluate(t-duration/2);
   }
@@ -533,9 +536,16 @@ Eigen::Vector3d AlipSwing::Evaluate(const double t){
 }
 
 Eigen::Vector3d AlipSwing::EvaluateFirstDerivative(const double t){
+  /*
   s = (duration-t)/duration;
+  x = -0.5*M_PI*sin(M_PI*s)/duration * (start_pos(0) - end_pos(0));
+  y = -0.5*M_PI*sin(M_PI*s)/duration * (start_pos(1) - end_pos(1));
+  */
+  s = t/duration;
+
   x = 0.5*M_PI*sin(M_PI*s)/duration * (end_pos(0) - start_pos(0));
   y = 0.5*M_PI*sin(M_PI*s)/duration * (end_pos(1) - start_pos(1));
+  
   if(t > duration/2){
     z = second_z->EvaluateFirstDerivative(t-duration/2);
   }
@@ -547,9 +557,16 @@ Eigen::Vector3d AlipSwing::EvaluateFirstDerivative(const double t){
 }
 
 Eigen::Vector3d AlipSwing::EvaluateSecondDerivative(const double t){
+  /*
   s = (duration-t)/duration;
+  x = 0.5*M_PI*M_PI*cos(M_PI*s)/duration/duration * (start_pos(0) - end_pos(0));
+  y = 0.5*M_PI*M_PI*cos(M_PI*s)/duration/duration * (start_pos(1) - end_pos(1));
+  */
+
+  s = t/duration;
   x = 0.5*M_PI*M_PI*cos(M_PI*s)/duration/duration * (end_pos(0) - start_pos(0));
   y = 0.5*M_PI*M_PI*cos(M_PI*s)/duration/duration * (end_pos(1) - start_pos(1));
+
   if(t > duration/2){
     z = second_z->EvaluateSecondDerivative(t-duration/2);
   }

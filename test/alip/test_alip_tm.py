@@ -188,6 +188,14 @@ MpcTs = MpcComState[:,13]
 swingXCommand = RobotCommand[:,0]
 swingYCommand = RobotCommand[:,1]
 swingZCommand = RobotCommand[:,2]
+swingVxCommand = RobotCommand[:, 3]
+swingVyCommand = RobotCommand[:, 4]
+swingVzCommand = RobotCommand[:, 5]
+swingAxCommand = RobotCommand[:, 6]
+swingAyCommand = RobotCommand[:, 7]
+swingAzCommand = RobotCommand[:, 8]
+
+print(RobotCommand, RobotCommand.shape)
 
 #Compute desired state x,y,Lx:
 l = np.sqrt(9.81/MpczH)
@@ -262,6 +270,60 @@ plt.scatter(timeCOM, trRobotSwing[:,2], label = 'pos')
 plt.scatter(timeCOM, swingZCommand, label =  'command')
 plt.title('time vs Z')
 plt.legend()
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot(swingVxCommand, swingVyCommand, swingVzCommand, marker='x', label = 'vel Command')
+ax.plot(trRobotSwing[:,4], trRobotSwing[:,5], trRobotSwing[:,6], marker = 'x', color = 'red', label = 'vel')
+ax.legend()
+
+plt.figure()
+plt.plot(swingVxCommand, trRobotSwing[:,4])
+plt.title('Vx Command vs Swing')
+
+plt.figure()
+plt.scatter(timeCOM, trRobotSwing[:,4], label = 'vel')
+plt.scatter(timeCOM, swingXCommand, label =  'vel command')
+plt.title('time vs Vx')
+plt.legend()
+
+
+plt.figure()
+plt.plot(swingVyCommand, trRobotSwing[:, 5])
+plt.title('Vy Command vs Swing')
+
+plt.figure()
+plt.scatter(timeCOM, trRobotSwing[:,5], label = 'vel')
+plt.scatter(timeCOM, swingVyCommand, label =  'vel command')
+plt.title('time vs Vy')
+plt.legend()
+
+plt.figure()
+plt.plot(swingZCommand, trRobotSwing[:,6])
+plt.title('Vz Command vs Swing')
+
+plt.figure()
+plt.scatter(timeCOM, trRobotSwing[:,6], label = 'vel')
+plt.scatter(timeCOM, swingVzCommand, label =  'vel command')
+plt.title('time vs Vz')
+plt.legend()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

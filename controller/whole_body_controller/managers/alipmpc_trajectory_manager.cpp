@@ -479,15 +479,20 @@ void AlipMpcTrajectoryManager::saveCurrentCOMstate(const double t){
 
 void AlipMpcTrajectoryManager::saveSwingState(const double t){
   Eigen::Isometry3d curr_swfoot_iso;
+  Eigen::Matrix<double, 6, 1> curr_swfoot_vel;
   if (indata.stance_leg == 1){  //LF is swing foot
     curr_swfoot_iso = robot_->GetLinkIsometry(draco_link::l_foot_contact);  //chequear si contact solo funciona cuando es stance foot
-    FootStep::MakeHorizontal(curr_swfoot_iso);          
+    FootStep::MakeHorizontal(curr_swfoot_iso);  
+    curr_swfoot_vel = robot_->GetLinkBodySpatialVel(draco_link::l_foot_contact);        
   }
   else {
     curr_swfoot_iso = robot_->GetLinkIsometry(draco_link::r_foot_contact);
     FootStep::MakeHorizontal(curr_swfoot_iso);
+    curr_swfoot_vel = robot_->GetLinkBodySpatialVel(draco_link::r_foot_contact);
+
   }
-  file7 << curr_swfoot_iso.translation().transpose() << "  " << t << std::endl;
+  file7 << curr_swfoot_iso.translation().transpose() << "  " << t << " " << 
+           curr_swfoot_vel[3, 0] << " " <<  curr_swfoot_vel[4, 0] << " " << curr_swfoot_vel[5, 0] << std::endl;
 }
 
 
