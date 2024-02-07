@@ -25,7 +25,6 @@ AlipLocomotion::AlipLocomotion(StateId state_id, PinocchioRobotSystem *robot,
 
     file1.open(THIS_COM "/test/alip/LandTime.txt", std::fstream::out);
 
-
 }
 
 

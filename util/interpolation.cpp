@@ -578,7 +578,7 @@ Eigen::Vector3d AlipSwing::EvaluateSecondDerivative(const double t){
 }
 
 
-
+//TODO: need to find why is works better with velocity with other derivative
 
 AlipSwing2::AlipSwing2() {}
 //Destructor
