@@ -599,6 +599,7 @@ AlipSwing2::AlipSwing2(const Eigen::Vector3d &start_pos_,
 
 Eigen::Vector3d AlipSwing2::Evaluate(const double t){
   s = t/duration;
+  if (s > 1) s = 1;
   x = 0.5*((1+cos(M_PI*s))*start_pos(0) + (1-cos(M_PI*s))*end_pos(0));
   y = 0.5*((1+cos(M_PI*s))*start_pos(1) + (1-cos(M_PI*s))*end_pos(1));
   z = z_curve->Evaluate(t);
@@ -607,22 +608,36 @@ Eigen::Vector3d AlipSwing2::Evaluate(const double t){
 }
 
 Eigen::Vector3d AlipSwing2::EvaluateFirstDerivative(const double t){
-  //s = (duration-t)/duration;
+  double s_2 = (duration-t)/duration;
   s = t/duration;
+  if (s > 1) s = 1;
+
   x = 0.5*M_PI*sin(M_PI*s)/duration * (end_pos(0) - start_pos(0));
   y = 0.5*M_PI*sin(M_PI*s)/duration * (end_pos(1) - start_pos(1));
+  double x_2 = 0.5*M_PI*sin(M_PI*s_2)/duration * (end_pos(0) - start_pos(0));
+  double y_2 = 0.5*M_PI*sin(M_PI*s_2)/duration * (end_pos(1) - start_pos(1));
   z = z_curve->EvaluateFirstDerivative(t);
   output = Eigen::Vector3d(x,y,z);
+
   return output;
 }
 
 Eigen::Vector3d AlipSwing2::EvaluateSecondDerivative(const double t){
-  //s = (duration-t)/duration;
+  double s_2 = (duration-t)/duration;
   s = t/duration;
+  
+  if (s > 1) s = 1;
   x = 0.5*M_PI*M_PI*cos(M_PI*s)/duration/duration * (end_pos(0) - start_pos(0));
   y = 0.5*M_PI*M_PI*cos(M_PI*s)/duration/duration * (end_pos(1) - start_pos(1));
   z = z_curve->EvaluateSecondDerivative(t);
+
   output = Eigen::Vector3d(x,y,z);
+  if (output[0] > 25){
+    output[0] = 25;
+  }
+  else if(output[0] < -25){
+    output[0] = -25;
+  }
   return output;
 }
 
@@ -636,6 +651,7 @@ QuadraticLagrangePol::QuadraticLagrangePol(const double &z0, const double &t0,
                                            const double &z2, const double &t2){
   Eigen::Vector3d z = Eigen::Vector3d(z0, z1, z2);
   Eigen::Matrix3d T;
+  duration = t2;
   T << t0*t0, t0, 1,
        t1*t1, t1, 1,
        t2*t2, t2, 1;
@@ -646,12 +662,14 @@ QuadraticLagrangePol::QuadraticLagrangePol(const double &z0, const double &t0,
   c = coefs(2);
 }
 
-double QuadraticLagrangePol::Evaluate(const double t){
+double QuadraticLagrangePol::Evaluate(double t){
+  if (t > duration) t = duration;
   return a*t*t + b*t + c;
 }
-double QuadraticLagrangePol::EvaluateFirstDerivative(const double t){
+double QuadraticLagrangePol::EvaluateFirstDerivative(double t){
+  if (t > duration) t = duration;
   return 2*a*t + b;
 }
-double QuadraticLagrangePol::EvaluateSecondDerivative(const double t){
+double QuadraticLagrangePol::EvaluateSecondDerivative(double t){
   return 2*a;
 }
