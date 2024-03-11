@@ -300,6 +300,7 @@ public:
     double a;  //z(t) = a*t²+b*t+c
     double b;
     double c;
+    double duration;
 
 };
 
