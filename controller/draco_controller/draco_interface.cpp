@@ -87,6 +87,7 @@ void DracoInterface::GetCommand(void *sensor_data, void *command_data) {
   sp_->current_time_ = static_cast<double>(count_) * sp_->servo_dt_;
   sp_->state_ = ctrl_arch_->state();
   sp_->prev_state_ = ctrl_arch_->prev_state();
+  sp_->rl_trigger_ = false;
 
   DracoSensorData *draco_sensor_data =
       static_cast<DracoSensorData *>(sensor_data);
@@ -113,7 +114,6 @@ void DracoInterface::GetCommand(void *sensor_data, void *command_data) {
         ? se_->UpdateGroundTruthSensorData(draco_sensor_data)
         : se_->UpdateGroundTruthSensorData(draco_sensor_data);
   }
-
   // process interrupt & task gains
   if (interrupt_handler_->IsSignalReceived())
     interrupt_handler_->Process();
@@ -121,8 +121,14 @@ void DracoInterface::GetCommand(void *sensor_data, void *command_data) {
     task_gain_handler_->Process();
 
   // get control command
+  se_->GetResidualRlpolicy(draco_sensor_data);
   ctrl_arch_->GetCommand(draco_command);
   //std::cout << "GIVE COMMAND" << draco_command->joint_trq_cmd_ << std::endl;
+  se_->UpdateWbcObs();
+  Eigen::VectorXd wbc_obs = sp_->get_wbc_obs();
+  draco_command->wbc_obs_ = wbc_obs;
+  draco_command->rl_trigger_ = sp_->rl_trigger_;
+
 
 #if B_USE_ZMQ
   if (sp_->count_ % sp_->data_save_freq_ == 0) {

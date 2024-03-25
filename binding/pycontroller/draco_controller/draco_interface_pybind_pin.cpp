@@ -38,6 +38,9 @@ PYBIND11_MODULE(draco_interface_py, m) {
       .def_readwrite("rf_contact_normal_", &DracoSensorData::rf_contact_normal_)
       .def_readwrite("imu_dvel_", &DracoSensorData::imu_dvel_)
       .def_readwrite("imu_lin_acc_", &DracoSensorData::imu_lin_acc_)
+      // Swing foot rl policy
+      .def_readwrite("res_rl_action_", &DracoSensorData::res_rl_action_)
+
 
       // Debug
       .def_readwrite("base_joint_pos_", &DracoSensorData::base_joint_pos_)
@@ -51,5 +54,8 @@ PYBIND11_MODULE(draco_interface_py, m) {
       .def(py::init<>())
       .def_readwrite("joint_pos_cmd_", &DracoCommand::joint_pos_cmd_)
       .def_readwrite("joint_vel_cmd_", &DracoCommand::joint_vel_cmd_)
-      .def_readwrite("joint_trq_cmd_", &DracoCommand::joint_trq_cmd_);
+      .def_readwrite("joint_trq_cmd_", &DracoCommand::joint_trq_cmd_)
+      .def_readwrite("wbc_obs_", &DracoCommand::wbc_obs_)
+      .def_readwrite("rl_trigger_", &DracoCommand::rl_trigger_)
+;
 }

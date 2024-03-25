@@ -339,10 +339,9 @@ class DracoEnv(gym.Env):
             
 
         reward = self._compute_reward(wbc_obs, action, done)
-        #assert False
         
         info = {}
-        return self.policy_obs, reward, done, truncate, info # need terminated AND truncated
+        return self.policy_obs, reward, done, done, info # need terminated AND truncated
 
     def close(self):
         self.client.disconnect()

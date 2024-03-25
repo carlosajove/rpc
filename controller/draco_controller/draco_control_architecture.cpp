@@ -43,6 +43,7 @@ DracoControlArchitecture::DracoControlArchitecture(PinocchioRobotSystem *robot)
   }
 
   bool b_sim = util::ReadParameter<bool>(cfg_, "b_sim");
+  util::ReadParameter(cfg_["alip_mpc_walking"], "verbose", verbose);
 
   // set starting state
   /*
@@ -51,8 +52,8 @@ DracoControlArchitecture::DracoControlArchitecture(PinocchioRobotSystem *robot)
   state_ =
       b_sim ? draco_states::kDoubleSupportStandUp : draco_states::kInitialize;
   */
-  state_ = draco_states::AlipLocomotion;
-  prev_state_ = draco_states::AlipLocomotion;
+  state_ = draco_states::kDoubleSupportStandUp;
+  prev_state_ = draco_states::kDoubleSupportStandUp;
 
   std::string prefix = b_sim ? "sim" : "exp";
 
@@ -199,6 +200,8 @@ DracoControlArchitecture::DracoControlArchitecture(PinocchioRobotSystem *robot)
       new AlipLocomotion(draco_states::AlipLocomotion, robot_, this);
   alipIter = 0;
   this->_InitializeParameters();
+  sp_->outsideCommand(cfg_["alip_mpc_walking"]);
+
 }
 
 DracoControlArchitecture::~DracoControlArchitecture() {
@@ -246,9 +249,6 @@ void DracoControlArchitecture::GetCommand(void *command) {
     //tci_container_->task_map_["com_xy_task"]->SetWeight(Eigen::Vector2d(4000,4000));
 
     if (alipIter == 0) {
-        cfg_ = YAML::LoadFile(THIS_COM "config/draco/pnc.yaml");
-
-        alip_tm_->outsideCommand(cfg_["alip_mpc_walking"]);
         state_machine_container_[draco_states::AlipLocomotion]->FirstVisit();
     }
 
@@ -260,18 +260,20 @@ void DracoControlArchitecture::GetCommand(void *command) {
     controller_->GetCommand(command);
     alipIter++;
     //if (alipIter == 4) alipIter = 0;
-    
-    alip_tm_->saveRobotCommand(sp_->current_time_);
-    alip_tm_->saveCurrentCOMstate(sp_->current_time_);
-    alip_tm_->saveMpcCOMstate(sp_->current_time_);
-    alip_tm_->saveSwingState(sp_->current_time_);
-    
+    if (verbose = true){
+        alip_tm_->saveRobotCommand(sp_->current_time_);
+        alip_tm_->saveCurrentCOMstate(sp_->current_time_);
+        alip_tm_->saveMpcCOMstate(sp_->current_time_);
+        alip_tm_->saveSwingState(sp_->current_time_);
+    }
     
     if (state_machine_container_[draco_states::AlipLocomotion]->SwitchLeg()) {
        //alipIter = 0;
        alipIter = -5;
        //exit(0);
-       
+       cfg_ = YAML::LoadFile(THIS_COM "config/draco/pnc.yaml");
+       sp_->outsideCommand(cfg_["alip_mpc_walking"]);
+       sp_->rl_trigger_ = true;
     }
   //  std::cout << "ctroarch end Get Command" << std::endl << std::endl;
 
@@ -294,7 +296,6 @@ void DracoControlArchitecture::GetCommand(void *command) {
             state_ = state_machine_container_[state_]->GetNextState();
             b_state_first_visit_ = true;
         }   
-
   }
 
 }

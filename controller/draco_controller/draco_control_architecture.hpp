@@ -70,6 +70,7 @@ private:
   DCMPlanner *dcm_planner_;
   NewStep_mpc *alip_mpc_;
 
+  bool verbose = false;
   int alipIter;
   double Tr;
   // LMPCHandler *lmpc_handler_;

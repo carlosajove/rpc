@@ -1,6 +1,7 @@
 import pybullet as pb
 import time
 import os
+import math
 
 cwd = os.getcwd()
 import sys
@@ -252,11 +253,6 @@ def apply_control_input_to_pybullet(robot, command):
                              controlMode=mode,
                              force=command[20])
 
-    print("heooeo HELOO")
-    print(robot)
-    print(DracoJointIdx.r_ankle_ie)
-    print(mode)
-    print(command[20])
     #RH
     pb.setJointMotorControl2(robot,
                              DracoJointIdx.r_shoulder_fe,
@@ -547,18 +543,15 @@ if __name__ == "__main__":
         ##compute control command
         if Config.MEASURE_COMPUTATION_TIME:
             timer.tic()
-        print("Sensor in", count)
-        print_sensor_data(rpc_draco_sensor_data)
-        print("command in")
-        print_command(rpc_draco_command)
+
+        #rl_policy
+        rpc_draco_sensor_data.res_rl_action_ = np.array([0, 0, 0])
+
         rpc_draco_interface.GetCommand(rpc_draco_sensor_data,
                                        rpc_draco_command)
-        print("Sensor out")
-        print_sensor_data(rpc_draco_sensor_data)
 
-        print("Commaind out")
-        print_command(rpc_draco_command)
-        if count > 3: assert False
+        print(rpc_draco_command.wbc_obs_)
+
         
         if Config.MEASURE_COMPUTATION_TIME:
             comp_time = timer.tocvalue()

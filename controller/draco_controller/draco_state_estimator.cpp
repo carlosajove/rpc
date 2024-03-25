@@ -273,7 +273,9 @@ void DracoStateEstimator::UpdateGroundTruthSensorData(
       sensor_data->base_joint_lin_vel_, sensor_data->base_joint_ang_vel_,
       sensor_data->joint_pos_, sensor_data->joint_vel_, true);
 
-  this->_ComputeDCM();
+  
+
+  //this->_ComputeDCM();
   //this->UpdateFootContact(sensor_data);
 
 #if B_USE_ZMQ
@@ -285,4 +287,29 @@ void DracoStateEstimator::UpdateGroundTruthSensorData(
 
   // dm->data_->joint_positions_ = sensor_data->joint_pos_;
 #endif
+}
+
+void DracoStateEstimator::GetResidualRlpolicy(DracoSensorData *sensor_data){
+  sp_-> res_rl_action_ = sensor_data->res_rl_action_;
+}
+
+void DracoStateEstimator::UpdateWbcObs(){
+  Eigen::Vector3d com_pos = robot_->GetRobotComPos();
+  Eigen::Vector3d com_vel = robot_->GetRobotComLinVel();
+  Eigen::Isometry3d torso_iso = robot_->GetLinkIsometry(draco_link::torso_com_link);
+
+  Eigen::Vector3d stfoot_pos;
+  if (sp_->stance_leg_ == 1) stfoot_pos = robot_->GetLinkIsometry(draco_link::r_foot_contact).translation();
+  else stfoot_pos = robot_->GetLinkIsometry(draco_link::l_foot_contact).translation();
+
+  Eigen::Vector3d com_pos_stfoot = com_pos - stfoot_pos;
+  Eigen::Vector3d com_pos_stfoot_torso_ori = torso_iso.linear().transpose() * com_pos_stfoot;
+  Eigen::Vector3d com_vel_torso_ori = torso_iso.linear().transpose() * com_vel;
+
+  Eigen::Vector3d L = sp_->mass_ * com_pos_stfoot_torso_ori.cross(com_vel);
+
+  sp_->com_pos_stance_frame_ = com_pos_stfoot_torso_ori;
+  sp_->L_stance_frame_ = L;
+  sp_->stfoot_pos_ = stfoot_pos;
+  sp_->torso_roll_pitch_yaw_ = util::QuatToEulerZYX(Eigen::Quaterniond(torso_iso.linear()));
 }

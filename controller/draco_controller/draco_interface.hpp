@@ -22,7 +22,8 @@ public:
         b_rf_contact_(false), lf_contact_normal_(0.), rf_contact_normal_(0.),
         base_joint_pos_(Eigen::Vector3d::Zero()), base_joint_quat_(0, 0, 0, 1),
         base_joint_lin_vel_(Eigen::Vector3d::Zero()),
-        base_joint_ang_vel_(Eigen::Vector3d::Zero()){};
+        base_joint_ang_vel_(Eigen::Vector3d::Zero()),
+        res_rl_action_(Eigen::VectorXd::Zero(3)){};
   virtual ~DracoSensorData() = default;
 
   Eigen::Vector4d imu_frame_quat_; // x, y, z, w order
@@ -41,6 +42,9 @@ public:
   Eigen::Vector4d base_joint_quat_; // x, y, z, w order
   Eigen::Vector3d base_joint_lin_vel_;
   Eigen::Vector3d base_joint_ang_vel_;
+
+  //residual swfoot rl action
+  Eigen::VectorXd res_rl_action_;
 };
 
 class DracoCommand {
@@ -48,12 +52,17 @@ public:
   DracoCommand()
       : joint_pos_cmd_(Eigen::VectorXd::Zero(draco::n_adof)),
         joint_vel_cmd_(Eigen::VectorXd::Zero(draco::n_adof)),
-        joint_trq_cmd_(Eigen::VectorXd::Zero(draco::n_adof)){};
+        joint_trq_cmd_(Eigen::VectorXd::Zero(draco::n_adof)),
+        wbc_obs_(Eigen::VectorXd::Zero(19)){};
   virtual ~DracoCommand() = default;
 
   Eigen::VectorXd joint_pos_cmd_;
   Eigen::VectorXd joint_vel_cmd_;
   Eigen::VectorXd joint_trq_cmd_;
+
+  //foot policy rl trained
+  Eigen::VectorXd wbc_obs_;
+  bool rl_trigger_;
 };
 
 class DracoInterface : public Interface {
