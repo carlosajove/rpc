@@ -38,6 +38,26 @@ r_contact_volt_noise = 0.001
 imu_ang_vel_noise_std_dev = 0.      # based on real IMU: 0.0052
 
 
+
+def print_command(rpc_command):
+
+    print("pos cmd", rpc_command.joint_pos_cmd_)
+    print("joint vel cmd", rpc_command.joint_vel_cmd_)
+    print("joint acc cmd", rpc_command.joint_trq_cmd_)
+
+def print_sensor_data(data):
+    print("imu sens", data.imu_frame_quat_)
+    print("imu ang sens", data.imu_ang_vel_)
+    print("imu dvel", data.imu_dvel_)
+    print("imu lin acc sens", data.imu_lin_acc_)
+    print("joint pos", data.joint_pos_)
+    print("joint vel", data.joint_vel_)
+    print("lf contact ", data.b_lf_contact_)
+    print("rf contact", data.b_rf_contact_)
+    print("lf contact normal", data.lf_contact_normal_)
+    print("rf contact normal", data.rf_contact_normal_)
+
+
 def get_sensor_data_from_pybullet(robot):
 
     #follow pinocchio robotsystem urdf reading convention
@@ -232,6 +252,11 @@ def apply_control_input_to_pybullet(robot, command):
                              controlMode=mode,
                              force=command[20])
 
+    print("heooeo HELOO")
+    print(robot)
+    print(DracoJointIdx.r_ankle_ie)
+    print(mode)
+    print(command[20])
     #RH
     pb.setJointMotorControl2(robot,
                              DracoJointIdx.r_shoulder_fe,
@@ -522,10 +547,19 @@ if __name__ == "__main__":
         ##compute control command
         if Config.MEASURE_COMPUTATION_TIME:
             timer.tic()
-
+        print("Sensor in", count)
+        print_sensor_data(rpc_draco_sensor_data)
+        print("command in")
+        print_command(rpc_draco_command)
         rpc_draco_interface.GetCommand(rpc_draco_sensor_data,
                                        rpc_draco_command)
+        print("Sensor out")
+        print_sensor_data(rpc_draco_sensor_data)
 
+        print("Commaind out")
+        print_command(rpc_draco_command)
+        if count > 3: assert False
+        
         if Config.MEASURE_COMPUTATION_TIME:
             comp_time = timer.tocvalue()
             compuation_cal_list.append(comp_time)
@@ -534,7 +568,7 @@ if __name__ == "__main__":
         rpc_trq_command = rpc_draco_command.joint_trq_cmd_
         rpc_joint_pos_command = rpc_draco_command.joint_pos_cmd_
         rpc_joint_vel_command = rpc_draco_command.joint_vel_cmd_
-
+        #break
         #apply command to pybullet robot
         apply_control_input_to_pybullet(draco_humanoid, rpc_trq_command)
 

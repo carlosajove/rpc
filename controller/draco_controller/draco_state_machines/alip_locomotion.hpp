@@ -39,7 +39,7 @@ public:
 private:
   DracoControlArchitecture *ctrl_arch_;
   DracoStateProvider *sp_;
-
+  int count = 0;
   double swing_height_;
   int stance_leg ;
   double Tr;

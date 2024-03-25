@@ -138,8 +138,8 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
     vector<double> xlip_sol = (vector<double>)result_solver.at(0);
     vector<double> ufp_sol = (vector<double>)result_solver.at(1);
     
-    cout << "xlip_sol" << xlip_sol.size() << endl;
-    cout << "ufp sol " << ufp_sol.size() << endl;
+    //cout << "xlip_sol" << xlip_sol.size() << endl;
+    //cout << "ufp sol " << ufp_sol.size() << endl;
 
     ufp_x_sol = ufp_sol[0];
     ufp_y_sol = ufp_sol[1];
@@ -182,8 +182,8 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
 
     /* Increase solver loop iteration */
     iter_++;
-    cout << "x_sol " << ufp_x_sol << endl;
-    cout << "y_sol " << ufp_y_sol << endl;
+    //cout << "x_sol " << ufp_x_sol << endl;
+    //cout << "y_sol " << ufp_y_sol << endl;
 
     // Update output data struct
     output_data.ufp_wrt_st[0] = ufp_x_sol;

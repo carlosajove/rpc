@@ -40,12 +40,11 @@ void AlipLocomotion::FirstVisit(){
     ctrl_arch_->alip_tm_->initializeOri();
     
   }
-
   else if (new_leg) {
     new_leg = false;
+
     state_machine_start_time_ = sp_->current_time_;
   }
-  
   
   ctrl_arch_->alip_tm_->setNewOri();
 

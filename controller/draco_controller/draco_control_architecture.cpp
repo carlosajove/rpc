@@ -45,11 +45,14 @@ DracoControlArchitecture::DracoControlArchitecture(PinocchioRobotSystem *robot)
   bool b_sim = util::ReadParameter<bool>(cfg_, "b_sim");
 
   // set starting state
+  /*
   prev_state_ =
       b_sim ? draco_states::kDoubleSupportStandUp : draco_states::kInitialize;
   state_ =
       b_sim ? draco_states::kDoubleSupportStandUp : draco_states::kInitialize;
-
+  */
+  state_ = draco_states::AlipLocomotion;
+  prev_state_ = draco_states::AlipLocomotion;
 
   std::string prefix = b_sim ? "sim" : "exp";
 
@@ -256,15 +259,17 @@ void DracoControlArchitecture::GetCommand(void *command) {
     upper_body_tm_->UseNominalUpperBodyJointPos(sp_->nominal_jpos_);
     controller_->GetCommand(command);
     alipIter++;
-    //if (alipIter == 2) alipIter = 0;
+    //if (alipIter == 4) alipIter = 0;
+    
     alip_tm_->saveRobotCommand(sp_->current_time_);
     alip_tm_->saveCurrentCOMstate(sp_->current_time_);
     alip_tm_->saveMpcCOMstate(sp_->current_time_);
     alip_tm_->saveSwingState(sp_->current_time_);
     
+    
     if (state_machine_container_[draco_states::AlipLocomotion]->SwitchLeg()) {
        //alipIter = 0;
-       alipIter = -3;
+       alipIter = -5;
        //exit(0);
        
     }

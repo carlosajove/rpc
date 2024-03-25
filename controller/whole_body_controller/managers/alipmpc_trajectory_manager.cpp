@@ -46,6 +46,7 @@ AlipMpcTrajectoryManager::AlipMpcTrajectoryManager(NewStep_mpc *alipMpc,
   file8.open(THIS_COM "/test/alip/RobotCOM.txt", std::fstream::out);
   file9.open(THIS_COM "/test/alip/RobotCommand.txt", std::fstream::out);
 
+  Swingfootvel_end(2) = -0.5;
 
 
 }  //need to add ori 
@@ -227,43 +228,40 @@ void AlipMpcTrajectoryManager::OutputMpcToInertiaCoordinates(){
 
 
 void AlipMpcTrajectoryManager::GenerateSwingFtraj(const double &tr_){
+  
   indata.Tr = tr_;
+  //cout << indata.Tr << endl;
   Eigen::Isometry3d curr_swfoot_iso;
+  Eigen::Vector3d curr_swfoot_linearVel = robot_->GetLinkSpatialVel(draco_link::l_foot_contact).tail<3>();
+
   if (indata.stance_leg == 1){  //LF is swing foot
     curr_swfoot_iso = robot_->GetLinkIsometry(draco_link::l_foot_contact);  //chequear si contact solo funciona cuando es stance foot
-    FootStep::MakeHorizontal(curr_swfoot_iso);          
+    FootStep::MakeHorizontal(curr_swfoot_iso); 
+    curr_swfoot_linearVel = robot_->GetLinkSpatialVel(draco_link::l_foot_contact).tail<3>();         
   }
   else {
     curr_swfoot_iso = robot_->GetLinkIsometry(draco_link::r_foot_contact);
     FootStep::MakeHorizontal(curr_swfoot_iso);
+    curr_swfoot_linearVel = robot_->GetLinkSpatialVel(draco_link::r_foot_contact).tail<3>();
   }
 
   Eigen::Vector3d curr_swfoot_pos = curr_swfoot_iso.translation();
 
-  Eigen::Vector3d curr_swfoot_linearVel = robot_->GetLinkSpatialVel(draco_link::l_foot_contact).tail<3>();
   //for now we will assume that the feet moves at an horizontal velocity that is constant in time
   //so we can compute the middle foot position proportionally to the time remaining
   
-
-  if(variable_height){
-    Eigen::Vector2d vectdist = (Swingfoot_end - Swingfoot_start).head<2>();
-    double step_distance = vectdist.norm();
-    swing_height = step_distance*reference_swing_height/0.5;
-    if (swing_height < 0.025) {  
-      swing_height = 0.025;   
-    }
-  }
 
   AlipSwingPos = new AlipSwing(Swingfoot_start, Swingfoot_end, swing_height, indata.Ts);
   AlipSwingPos2 = new AlipSwing2(Swingfoot_start, Swingfoot_end, swing_height, indata.Ts);
 
   
   if(indata.Tr > 0.5*indata.Ts){  //pensar en como calcular la midfoot position
-
+    
     Eigen::Vector3d mid_pos;
     double t1 = indata.Tr - 0.5*indata.Ts ;
     mid_pos << (curr_swfoot_pos + Swingfoot_end)*t1/(indata.Tr);  //could be problematic if indata.Tr is verry small
     mid_pos(2) = swing_height;
+    //cout << "params" << endl << mid_pos << "vel:" <<endl << mid_linearVel << endl << "pos end:" << Swingfoot_end << endl << Swingfootvel_end << endl;
 
     Eigen::Vector3d mid_linearVel;
     mid_linearVel = (Swingfoot_end-curr_swfoot_pos)/indata.Tr;
@@ -273,8 +271,14 @@ void AlipMpcTrajectoryManager::GenerateSwingFtraj(const double &tr_){
 
     BezierSwingPos = new QuadraticBezierCurve(curr_swfoot_pos, mid_pos, Swingfoot_end, indata.Tr);
 
+    //cout << "sw vel" << curr_swfoot_linearVel << endl;
+    if (indata.Tr - indata.Ts < 0.001){
+      curr_swfoot_linearVel(1) = curr_swfoot_linearVel(0) = 0;
+      curr_swfoot_linearVel(2) = 0.01;
+    }
     first_half_curve_SwingPos = 
       new HermiteCurveVec(curr_swfoot_pos, curr_swfoot_linearVel, mid_pos, mid_linearVel, t1);
+    //cout << "params" << endl << mid_pos << "vel:" <<endl << mid_linearVel << endl << "pos end:" << Swingfoot_end << endl << Swingfootvel_end << endl;
     second_half_curve_SwingPos = 
       new HermiteCurveVec(mid_pos, mid_linearVel, Swingfoot_end, Swingfootvel_end, 0.5*indata.Ts);
   }
@@ -321,16 +325,18 @@ void AlipMpcTrajectoryManager::UpdateDesired(const double t){
   }
   else { //two splines 
     if (indata.Tr > 0.5*indata.Ts){
-      if (indata.Tr-t > 0.5*indata.Ts){
+      if (t < 0.5*indata.Ts){
           des_swfoot_pos = first_half_curve_SwingPos->Evaluate(t);
           des_swfoot_vel = first_half_curve_SwingPos->EvaluateFirstDerivative(t);
           des_swfoot_acc = first_half_curve_SwingPos->EvaluateSecondDerivative(t);
 
       }
       else {
-          des_swfoot_pos = second_half_curve_SwingPos->Evaluate(t-(indata.Tr-0.5*indata.Ts));
-          des_swfoot_vel = second_half_curve_SwingPos->EvaluateFirstDerivative(t-(indata.Tr-0.5*indata.Ts));
-          des_swfoot_acc = second_half_curve_SwingPos->EvaluateSecondDerivative(t-(indata.Tr-0.5*indata.Ts));
+          //cout << "time" << t+indata.Tr-indata.Ts << endl;
+          des_swfoot_pos = second_half_curve_SwingPos->Evaluate(t+indata.Tr-indata.Ts);
+          des_swfoot_vel = second_half_curve_SwingPos->EvaluateFirstDerivative(t+indata.Tr-indata.Ts);
+          des_swfoot_acc = second_half_curve_SwingPos->EvaluateSecondDerivative(t+indata.Tr-indata.Ts);
+
       }
     }
     else {
@@ -340,6 +346,16 @@ void AlipMpcTrajectoryManager::UpdateDesired(const double t){
     }
 
   }
+  for (int i = 0; i < 3; i++){
+    if (des_swfoot_acc(i) > 10) des_swfoot_acc(i) = 10.;
+    else if(des_swfoot_acc(i) < -10) des_swfoot_acc(i) = -10.;
+    if (des_swfoot_vel(i) > 15) des_swfoot_vel(i) = 15.;
+    else if(des_swfoot_vel(i) < -15) des_swfoot_vel(i) = -15.;
+    //if(des_swfoot_pos(i) > 15) des_swfoot_pos(i) = 15;
+    //else if(des_swfoot_pos(i) < -15) des_swfoot_pos(i) = -15.;
+  }
+
+
 
   //in single_support_swing update both the tasks
   //for the stance leg they use UseCurrent. Is it really necessary

@@ -122,6 +122,7 @@ void DracoInterface::GetCommand(void *sensor_data, void *command_data) {
 
   // get control command
   ctrl_arch_->GetCommand(draco_command);
+  //std::cout << "GIVE COMMAND" << draco_command->joint_trq_cmd_ << std::endl;
 
 #if B_USE_ZMQ
   if (sp_->count_ % sp_->data_save_freq_ == 0) {

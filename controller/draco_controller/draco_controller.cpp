@@ -223,6 +223,9 @@ void DracoController::GetCommand(void *command) {
                   tci_container_->force_task_map_, wbc_qddot_cmd_,
                   joint_trq_cmd_); // joint_trq_cmd_ size: 27
 
+
+    //std::cout << "CONTROLLER GIVE COMMAND" << joint_trq_cmd_ << std::endl;
+
     // joint integrator for real experiment
     Eigen::VectorXd joint_acc_cmd = wbc_qddot_cmd_.tail(robot_->NumActiveDof());
     joint_integrator_->Integrate(joint_acc_cmd, robot_->GetJointPos(),
