@@ -15,7 +15,7 @@ AlipLocomotion::AlipLocomotion(StateId state_id, PinocchioRobotSystem *robot,
                             DracoControlArchitecture *ctrl_arch)
     : StateMachine(state_id, robot), ctrl_arch_(ctrl_arch){
 
-    util::PrettyConstructor(2, "AlipLocomotion");
+    //util::PrettyConstructor(2, "AlipLocomotion");
 
     sp_ = DracoStateProvider::GetStateProvider();
 

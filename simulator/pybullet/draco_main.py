@@ -362,7 +362,8 @@ if __name__ == "__main__":
                                  "/robot_model/draco/draco_modified.urdf",
                                  Config.INITIAL_BASE_JOINT_POS,
                                  Config.INITIAL_BASE_JOINT_QUAT,
-                                 useFixedBase=0)
+                                 useFixedBase=0,
+                                 flags=pb.URDF_USE_SELF_COLLISION)
 
     ground = pb.loadURDF(cwd + "/robot_model/ground/plane.urdf",
                          useFixedBase=1)
@@ -550,7 +551,6 @@ if __name__ == "__main__":
         rpc_draco_interface.GetCommand(rpc_draco_sensor_data,
                                        rpc_draco_command)
 
-        print(rpc_draco_command.wbc_obs_)
 
         
         if Config.MEASURE_COMPUTATION_TIME:

@@ -20,7 +20,7 @@ AlipMpcTrajectoryManager::AlipMpcTrajectoryManager(NewStep_mpc *alipMpc,
       rfoot_task(rfoot_task), rfoot_ori(rfoot_ori), 
       lf_force_task(lf_force_), rg_force_task(rg_force_),robot_(robot) {
   
-  util::PrettyConstructor(2, "AlipMpcTrajectoryManager");
+  //util::PrettyConstructor(2, "AlipMpcTrajectoryManager");
   printCounter = 5;
   first_ever = false;
 

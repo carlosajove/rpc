@@ -7,7 +7,7 @@ using namespace std;
 // Constructor
 NewStep_mpc::NewStep_mpc(string & horizon, string & intervals)
 {
-    util::PrettyConstructor(2, "Alip Mpc");
+    //util::PrettyConstructor(2, "Alip Mpc");
 
     // Casadi function definitions
     N_steps_ = stoi(horizon); //C: ver que significa stoi

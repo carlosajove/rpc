@@ -15,7 +15,7 @@ DoubleSupportSwaying::DoubleSupportSwaying(const StateId state_id,
                                            DracoControlArchitecture *ctrl_arch)
     : StateMachine(state_id, robot), ctrl_arch_(ctrl_arch),
       amp_(Eigen::Vector3d::Zero()), freq_(Eigen::Vector3d::Zero()) {
-  util::PrettyConstructor(2, "DoubleSupportSwaying");
+  //util::PrettyConstructor(2, "DoubleSupportSwaying");
 
   try {
     YAML::Node cfg =

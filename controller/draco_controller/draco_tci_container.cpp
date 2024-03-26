@@ -12,7 +12,7 @@
 
 DracoTCIContainer::DracoTCIContainer(PinocchioRobotSystem *robot)
     : TCIContainer(robot) {
-  util::PrettyConstructor(2, "DracoTCIContainer");
+  //util::PrettyConstructor(2, "DracoTCIContainer");
 
   //=============================================================
   // Tasks List

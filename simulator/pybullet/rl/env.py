@@ -22,7 +22,6 @@ from loop_rate_limiters import RateLimiter
 
 import cv2
 
-
 from config.draco.pybullet_simulation import *
 from util.python_utils import pybullet_util_rl
 from util.python_utils import util
@@ -30,6 +29,7 @@ from util.python_utils import liegroup
 
 import draco_interface_py
 
+from config.draco.pybullet_simulation import AlipParams
 
 imu_dvel_bias = np.array([0.0, 0.0, 0.0])
 l_contact_volt_noise = 0.001
@@ -44,12 +44,6 @@ def set_init_config_pybullet_robot(robot, client = None):
     client.resetJointState(robot, DracoJointIdx.l_elbow_fe, -np.pi / 2, 0.)
     client.resetJointState(robot, DracoJointIdx.r_shoulder_aa, -np.pi / 6, 0.)
     client.resetJointState(robot, DracoJointIdx.r_elbow_fe, -np.pi / 2, 0.)
-    """
-    client.resetJointState(robot, DracoJointIdx.l_shoulder_aa, -np.pi / 6, 0.)
-    client.resetJointState(robot, DracoJointIdx.l_elbow_fe, np.pi / 2, 0.)
-    client.resetJointState(robot, DracoJointIdx.r_shoulder_aa, np.pi / 6, 0.)
-    client.resetJointState(robot, DracoJointIdx.r_elbow_fe, np.pi / 2, 0.)
-    """
     # Lowerbody
     hip_yaw_angle = 0
     client.resetJointState(robot, DracoJointIdx.l_hip_aa,
@@ -121,8 +115,8 @@ class DracoEnv(gym.Env):
         )
    
         self.observation_space = gym.spaces.Box(  #observation space
-            low = np.array([-100]*54),
-            high = np.array([100]*54),
+            low = np.array([-100]*67),
+            high = np.array([100]*67),
             dtype = np.float64
         )
 
@@ -236,8 +230,7 @@ class DracoEnv(gym.Env):
         self.previous_torso_velocity = np.array([0., 0., 0.])
         self.rate = RateLimiter(frequency=1./self.dt)
 
-
-        obs_numpy = self._get_observation()
+        obs_numpy = self._get_observation(self._rpc_draco_command.wbc_obs_)
 
         info = {
             "interface" : self._rpc_draco_interface,
@@ -246,18 +239,14 @@ class DracoEnv(gym.Env):
 
         
 
-        return obs_numpy[0], info
+        return obs_numpy, info
     
     def step(self, action):
         #residual, self.gripper_command = action[0], action[1]
 
         # TODO remove printing
-        self._iter += 1
-        step_flag = [False]
-        wbc_obs = None
-        self._time = 0
-        while not step_flag[0]:
-
+        step_flag = False
+        while not step_flag:
             l_normal_volt_noise = np.random.normal(0, l_contact_volt_noise)
             r_normal_volt_noise = np.random.normal(0, r_contact_volt_noise)
             imu_ang_vel_noise = np.random.normal(0, imu_ang_vel_noise_std_dev)
@@ -306,15 +295,11 @@ class DracoEnv(gym.Env):
             #### DEBUGGING   END ####
             #########################
 
-
-            self.obs, self.policy_obs = self._get_observation(wbc_obs)
-            self._iter += 1
-            
+            self.pybulled_to_sensor_data(action)
 
             self._rpc_draco_interface.GetCommand(self._rpc_draco_sensor_data,
                                                  self._rpc_draco_command)
-
-            
+            step_flag = self._rpc_draco_command.rl_trigger_            
             
             self._set_motor_command(self._rpc_draco_command, self.client)
 
@@ -324,21 +309,18 @@ class DracoEnv(gym.Env):
             self.client.stepSimulation()
 
             #if self.render: self.rate.sleep()
-            done = self._compute_termination(wbc_obs)
+            done = self._compute_termination(self._rpc_draco_command.wbc_obs_)
             if done: break
             #if self._iter >3: assert False
-            if self._time >= 0.2: 
-                break
-            self._time += Config.CONTROLLER_DT
 
-        self.obs, self.policy_obs = self._get_observation(wbc_obs)
+        self.policy_obs = self._get_observation(self._rpc_draco_command.wbc_obs_)
 
         if(self._iter > 30): truncate = True
         else: truncate = False
 
             
 
-        reward = self._compute_reward(wbc_obs, action, done)
+        reward = self._compute_reward(self._rpc_draco_command.wbc_obs_, action, done)
         
         info = {}
         return self.policy_obs, reward, done, done, info # need terminated AND truncated
@@ -348,16 +330,11 @@ class DracoEnv(gym.Env):
         self.client = None
 
     def _set_motor_command(self, command, client) -> None:
-
         rpc_trq_command = command.joint_trq_cmd_
-        rpc_joint_pos_command = command.joint_pos_cmd_
-        rpc_joint_vel_command = command.joint_vel_cmd_
 
         pybullet_util_rl.apply_control_input_to_pybullet(self.robot, rpc_trq_command, DracoJointIdx, client)
 
-
-    def _get_observation(self, wbc_obs = None) -> dict:
-
+    def pybulled_to_sensor_data(self, action):
         imu_frame_quat, imu_ang_vel, imu_dvel, joint_pos, joint_vel, b_lf_contact, b_rf_contact, \
             l_normal_force, r_normal_force = pybullet_util_rl.get_sensor_data_from_pybullet(
             self.robot, DracoLinkIdx, DracoJointIdx, self.previous_torso_velocity, 
@@ -376,17 +353,36 @@ class DracoEnv(gym.Env):
         self._rpc_draco_sensor_data.b_rf_contact_ = b_rf_contact
         self._rpc_draco_sensor_data.lf_contact_normal_ = l_normal_force
         self._rpc_draco_sensor_data.rf_contact_normal_ = r_normal_force
+        self._rpc_draco_sensor_data.res_rl_action_ = action
+
+
+    def _get_observation(self, wbc_obs) -> dict:
+        imu_frame_quat, imu_ang_vel, imu_dvel, joint_pos, joint_vel, b_lf_contact, b_rf_contact, \
+            l_normal_force, r_normal_force = pybullet_util_rl.get_sensor_data_from_pybullet(
+            self.robot, DracoLinkIdx, DracoJointIdx, self.previous_torso_velocity, 
+            self.link_id_dict, self.client)
 
         policy_obs = np.concatenate((joint_pos, joint_vel))
+        if wbc_obs is None:
+            wbc_obs = np.array([AlipParams.INITIAL_STANCE_LEG, AlipParams.LX_OFFSET, AlipParams.Ly_des_,
+                                AlipParams.COM_YAW, AlipParams.TS, AlipParams.TS, 0, 0, 0, 0,0,0])
+            policy_obs = np.concatenate((joint_pos, joint_vel))
 
-        return policy_obs, policy_obs
+        else:
+            policy_obs = np.concatenate((joint_pos, joint_vel, wbc_obs[0:13]))
+
+
+        
+
+        return policy_obs
 
     
     def _compute_termination(self, _wbc_obs = None):
         #TODO: add more termination
         if _wbc_obs is not None:
-            condition = np.any((_wbc_obs[:, 8] < 0.5) | (_wbc_obs[:, 8] > 0.8))  #0.69
-            return condition
+            condition = np.any((_wbc_obs[8] < 0.5) | (_wbc_obs[8] > 0.8))  #0.69
+            if _wbc_obs[8] > 0.75: return True
+            if _wbc_obs[8] < 0.6: return True
         
         return False
 
@@ -409,17 +405,17 @@ class DracoEnv(gym.Env):
 
     def reward_tracking_com_L(self):
         Lx = np.zeros(2)
-        Lx[0] = self._new_wbc_obs[0]*self._Lx_main 
+        Lx[0] = self._new_wbc_obs[1]*self._Lx_main 
         #in the code 1 corresponds to current stance foot right
         # -1 to current stance foot left 
         # new obs -1 --> ended policy for left foot --> we are at the desired state for end of right stance
         error = Lx #+ self._old_wbc_obs[1:3] - self._new_wbc_obs[9:11]  #desired Lx,y - observedLx,y at the end of the step
-        error = np.sum(np.square(error), dim = 1)
+        error = np.sum(np.square(error))
         error *= self._w_desired_Lxy
         return np.exp(-error)
     
     def reward_tracking_yaw(self):
-        error = self._new_wbc_obs[:, 16] - self._old_wbc_obs[16] - self._old_wbc_obs[3]
+        error = self._new_wbc_obs[17] - self._old_wbc_obs[17] - self._old_wbc_obs[3]
         error = np.square(error)
         error *= self._w_desired_yaw
 
@@ -432,12 +428,12 @@ class DracoEnv(gym.Env):
         return np.exp(-error)
 
     def reward_roll_pitch(self):
-        error = np.sum(np.square(self._new_wbc_obs[14:16]), dim = 1)
+        error = np.sum(np.square(self._new_wbc_obs[15:17]))
         error *= self._w_roll_pitch 
         return np.exp(-error)
     
     def penalise_excessive_fp(self):
-        error = np.sum(np.square(self._rl_action[0:2]), dim = 1)
+        error = np.sum(np.square(self._rl_action[0:2]))
         error *= self._w_excessive_fp
         return np.exp(-error)
     

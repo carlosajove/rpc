@@ -19,10 +19,10 @@
 
 DracoInterface::DracoInterface() : Interface() {
   std::string border = "=";
-  for (unsigned int i = 0; i < 79; ++i)
-    border += "=";
-  util::ColorPrint(color::kBoldRed, border);
-  util::PrettyConstructor(0, "DracoInterface");
+  //for (unsigned int i = 0; i < 79; ++i)
+  //  border += "=";
+  //util::ColorPrint(color::kBoldRed, border);
+  //util::PrettyConstructor(0, "DracoInterface");
 
   sp_ = DracoStateProvider::GetStateProvider();
   Eigen::Vector3d com_offset = Eigen::Vector3d::Zero();

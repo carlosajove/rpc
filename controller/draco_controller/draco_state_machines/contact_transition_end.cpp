@@ -15,12 +15,12 @@ ContactTransitionEnd::ContactTransitionEnd(StateId state_id,
                                            PinocchioRobotSystem *robot,
                                            DracoControlArchitecture *ctrl_arch)
     : StateMachine(state_id, robot), ctrl_arch_(ctrl_arch) {
-
+  /*
   if (state_id_ == draco_states::kLFContactTransitionEnd)
     util::PrettyConstructor(2, "LFContactTransitionEnd");
   else if (state_id_ == draco_states::kRFContactTransitionEnd)
     util::PrettyConstructor(2, "RFContactTransitionEnd");
-
+  */
   try {
     YAML::Node cfg =
             YAML::LoadFile(THIS_COM "config/draco/pnc.yaml"); // get yaml node

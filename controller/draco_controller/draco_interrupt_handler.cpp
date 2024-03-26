@@ -6,7 +6,7 @@
 DracoInterruptHandler::DracoInterruptHandler(
     DracoControlArchitecture *ctrl_arch)
     : InterruptHandler(), ctrl_arch_(ctrl_arch) {
-  util::PrettyConstructor(1, "DracoInterruptHandler");
+  //util::PrettyConstructor(1, "DracoInterruptHandler");
 }
 
 void DracoInterruptHandler::Process() {

@@ -3,7 +3,7 @@
 DCMPlanner::DCMPlanner()
     : Planner(), init_dcm_pos_(Eigen::Vector3d::Zero()),
       init_dcm_vel_(Eigen::Vector3d::Zero()) {
-  util::PrettyConstructor(2, "DCMPlanner");
+  //util::PrettyConstructor(2, "DCMPlanner");
   initial_left_stance_foot_.SetLeftSide();
   initial_right_stance_foot_.SetRightSide();
 }

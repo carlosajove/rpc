@@ -31,7 +31,7 @@
 
 DracoControlArchitecture::DracoControlArchitecture(PinocchioRobotSystem *robot)
     : ControlArchitecture(robot) {
-  util::PrettyConstructor(1, "DracoControlArchitecture");
+  //util::PrettyConstructor(1, "DracoControlArchitecture");
 
   sp_ = DracoStateProvider::GetStateProvider();
 

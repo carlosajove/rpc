@@ -13,10 +13,10 @@ SingleSupportSwing::SingleSupportSwing(StateId state_id,
                                        DracoControlArchitecture *ctrl_arch)
     : StateMachine(state_id, robot), ctrl_arch_(ctrl_arch), swing_height_(0.) {
 
-  if (state_id_ == draco_states::kLFSingleSupportSwing)
-    util::PrettyConstructor(2, "kLFSingleSupportSwing");
-  else if (state_id_ == draco_states::kRFSingleSupportSwing)
-    util::PrettyConstructor(2, "kRFSingleSupportSwing");
+  //if (state_id_ == draco_states::kLFSingleSupportSwing)
+    //util::PrettyConstructor(2, "kLFSingleSupportSwing");
+  //else if (state_id_ == draco_states::kRFSingleSupportSwing)
+    //util::PrettyConstructor(2, "kRFSingleSupportSwing");
 
   try {
     YAML::Node cfg =

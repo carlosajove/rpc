@@ -8,7 +8,7 @@ IHWBC::IHWBC(const Eigen::MatrixXd &sa, const Eigen::MatrixXd *sf,
              const Eigen::MatrixXd *sv)
     : sa_(sa), dim_contact_(0), dim_cone_constraint_(0), b_contact_(true),
       lambda_qddot_(0.), b_first_visit_(true) {
-  util::PrettyConstructor(3, "IHWBC");
+  //util::PrettyConstructor(3, "IHWBC");
 
   num_qdot_ = sa_.cols();
   num_active_ = sa_.rows();

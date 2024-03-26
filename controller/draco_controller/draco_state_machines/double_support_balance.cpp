@@ -13,7 +13,7 @@ DoubleSupportBalance::DoubleSupportBalance(const StateId state_id,
       b_com_swaying_(false), b_lmpc_swaying_(false), b_nmpc_swaying_(false),
       b_dcm_walking_(false), b_lmpc_walking_(false), b_nmpc_walking_(false),
       b_static_walking_(false) {
-  util::PrettyConstructor(2, "DoubleSupportBalance");
+  //util::PrettyConstructor(2, "DoubleSupportBalance");
 
   try {
     YAML::Node cfg =

@@ -14,7 +14,7 @@ from env import DracoEnv
 
 
 if __name__ == "__main__":
-    env = DracoEnv(render=False)
+    env = DracoEnv(render=True)
 
     
     #TODO: periodically save

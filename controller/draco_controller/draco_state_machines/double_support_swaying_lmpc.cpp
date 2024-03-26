@@ -13,7 +13,7 @@ DoubleSupportSwayingLmpc::DoubleSupportSwayingLmpc(
     : StateMachine(state_id, robot), ctrl_arch_(ctrl_arch),
       amp_(Eigen::Vector3d::Zero()), freq_(Eigen::Vector3d::Zero()),
       b_use_base_height_(false) {
-  util::PrettyConstructor(2, "DoubleSupportSwayingLmpc");
+  //util::PrettyConstructor(2, "DoubleSupportSwayingLmpc");
 
   sp_ = DracoStateProvider::GetStateProvider();
 

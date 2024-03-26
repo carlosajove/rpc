@@ -1,4 +1,4 @@
-servo_dt: 0.0015
+servo_dt: 0.00125
 
 ip_address: "tcp://127.0.0.1:5557"
 
@@ -132,18 +132,13 @@ wbc:
       exp_lpf_time_constant: 0.03
 
     com_z_task:
-      com_height_target_source: 0 # 0: com height / 1: base height
+      com_height_target_source: 1 # 0: com height / 1: base height
       ########################################################################
       ## sim params
       ########################################################################
-     # sim_com_weight : [1000.]  Carlos
-      sim_com_weight : [1000.] #Carlos
+      sim_com_weight : [1000.]
       sim_com_kp : [100.]
-      sim_com_kd : [50.]
-
-      #sim_com_weight : [1000.]
-      #sim_com_kp : [100.]
-      #sim_com_kd : [5.]
+      sim_com_kd : [5.]
 
       sim_base_weight : [1000.] # only used when target source : 1
       sim_base_kp : [100.]
@@ -152,7 +147,7 @@ wbc:
       ########################################################################
       ## exp params
       ########################################################################
-      exp_com_weight : [1000.] 
+      exp_com_weight : [1000.]
       exp_com_kp : [100.]
       exp_com_kd : [5.]
 
@@ -177,8 +172,7 @@ wbc:
       ########################################################################
       ## sim params
       ########################################################################
-      #sim_weight : [100., 100., 10.]
-      sim_weight : [500., 500., 50.]
+      sim_weight : [100., 100., 10.]
       sim_kp : [200., 200., 100.]
       sim_kd : [14., 14., 10.]
 
@@ -194,9 +188,7 @@ wbc:
       ## l_shoulder_fe(0), l_shoulder_aa(1), l_shoulder_ie(2), l_elbow_fe(3), l_wrist_ps_(4),
       ## l_wrist_pitch(5), neck_pitch(6), r_shoulder_fe(7), r_shoulder_aa(8), r_shoulder_ie(9),
       ## r_shoulder_ie(10), r_elbow_fe(11), r_wrist_ps(12), r_wrist_pitch(13)
-      #sim_weight : [10000., 10000., 10000., 10000., 10000., 10000., 10000., 10000., 10000., 10000., 10000., 10000., 10000.]
-      sim_weight : [400., 400., 400., 400., 400., 400., 400., 400., 400., 400., 400., 400., 400.]
-      #sim_weight : [40., 40., 40., 40., 40., 40., 40., 40., 40., 40., 40., 40., 40.]
+      sim_weight : [40., 40., 40., 40., 40., 40., 40., 40., 40., 40., 40., 40., 40.]
       sim_kp : [100., 100., 100., 50., 40., 40., 100., 100., 100., 100., 50., 40., 40.]
       sim_kd : [8., 8., 8., 3., 2., 2., 10., 8., 8., 8., 3., 2., 2.]
 
@@ -213,12 +205,8 @@ wbc:
       ########################################################################
       sim_weight : [5000., 5000., 5000.]
       sim_weight_at_swing : [8000., 8000., 8000.]
-      #sim_kp : [800., 800., 700.]
-      #sim_kd : [25., 25., 20.]
-      sim_kp : [800., 800., 700.]
-      sim_kd : [25., 25., 20.]
-      #sim_kp : [300., 300., 300.]
-      #sim_kd : [30., 30., 30.]
+      sim_kp : [300., 300., 300.]
+      sim_kd : [30., 30., 30.]
 
       ########################################################################
       ## exp params
@@ -226,7 +214,7 @@ wbc:
       exp_weight : [6000., 6000., 5000.]
       exp_weight_at_swing : [8000., 8500., 8000.]
       exp_kp : [150., 200., 250.]
-      exp_kd : [3.0, 3, 3]
+      exp_kd : [3.0, 0.8, 7.0]
 
     foot_ori_task:
       ########################################################################
@@ -234,10 +222,8 @@ wbc:
       ########################################################################
       sim_weight : [5000., 5000., 5000.]
       sim_weight_at_swing : [5000., 5000., 5000.]
-      #sim_kp : [80., 80., 80.]
-      #sim_kd : [4., 4., 4.]
-      sim_kp : [800., 800., 800.]  #good change 800
-      sim_kd : [40., 40., 40.]  #40
+      sim_kp : [80., 80., 80.]
+      sim_kd : [4., 4., 4.]
 
       ########################################################################
       ## exp params
@@ -376,6 +362,8 @@ lmpc_walking:
   first_swing_leg: 0 ## 0: left leg ## 1: right leg
 
 
+
+
 alip_mpc_walking:
   verbose: false
   rf_z_MAX: 500
@@ -383,7 +371,7 @@ alip_mpc_walking:
   step_horizon: "4"
   Ts: 0.25  #0.25  #Greater Ts makes offset increase also
   stance_leg: -1 # -1: RIGHT SWING TO START; 1: LEFT SWING TO START
-  leg_width: 0. #0.1
+  leg_width: 0.08 #0.1
   zH: 0.69   #this will be the reference height target. The height for the mpc will be another
   mu: 0.3
   total_mass: 39.15342    
@@ -398,7 +386,7 @@ alip_mpc_walking:
 
   variable_height: 0
   swing_height: 0.05   #0.07  higher swing_height can work for lower zH
-  reference_swing_height: 0.05 #0.08   #for a swing of 0.5m
+  reference_swing_height: 0.1 #0.08   #for a swing of 0.5m
   Bezier: 0
   Alip: 0
   Alip2: 1

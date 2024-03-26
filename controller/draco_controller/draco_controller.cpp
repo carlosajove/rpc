@@ -30,7 +30,7 @@ DracoController::DracoController(DracoTCIContainer *tci_container,
       b_first_visit_wbc_ctrl_(true), b_smoothing_command_(false),
       b_use_modified_swing_foot_jac_(false), smoothing_command_duration_(0.),
       init_joint_pos_(Eigen::VectorXd::Zero(draco::n_adof)) {
-  util::PrettyConstructor(2, "DracoController");
+  //util::PrettyConstructor(2, "DracoController");
   sp_ = DracoStateProvider::GetStateProvider();
 
 #if B_USE_MATLOGGER

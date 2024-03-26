@@ -71,23 +71,23 @@ public:
   Eigen::VectorXd get_wbc_obs(){
     Eigen::VectorXd obs(18);
     obs <<  stance_leg_,
-            Lx_offset_,               //3
+            Lx_offset_,               //2
             Ly_des_,
-            des_com_yaw_,             //5
+            des_com_yaw_,             //4
             Ts_,
             Tr_,
-            com_pos_stance_frame_(0), //8
+            com_pos_stance_frame_(0), //7
             com_pos_stance_frame_(1),
             com_pos_stance_frame_(2),
-            L_stance_frame_(0),       //11
+            L_stance_frame_(0),       //10
             L_stance_frame_(1),
             L_stance_frame_(2),
-            stfoot_pos_(0),           //14
+            stfoot_pos_(0),           //13
             stfoot_pos_(1),
             stfoot_pos_(2),
-            torso_roll_pitch_yaw_(0), //17
+            torso_roll_pitch_yaw_(0), //16
             torso_roll_pitch_yaw_(1),
-            torso_roll_pitch_yaw_(2); //19
+            torso_roll_pitch_yaw_(2); //18
     return obs;
   }
 
