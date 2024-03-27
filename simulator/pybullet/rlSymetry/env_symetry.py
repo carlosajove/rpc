@@ -365,18 +365,17 @@ class DracoEnv(gym.Env):
             if done: break
             #if self._iter >3: assert False
 
-        self.policy_obs = self._get_observation(self._rpc_draco_command.wbc_obs_)
+        wbc_obs = self.simetrise_wbc_obs(self._rpc_draco_command.wbc_obs_)
+        self.policy_obs = self._get_observation(wbc_obs)
 
         if(self._iter > 60): truncate = True
         else: truncate = False
 
             
 
-        reward = self._compute_reward(self._rpc_draco_command.wbc_obs_, action, done)
+        reward = self._compute_reward(wbc_obs, action, done)
         
-        info = {
-            "reward_components": self.reward_info
-        }
+        info = {}
 
         #self.data_save()
         return self.policy_obs, reward, done, truncate, info # need terminated AND truncated
@@ -389,6 +388,16 @@ class DracoEnv(gym.Env):
         rpc_trq_command = command.joint_trq_cmd_
 
         pybullet_util_rl.apply_control_input_to_pybullet(self.robot, rpc_trq_command, DracoJointIdx, client)
+
+    def simetrise_wbc_obs(self, wbc_obs): #makes stance leg is right
+        wbc_obs_ = wbc_obs.copy() 
+        if (wbc_obs[0] == -1):
+            wbc_obs_[1] *= -1  #- Lx_offset_desired
+            wbc_obs_[3] *= -1  # des_com_yaw --> TODO: verificar esto
+            wbc_obs_[7] *= -1  # com_pos_stance_frame
+            wbc_obs_[9] *= -1  # Lx stance frame
+            wbc_obs_[11]*= -1  # Ly stance frame
+        return wbc_obs_
 
     def pybulled_to_sensor_data(self, action):
         imu_frame_quat, imu_ang_vel, imu_dvel, joint_pos, joint_vel, b_lf_contact, b_rf_contact, \
@@ -427,11 +436,15 @@ class DracoEnv(gym.Env):
         else:
             policy_obs = np.concatenate((joint_pos, joint_vel, wbc_obs[0:13]))
         """
+        # Policy will be for right stance 
+        #left stance will be mirrored
         if wbc_obs is None:
             wbc_obs = np.array([AlipParams.INITIAL_STANCE_LEG, AlipParams.LX_OFFSET, AlipParams.Ly_des_,
                                 AlipParams.COM_YAW, AlipParams.TS, AlipParams.TS, 0., 0., 0., 0.,0.,0., 0.,0.,0.,0.,0.,0.])
-        policy_obs = np.concatenate((wbc_obs[0:12], wbc_obs[15:18]))             
-        #add angular velocity
+            wwbc_obs = self.simetrise_wbc_obs(wbc_obs)
+
+        policy_obs = np.concatenate(wbc_obs[1:12], wbc_obs[15:18])
+        
         
 
         return policy_obs
@@ -461,10 +474,6 @@ class DracoEnv(gym.Env):
         reward += self.penalise_excessive_fp()
         reward += self.penalise_excessive_yaw()
         #if done: reward -= self._w_termination
-        self.reward_info = np.array([self._w_alive_bonus,  self.reward_tracking_com_L(),
-                                     self.reward_tracking_yaw(), self.reward_com_height(),
-                                     self.reward_roll_pitch(), self.penalise_excessive_fp(),
-                                     self.penalise_excessive_yaw()])
         """
         print("alive _bonus  ", reward)
         print("trakin L      ", self.reward_tracking_com_L())

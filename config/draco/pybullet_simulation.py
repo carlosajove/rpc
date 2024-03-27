@@ -1,6 +1,6 @@
 class Config(object):
     #CONTROLLER_DT = 0.00125
-    CONTROLLER_DT = 0.0015
+    CONTROLLER_DT = 0.0025
 
     N_SUBSTEP = 1
 
@@ -11,7 +11,7 @@ class Config(object):
 
     PRINT_ROBOT_INFO = False
 
-    MEASURE_COMPUTATION_TIME = False
+    MEASURE_COMPUTATION_TIME = True
 
     VIDEO_RECORD = False
     RECORD_FREQ = 50
@@ -95,7 +95,7 @@ class DracoJointIdx(object):
 
 class AlipParams(object):
     N_BATCH = 1
-    TS = 0.2
+    TS = 0.25
     NT_qp = 4
     NT_mpc = 1
     NS = 4

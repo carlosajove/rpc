@@ -1,4 +1,5 @@
-servo_dt: 0.0015
+#servo_dt: 0.0035
+servo_dt: 0.0025
 
 ip_address: "tcp://127.0.0.1:5557"
 
@@ -309,7 +310,7 @@ state_machine:
       wait_time: 15.
 
     stand_up:
-      standup_duration: 1.
+      standup_duration: 0.2
       target_com_height: 0.685
       target_base_height: 0.90
 
@@ -383,13 +384,13 @@ alip_mpc_walking:
   step_horizon: "4"
   Ts: 0.25  #0.25  #Greater Ts makes offset increase also
   stance_leg: -1 # -1: RIGHT SWING TO START; 1: LEFT SWING TO START
-  leg_width: 0. #0.1
+  leg_width: 0.08 #0.1
   zH: 0.69   #this will be the reference height target. The height for the mpc will be another
   mu: 0.3
   total_mass: 39.15342    
   ufp_x_max: 0.5  #0.6
   ufp_y_max: 0.4  #0.4
-  ufp_y_min: 0.08 #0.05
+  ufp_y_min: 0.1 #0.05
   Lx_offset: 0 #0
   Ly_des: 0 #3
   com_yaw: 0   #degrees

@@ -164,6 +164,33 @@ void AlipMpcTrajectoryManager::add_residual_rl_action(const Eigen::VectorXd &act
 
 }
 
+void AlipMpcTrajectoryManager::safety_proj(){
+  Eigen::VectorXd v_min(3);
+  Eigen::VectorXd v_max(3);
+  Eigen::Isometry3d stfoot_iso;
+  if (indata.stance_leg == 1){ //right stance
+    v_min << -ufp_x_max_, ufp_y_min_, 0;
+    v_max << ufp_x_max_, ufp_y_max_, 0;
+    stfoot_iso = robot_->GetLinkIsometry(draco_link::r_foot_contact);
+  }
+  else{
+    v_min << -ufp_x_max_, -ufp_x_max_;
+    v_max << ufp_x_max_, -ufp_y_min_;
+    stfoot_iso = robot_->GetLinkIsometry(draco_link::l_foot_contact);
+  }
+  v_min = stfoot_iso.linear().transpose() * v_min;
+  v_max = stfoot_iso.linear().transpose() * v_max;
+
+  for (int i = 0; i < 2; i++){
+    if (Swingfoot_end(i) - stfoot_iso.translation()(i) > v_max(i)) Swingfoot_end(i) = stfoot_iso.translation()(i) + v_max(i);
+    else if (Swingfoot_end(i) - stfoot_iso.translation()(i) < v_min(i)) Swingfoot_end(i) = stfoot_iso.translation()(i) + v_min(i);
+  }
+
+
+
+
+}
+
 void AlipMpcTrajectoryManager::GenerateTrajs(const double &tr_){  //will only use alip2
   indata.Tr = tr_;
   Eigen::Isometry3d curr_swfoot_iso;
@@ -461,6 +488,10 @@ void AlipMpcTrajectoryManager::SetParameters(const YAML::Node &node) {
     util::ReadParameter(node, "variable_height", variable_height);
     util::ReadParameter(node, "reference_swing_height", reference_swing_height);
     util::ReadParameter(node, "swing_height", swing_height);
+    util::ReadParameter(node, "ufp_x_max", ufp_x_max_);
+    ufp_x_max_ = ufp_x_max_/2;
+    util::ReadParameter(node, "ufp_y_min", ufp_y_min_);
+    util::ReadParameter(node, "ufp_y_max", ufp_y_max_); 
   } catch (const std::runtime_error &e) {
     std::cerr << "Error reading parameter [" << e.what() << "] at file: ["
               << __FILE__ << "]" << std::endl;

@@ -107,7 +107,7 @@ bool DoubleSupportStandUp::EndOfState() {
 }
 
 StateId DoubleSupportStandUp::GetNextState() {
-  return draco_states::AlipLocomotion;
+  return draco_states::kDoubleSupportBalance;
 }
 
 void DoubleSupportStandUp::SetParameters(const YAML::Node &node) {

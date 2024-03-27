@@ -233,6 +233,21 @@ for t in landingTime:
 
 #normal3Dplot(RobotCommand[:,6], RobotCommand[:,7], RobotCommand[:,8], 'Foot Acceleration')
 
+plt.figure()
+plt.plot(timeCOM, swingXCommand)
+plt.plot(timeCOM, trRobotSwing[:,0])
+plt.title("X foot tracking")
+
+plt.figure()
+plt.plot(timeCOM, swingYCommand)
+plt.plot(timeCOM, trRobotSwing[:,1])
+plt.title("Y foot tracking")
+
+plt.figure()
+plt.plot(timeCOM, swingZCommand)
+plt.plot(timeCOM, trRobotSwing[:,2])
+plt.title("Z foot tracking")
+
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')

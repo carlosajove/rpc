@@ -33,6 +33,7 @@ public:
   void OutputMpcToInertiaCoordinates();
 
   void add_residual_rl_action(const Eigen::VectorXd &action);
+  void safety_proj();
 
   void GenerateTrajs(const double &tr_);
   void UpdateCurrentOri(Task* task);
@@ -148,6 +149,9 @@ private:
   Eigen::Vector3d des_torso_ang_acc;
 
   double indataLz;
+  double ufp_x_max_;
+  double ufp_y_min_;
+  double ufp_y_max_;
 
 
 };

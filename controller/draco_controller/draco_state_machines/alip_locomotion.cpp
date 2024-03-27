@@ -58,7 +58,7 @@ void AlipLocomotion::FirstVisit(){
 
   ctrl_arch_->alip_tm_->add_residual_rl_action(sp_->res_rl_action_);
 
-  //ctrl_arch_->alip_tm_->safety_proj();
+  ctrl_arch_->alip_tm_->safety_proj();
 
   ctrl_arch_->alip_tm_->GenerateTrajs(Tr);
 
@@ -182,4 +182,9 @@ void AlipLocomotion::SetParameters(const YAML::Node &node) {
 
 
 int AlipLocomotion::GetStance_leg(){return stance_leg;}
+
+void AlipLocomotion::Reset(){
+    first_ever = true;
+    new_leg = false;
+}
 

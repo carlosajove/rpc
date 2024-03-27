@@ -71,12 +71,10 @@ public:
   virtual ~DracoInterface();
 
   void GetCommand(void *sensor_data, void *command_data) override;
-
-  DracoTaskGainHandler *task_gain_handler_;
+  void Reset();
 
 private:
   DracoStateEstimator *se_;
-  DracoKFStateEstimator *se_kf_;
   DracoStateProvider *sp_;
   void _SafeCommand(DracoSensorData *data, DracoCommand *command);
 };

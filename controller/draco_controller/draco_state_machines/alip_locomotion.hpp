@@ -38,6 +38,8 @@ public:
   
   int GetStance_leg() override;
 
+  void Reset() override;
+
 private:
   DracoControlArchitecture *ctrl_arch_;
   DracoStateProvider *sp_;

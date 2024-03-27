@@ -24,7 +24,8 @@ PYBIND11_MODULE(draco_interface_py, m) {
 
   py::class_<DracoInterface, Interface>(m, "DracoInterface")
       .def(py::init<>())
-      .def_readwrite("interrupt_", &DracoInterface::interrupt_handler_);
+      .def("Reset", &DracoInterface::Reset);
+
 
   py::class_<DracoSensorData>(m, "DracoSensorData")
       .def(py::init<>())

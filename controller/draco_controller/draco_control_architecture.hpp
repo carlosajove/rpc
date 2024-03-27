@@ -44,6 +44,9 @@ public:
     state_ = draco_states::AlipLocomotion;
   }
 
+  void Reset() override; 
+
+
 
   DracoTCIContainer *tci_container_;
 

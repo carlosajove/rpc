@@ -1,14 +1,11 @@
 #include "configuration.hpp"
 #include "controller/robot_system/pinocchio_robot_system.hpp"
 
-#include "controller/draco_controller/draco_kf_state_estimator.hpp"
 #include "controller/draco_controller/draco_state_estimator.hpp"
 
 #include "controller/draco_controller/draco_control_architecture.hpp"
 #include "controller/draco_controller/draco_interface.hpp"
-#include "controller/draco_controller/draco_interrupt_handler.hpp"
 #include "controller/draco_controller/draco_state_provider.hpp"
-#include "controller/draco_controller/draco_task_gain_handler.hpp"
 
 #include "controller/draco_controller/draco_definition.hpp"
 #include "util/util.hpp"
@@ -18,14 +15,13 @@
 #endif
 
 DracoInterface::DracoInterface() : Interface() {
-  std::string border = "=";
+  //std::string border = "=";
   //for (unsigned int i = 0; i < 79; ++i)
   //  border += "=";
   //util::ColorPrint(color::kBoldRed, border);
   //util::PrettyConstructor(0, "DracoInterface");
 
   sp_ = DracoStateProvider::GetStateProvider();
-  Eigen::Vector3d com_offset = Eigen::Vector3d::Zero();
   try {
     YAML::Node cfg =
         YAML::LoadFile(THIS_COM "config/draco/pnc.yaml"); // get yaml node
@@ -33,11 +29,8 @@ DracoInterface::DracoInterface() : Interface() {
     sp_->servo_dt_ =
         util::ReadParameter<double>(cfg, "servo_dt"); // set control frequency
 
-    sp_->data_save_freq_ = util::ReadParameter<int>(cfg, "data_save_freq");
-    sp_->b_use_kf_state_estimator_ =
-        util::ReadParameter<bool>(cfg["state_estimator"], "kf");
-    com_offset = util::ReadParameter<Eigen::Vector3d>(
-            cfg["controller"], "com_offset");
+    //sp_->data_save_freq_ = util::ReadParameter<int>(cfg, "data_save_freq");
+
 
 #if B_USE_ZMQ
     if (!DracoDataManager::GetDataManager()->IsInitialized()) {
@@ -59,14 +52,8 @@ DracoInterface::DracoInterface() : Interface() {
   robot_ =
       new PinocchioRobotSystem(THIS_COM "robot_model/draco/draco_modified.urdf",
                                THIS_COM "robot_model/draco", false, false);
-  robot_->SetRobotComOffset(com_offset);
   se_ = new DracoStateEstimator(robot_);
-  se_kf_ = new DracoKFStateEstimator(robot_);
   ctrl_arch_ = new DracoControlArchitecture(robot_);
-  interrupt_handler_ = new DracoInterruptHandler(
-      static_cast<DracoControlArchitecture *>(ctrl_arch_));
-  task_gain_handler_ = new DracoTaskGainHandler(
-      static_cast<DracoControlArchitecture *>(ctrl_arch_));
 
   // assume start with double support
   sp_->b_lf_contact_ = true;
@@ -76,10 +63,7 @@ DracoInterface::DracoInterface() : Interface() {
 DracoInterface::~DracoInterface() {
   delete robot_;
   delete se_;
-  delete se_kf_;
   delete ctrl_arch_;
-  delete interrupt_handler_;
-  delete task_gain_handler_;
 }
 
 void DracoInterface::GetCommand(void *sensor_data, void *command_data) {
@@ -93,37 +77,11 @@ void DracoInterface::GetCommand(void *sensor_data, void *command_data) {
       static_cast<DracoSensorData *>(sensor_data);
   DracoCommand *draco_command = static_cast<DracoCommand *>(command_data);
 
-  // if (count_ <= waiting_count_) {
-  // for simulation without state estimator
-  // se_->UpdateGroundTruthSensorData(draco_sensor_data);
-  // se_->Initialize(draco_sensor_data);
-  // this->_SafeCommand(draco_sensor_data, draco_command);
-  //} else {
-
-  // for simulation without state estimator
-  //se_->UpdateGroundTruthSensorData(draco_sensor_data);
-
-  if (sp_->b_use_kf_state_estimator_) {
-    sp_->state_ == draco_states::kInitialize
-        ? se_kf_->Initialize(draco_sensor_data)
-        : se_kf_->Update(draco_sensor_data);
-  } else {
-    sp_->state_ == draco_states::kInitialize
-        //? se_->Initialize(draco_sensor_data)  //state estimator
-        //: se_->Update(draco_sensor_data);
-        ? se_->UpdateGroundTruthSensorData(draco_sensor_data)
-        : se_->UpdateGroundTruthSensorData(draco_sensor_data);
-  }
-  // process interrupt & task gains
-  if (interrupt_handler_->IsSignalReceived())
-    interrupt_handler_->Process();
-  if (task_gain_handler_->IsSignalReceived())
-    task_gain_handler_->Process();
+  se_->UpdateGroundTruthSensorData(draco_sensor_data);
 
   // get control command
   se_->GetResidualRlpolicy(draco_sensor_data);
   ctrl_arch_->GetCommand(draco_command);
-  //std::cout << "GIVE COMMAND" << draco_command->joint_trq_cmd_ << std::endl;
   se_->UpdateWbcObs();
   Eigen::VectorXd wbc_obs = sp_->get_wbc_obs();
   draco_command->wbc_obs_ = wbc_obs;
@@ -147,4 +105,10 @@ void DracoInterface::_SafeCommand(DracoSensorData *data,
   command->joint_pos_cmd_ = data->joint_pos_;
   command->joint_vel_cmd_.setZero();
   command->joint_trq_cmd_.setZero();
+}
+
+void DracoInterface::Reset(){
+  ctrl_arch_->Reset();
+  sp_->b_lf_contact_ = true;
+  sp_->b_rf_contact_ = true;
 }
