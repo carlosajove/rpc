@@ -117,8 +117,8 @@ class DracoEnv(gym.Env):
             self.client = bc.BulletClient(connection_mode=p.DIRECT)
         
         self.action_space = gym.spaces.Box(  #maximum and minumni value
-            low = np.array([-0.1, -0.1, -0.1]),
-            high = np.array([0.1, 0.1, 0.1]),
+            low = np.array([-1, -1, -1]),
+            high = np.array([1, 1, 1]),
             dtype = np.float64
         )
         """
@@ -164,18 +164,18 @@ class DracoEnv(gym.Env):
         self._rpc_draco_sensor_data = draco_interface_py.DracoSensorData()
         self._rpc_draco_command = draco_interface_py.DracoCommand()
 
-
+        self.num_envs = 1
 
         #reward terms
-        self._w_roll_pitch = 5.
-        self._w_com_height = 5.
+        self._w_roll_pitch = 0.5
+        self._w_com_height = 0.5
 
-        self._w_desired_Lxy = 15.
-        self._w_desired_yaw = 15.
-        self._w_excessive_fp = 10.
-        self._w_excessive_angle = 10.
+        self._w_desired_Lxy = 3.
+        self._w_desired_yaw = 1.
+        self._w_excessive_fp = 0.5
+        self._w_excessive_angle = 0.5
         self._w_termination = -20.
-        self._w_alive_bonus = 1.
+        self._w_alive_bonus = 3.
 
         self._Lx_main = 0.5*AlipParams.WIDTH*AlipParams.MASS*math.sqrt(AlipParams.G/AlipParams.ZH) \
                         *AlipParams.ZH*math.tanh(math.sqrt(AlipParams.G/AlipParams.ZH)*AlipParams.TS/2)
@@ -349,7 +349,9 @@ class DracoEnv(gym.Env):
             #### DEBUGGING   END ####
             #########################
 
-            self.pybulled_to_sensor_data(action)
+            wbc_action = self._denormalise_action(action)
+
+            self.pybulled_to_sensor_data(wbc_action)
             self._rpc_draco_interface.GetCommand(self._rpc_draco_sensor_data,
                                                  self._rpc_draco_command)
             step_flag = self._rpc_draco_command.rl_trigger_            
@@ -372,14 +374,53 @@ class DracoEnv(gym.Env):
 
             
 
-        reward = self._compute_reward(self._rpc_draco_command.wbc_obs_, action, done)
+        reward = self._compute_reward(self._rpc_draco_command.wbc_obs_, wbc_action, done)
         
         info = {
             "reward_components": self.reward_info
         }
 
         #self.data_save()
-        return self.policy_obs, reward, done, truncate, info # need terminated AND truncated
+        _policy_obs = self._normalise_observation(self.policy_obs)
+        print(reward, done)
+        return _policy_obs, reward, done, truncate, info # need terminated AND truncated
+
+    def _denormalise_action(self, action):
+        #from -1 to 1 to-0.1 to 1
+        #for now dummy 
+        wbc_action = 0.1*action
+        return wbc_action
+
+    def _normalise_observation(self, _observation):
+        observation = np.copy(_observation)
+        #dummy normalisation para que valla de -1 a 1  #luego mirare lo de vec env
+        observation[6] *= 2   #COM x va de 0.5 a -0.5
+        observation[7] *= 2   
+        observation[8] -= AlipParams.ZH #z height
+        observation[8] *= 5
+        observation[9] /= 5    
+        observation[10] /= 5
+        observation[11] /= 5
+        observation[12] *= 10  #angulos
+        observation[13] *= 10
+        observation[14] *= 10
+        return observation
+
+    def _denormalise_obs(self, _observation):
+        observation = np.copy(_observation)
+        observation[6] /= 2   #COM x va de 0.5 a -0.5
+        observation[7] /= 2 
+        observation[8] /= 5
+        observation[8] += AlipParams.ZH #z height
+        observation[9] *= self._Lx_main    
+        observation[10] *= 5
+        observation[11] *= 5
+        observation[12] /= 10  #angulos
+        observation[13] /= 10
+        observation[14] /= 10
+        return observation
+
+ 
 
     def close(self):
         self.client.disconnect()
@@ -445,6 +486,8 @@ class DracoEnv(gym.Env):
                 return True
             if _wbc_obs[8] < 0.57: 
                 return True
+            if np.abs(_wbc_obs[9]) > (np.abs(self._Lx_main+AlipParams.LX_OFFSET)+25):
+                return True
         return False
 
     def _compute_reward(self, wbc_obs, action, done):
@@ -465,14 +508,8 @@ class DracoEnv(gym.Env):
                                      self.reward_tracking_yaw(), self.reward_com_height(),
                                      self.reward_roll_pitch(), self.penalise_excessive_fp(),
                                      self.penalise_excessive_yaw()])
-        """
-        print("alive _bonus  ", reward)
-        print("trakin L      ", self.reward_tracking_com_L())
-        print("height        ", self.reward_com_height())
-        print("roll pitch    ", self.reward_roll_pitch())
-        print("excessive fp  ", self.penalise_excessive_fp())
-        print("excessive yaw ", self.penalise_excessive_yaw())
-        """
+       
+
         return reward.item()
 
     def reward_tracking_com_L(self):
@@ -486,36 +523,44 @@ class DracoEnv(gym.Env):
         # new obs -1 --> ended policy for left foot --> we are at the desired state for end of right stance
         error = L - self._new_wbc_obs[9:11]  #+ self._old_wbc_obs[1:3] - self._new_wbc_obs[9:11]  #desired Lx,y - observedLx,y at the end of the step
         error = np.sum(np.square(error))
+        error = np.exp(-error*0.1)
+
         error *= self._w_desired_Lxy
-        return np.exp(-error)
+        return error
     
     def reward_tracking_yaw(self):
         error = self._new_wbc_obs[17] - self._old_wbc_obs[17] - self._old_wbc_obs[3]
         error = np.square(error)
+        error = np.exp(-error)
         error *= self._w_desired_yaw
 
-        return np.exp(-error)
+        return error
 
     def reward_com_height(self):
         error = self._new_wbc_obs[8] - AlipParams.ZH
         error = np.square(error)
         error *= self._w_com_height
-        return np.exp(-error)
+        return error
 
     def reward_roll_pitch(self):
         error = np.sum(np.square(self._new_wbc_obs[15:17]))
+        error = np.exp(-error)
+
         error *= self._w_roll_pitch 
-        return np.exp(-error)
+        return error
     
     def penalise_excessive_fp(self):
         error = np.sum(np.square(self._rl_action[0:2]))
+        error = np.exp(-error)
+
         error *= self._w_excessive_fp
-        return np.exp(-error)
+        return error
     
     def penalise_excessive_yaw(self): 
         error = np.square(self._rl_action[2])
+        error = np.exp(-error)
         error *= self._w_excessive_angle
-        return np.exp(-error)
+        return error
 """
     def data_save(self):
         Ly_saved

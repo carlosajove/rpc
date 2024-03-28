@@ -8,7 +8,7 @@ import gymnasium as gym
 
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
-from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecNormalize
 
 from env import DracoEnv
 cwd = os.getcwd()
@@ -19,12 +19,13 @@ model_dir = cwd + "/rl_model/PPO"
 
 
 if __name__ == "__main__":
-    env = DracoEnv(render=False)
-    new_model = False
+    env = DracoEnv(render=True)
+    #env = VecNormalize(not_norm_env, norm_reward=False, clip_obs=50)
+    new_model = True
     
     ## train model
     if new_model:
-        tensorboard_dir = "/home/carlos/Desktop/Austin/SeungHyeonProject/rpc/ppo_rl_log/"
+        tensorboard_dir = cwd + "/ppo_rl_log/"
         model = PPO("MlpPolicy", env, verbose=1, n_steps = 256, batch_size=64, tensorboard_log=tensorboard_dir) #policy_kwargs=dict(net_arch=[64,64, dict(vf=[], pi=[])]), 
         startTime = time.time()
         iters = 0
