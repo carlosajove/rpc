@@ -497,7 +497,9 @@ class DracoEnv(gym.Env):
         self._rl_action = action
 
         reward = self._w_alive_bonus
-        reward += self.reward_tracking_com_L()
+        #reward += self.reward_tracking_com_L()
+        reward += self.reward_tracking_com_Lx()
+        reward += self.reward_tracking_com_Ly()
         reward += self.reward_tracking_yaw()
         reward += self.reward_com_height()
         reward += self.reward_roll_pitch()
@@ -519,7 +521,7 @@ class DracoEnv(gym.Env):
         else:
             L[0] = self._old_wbc_obs[1]-self._Lx_main
         #in the code 1 corresponds to current stance foot right
-        # -1 to current stance foot left 
+        # -1 to current stance foot left
         # new obs -1 --> ended policy for left foot --> we are at the desired state for end of right stance
         error = L - self._new_wbc_obs[9:11]  #+ self._old_wbc_obs[1:3] - self._new_wbc_obs[9:11]  #desired Lx,y - observedLx,y at the end of the step
         error = np.sum(np.square(error))
@@ -527,44 +529,73 @@ class DracoEnv(gym.Env):
 
         error *= self._w_desired_Lxy
         return error
+
+    def reward_tracking_com_Lx(self):
+        if (self._new_wbc_obs[0] == 1):
+            L = self._old_wbc_obs[1]+self._Lx_main   #Lx_offset+ LX_MAIN
+        else:
+            L = self._old_wbc_obs[1]-self._Lx_main
+        #in the code 1 corresponds to current stance foot right
+        # -1 to current stance foot left
+        # new obs -1 --> ended policy for left foot --> we are at the desired state for end of right stance
+        error = L - self._new_wbc_obs[9]  #+ self._old_wbc_obs[1:3] - self._new_wbc_obs[9:11]  #desired Lx,y - observedLx,y at the end of the step
+        error = np.square(error)
+        error = np.exp(-error*0.1)
+
+        error *= self._w_desired_Lx
+        return error
     
+    def reward_tracking_com_Ly(self):
+        error = self._old_wbc_obs[2] - self._new_wbc_obs[10]
+        error = np.square(error)
+        error = np.exp(-error*0.1)
+
+        erro*= self._w_desired_Ly
+
+
     def reward_tracking_yaw(self):
         error = self._new_wbc_obs[17] - self._old_wbc_obs[17] - self._old_wbc_obs[3]
-        error = np.square(error)
-        error = np.exp(-error)
+        #error = np.square(error)
+        #eror = np.exp(-error)
+        error = np.abs(error)
         error *= self._w_desired_yaw
 
         return error
 
     def reward_com_height(self):
         error = self._new_wbc_obs[8] - AlipParams.ZH
-        error = np.square(error)
+        #error = np.square(error)
+        error = np.abs(error)
+
         error *= self._w_com_height
         return error
 
     def reward_roll_pitch(self):
-        error = np.sum(np.square(self._new_wbc_obs[15:17]))
-        error = np.exp(-error)
-
-        error *= self._w_roll_pitch 
+        #error = np.sum(np.square(self._new_wbc_obs[15:17]))
+        #error = np.exp(-error)
+        error = scipy.linalg.norm(self._new_wbc_obs[15:17])
+        error *= self._w_roll_pitch
         return error
-    
+   
     def penalise_excessive_fp(self):
-        error = np.sum(np.square(self._rl_action[0:2]))
-        error = np.exp(-error)
+        #error = np.sum(np.square(self._rl_action[0:2]))
+        #error = np.exp(-error)
+        error = scipy.linalg.norm(self._rl_action[0:2])
 
         error *= self._w_excessive_fp
         return error
-    
-    def penalise_excessive_yaw(self): 
-        error = np.square(self._rl_action[2])
-        error = np.exp(-error)
+   
+    def penalise_excessive_yaw(self):
+        #rror = np.square(self._rl_action[2])
+        #error = np.exp(-error)
+        error = np.abs(self._rl_action[2])
         error *= self._w_excessive_angle
+       
         return error
 """
     def data_save(self):
         Ly_saved
-    
+   
     def env_data_plot(self):
 """
 

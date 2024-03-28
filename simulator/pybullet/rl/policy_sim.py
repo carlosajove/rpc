@@ -33,9 +33,9 @@ if __name__ == "__main__":
     obs, info = env.reset()
     interface = info["interface"]
 
-    model_dir = cwd + "/rl_model/PPO/reduced_input"
+    model_dir = cwd + "/rl_model/PPO/full_joint_obs"
 
-    model_path = f"{model_dir}/115968_"
+    model_path = f"{model_dir}/NSTEPS256_LEARNING_RATE0.0003_TIME4096"
     model = PPO.load(model_path, env=env)
 
     plot = False
@@ -48,13 +48,11 @@ if __name__ == "__main__":
             obs, reward, done, trunc, info = env.step(action)
             print("reward", reward)
             print("reward info", info["reward_components"])
-            if done: 
+            if done:
                 print(done)
                 obs,info = env.reset()
     else:
         while not done:
-            action, _ = model.predict(obs, deterministic=True)
+            action, _ = model.predict(obs, deterministic=False)
             print(action)
             obs, reward, done, trunc, info = env.step(action)
-            #env.data_plot()
-
