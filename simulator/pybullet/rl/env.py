@@ -610,7 +610,7 @@ if __name__ == "__main__":
     obs, info = env.reset()
     interface = info["interface"]
     iter = 0
-    flag = False
+    flag = Fals
     all_iter = 0
     list_snapshot = []
     while True:
@@ -631,35 +631,5 @@ if __name__ == "__main__":
             flag = False
             obs,info = env.reset()
         
-        if all_iter == 1:
-            snapshot1 = tracemalloc.take_snapshot()
-        if all_iter == 50:
-            snapshot50 = tracemalloc.take_snapshot()
-        if all_iter == 5000:
-            snapshot100 = tracemalloc.take_snapshot()
-            break
 
-
-    top_stats1 = snapshot1.statistics('lineno')
-    print("[ TOP20 1 ]")
-    for stat in top_stats1[:20]:
-        print(stat)
-    
-    top_stats50 = snapshot50.statistics('lineno')
-    print("[ TOP20 50 ]")
-    for stat in top_stats50[:20]:
-        print(stat)
-
-    top_stats100 = snapshot100.statistics('lineno')
-    print("[ TOP20 100 ]")
-    for stat in top_stats100[:20]:
-        print(stat)
-
-    compare_stats_100_1 = snapshot100.compare_to(snapshot1, 'lineno')
-
-    print("[ Top 20 differences ]")
-    for stat in compare_stats_100_1[:20]:
-        print(stat)
-    
-    
 

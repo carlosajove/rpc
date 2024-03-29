@@ -50,4 +50,5 @@ test/alip/*.txt
 
 ppo_rl_log/*
 rl_model/PPO/*
+RL videos/*
 
