@@ -33,9 +33,9 @@ if __name__ == "__main__":
     obs, info = env.reset()
     interface = info["interface"]
 
-    model_dir = cwd + "/rl_model/PPO/full_joint_obs"
+    model_dir = cwd + "/rl_model/PPO/full_obs_yaw10"
 
-    model_path = f"{model_dir}/NSTEPS256_LEARNING_RATE0.0003_TIME4096"
+    model_path = f"{model_dir}/NSTEPS254_LEARNING_RATE0.0003_TIME115824"
     model = PPO.load(model_path, env=env)
 
     plot = False
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     if plot == False:
         while True:
             #action = torch.ones(AlipParams.N_BATCH,3)
-            action, _ = model.predict(obs, deterministic=True)
+            action, _ = model.predict(obs, deterministic=False)
             print(action)
             obs, reward, done, trunc, info = env.step(action)
             print("reward", reward)

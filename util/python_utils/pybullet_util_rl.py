@@ -32,7 +32,6 @@ def get_robot_config(robot,
     na = len(joint_id)
 
     base_pos, base_quat = client.getBasePositionAndOrientation(robot)
-    print(base_pos, base_quat)
     rot_world_com = util.quat_to_rot(base_quat)
     initial_pos = [0., 0., 0.] if initial_pos is None else initial_pos
     initial_quat = [0., 0., 0., 1.] if initial_quat is None else initial_quat
@@ -64,6 +63,7 @@ def get_robot_config(robot,
         print(initial_pos)
         print("base joint ori")
         print(rot_world_basejoint)
+        print(client.getJointP)
 
     return nq, nv, na, joint_id, link_id, pos_basejoint_to_basecom, rot_basejoint_to_basecom
 
