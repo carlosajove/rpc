@@ -392,8 +392,8 @@ alip_mpc_walking:
   ufp_y_max: 0.4  #0.4
   ufp_y_min: 0.1 #0.05
   Lx_offset: 0 #0
-  Ly_des: 1 #3
-  com_yaw: 0   #degrees
+  Ly_des: 0 #3
+  com_yaw: 10   #degrees
   kx: 0
   ky: 0
 

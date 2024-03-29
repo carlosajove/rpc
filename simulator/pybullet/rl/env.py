@@ -36,10 +36,10 @@ from config.draco.pybullet_simulation import AlipParams
 imu_dvel_bias = np.array([0.0, 0.0, 0.0])
 l_contact_volt_noise = 0.001
 r_contact_volt_noise = 0.001
-imu_ang_vel_noise_std_dev = 0. 
+imu_ang_vel_noise_std_dev = 0.
 
 
-MEASEURE_TIME = False
+MEASEURE_TIME = True
 
 if MEASEURE_TIME:
     from pytictoc import TicToc
@@ -47,7 +47,11 @@ if MEASEURE_TIME:
 
 def set_init_config_pybullet_robot(robot, client = None):
     # Upperbody
-    
+    #TODO: make a List of the torques that are 0
+    for i in range(1,36):
+        client.resetJointState(robot, i, 0., 0.)
+
+
     client.resetJointState(robot, DracoJointIdx.l_shoulder_aa, np.pi / 6, 0.)
     client.resetJointState(robot, DracoJointIdx.l_elbow_fe, -np.pi / 2, 0.)
     client.resetJointState(robot, DracoJointIdx.r_shoulder_aa, -np.pi / 6, 0.)
@@ -105,7 +109,7 @@ def dict_to_numpy(obs_dict):
         else:
             obs.append(v)
     return np.array(obs)
-    
+   
 class DracoEnv(gym.Env):
     metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 50}
     def __init__(self, render: bool = False) -> None:
@@ -115,7 +119,7 @@ class DracoEnv(gym.Env):
             self.client.configureDebugVisualizer(p.COV_ENABLE_GUI,0)
         else:
             self.client = bc.BulletClient(connection_mode=p.DIRECT)
-        
+       
         self.action_space = gym.spaces.Box(  #maximum and minumni value
             low = np.array([-1, -1, -1]),
             high = np.array([1, 1, 1]),
@@ -128,66 +132,14 @@ class DracoEnv(gym.Env):
             dtype = np.float64
         )
         """
+        
         self.observation_space = gym.spaces.Box(  #observation space
             low = np.array([-50]*15),
             high = np.array([50]*15),
             dtype = np.float64
         )
-        """TODO
-        if (self.render):
-            self.client.resetDebugVisualizerCamera(
-                cameraDistance=1.0,
-                cameraYaw=120,
-                cameraPitch=-30,
-                cameraTargetPosition=[1, 0.5, 1.0])
-        self.client.setPhysicsEngineParameter(
-            fixedTimeStep=Config.CONTROLLER_DT, numSubSteps=Config.N_SUBSTEP)
-        self.client.setGravity(0, 0, -9.81)
-
-        self.client.configureDebugVisualizer(self.client.COV_ENABLE_RENDERING, 0)
-
-
-        # Create Robot, Ground
-        self.client.configureDebugVisualizer(self.client.COV_ENABLE_RENDERING, 0)
-        self.robot = self.client.loadURDF(cwd + 
-                                 "/robot_model/draco/draco_modified.urdf",
-                                 Config.INITIAL_BASE_JOINT_POS,
-                                 Config.INITIAL_BASE_JOINT_QUAT,
-                                 useFixedBase=0,
-                                 flags=p.URDF_USE_SELF_COLLISION)
-
-        ground = self.client.loadURDF(cwd + "/robot_model/ground/plane.urdf",
-                    useFixedBase=1)
-        self.client.configureDebugVisualizer(self.client.COV_ENABLE_RENDERING, 1)
-        """
-        self._rpc_draco_interface = draco_interface_py.DracoInterface()
-        self._rpc_draco_sensor_data = draco_interface_py.DracoSensorData()
-        self._rpc_draco_command = draco_interface_py.DracoCommand()
-
-        self.num_envs = 1
-
-        #reward terms
-        self._w_roll_pitch = 0.5
-        self._w_com_height = 0.5
-
-        self._w_desired_Lxy = 3.
-        self._w_desired_yaw = 1.
-        self._w_excessive_fp = 0.5
-        self._w_excessive_angle = 0.5
-        self._w_termination = -20.
-        self._w_alive_bonus = 3.
-
-        self._Lx_main = 0.5*AlipParams.WIDTH*AlipParams.MASS*math.sqrt(AlipParams.G/AlipParams.ZH) \
-                        *AlipParams.ZH*math.tanh(math.sqrt(AlipParams.G/AlipParams.ZH)*AlipParams.TS/2)
         
-        #initialise old_wbc_obs for reward
-        self._old_wbc_obs = np.zeros(18)
-        self._new_wbc_obs = np.zeros(18)
 
-
-    def reset(self, seed: int = 0):  #creates env
-        # Environment Setup
-        self.client.resetSimulation()
         if (self.render):
             self.client.resetDebugVisualizerCamera(
                 cameraDistance=1.0,
@@ -202,7 +154,7 @@ class DracoEnv(gym.Env):
 
         # Create Robot, Ground
         self.client.configureDebugVisualizer(self.client.COV_ENABLE_RENDERING, 0)
-        self.robot = self.client.loadURDF(cwd + 
+        self.robot = self.client.loadURDF(cwd +
                                  "/robot_model/draco/draco_modified.urdf",
                                  Config.INITIAL_BASE_JOINT_POS,
                                  Config.INITIAL_BASE_JOINT_QUAT,
@@ -211,13 +163,15 @@ class DracoEnv(gym.Env):
 
         ground = self.client.loadURDF(cwd + "/robot_model/ground/plane.urdf",
                     useFixedBase=1)
+
         self.client.configureDebugVisualizer(self.client.COV_ENABLE_RENDERING, 1)
+
+        set_init_config_pybullet_robot(self.robot, self.client)
+
 
         nq, nv, na,self.joint_id,self.link_id_dict, self.pos_basejoint_to_basecom, self.rot_basejoint_to_basecom = pybullet_util_rl.get_robot_config(
             self.robot, Config.INITIAL_BASE_JOINT_POS,
             Config.INITIAL_BASE_JOINT_QUAT, Config.PRINT_ROBOT_INFO,  client = self.client)
-
-        set_init_config_pybullet_robot(self.robot, self.client)
 
         pybullet_util_rl.set_joint_friction(self.robot,self.joint_id, 0., client=self.client)
         pybullet_util_rl.set_link_damping(self.robot, self.link_id_dict, 0., 0., client=self.client)
@@ -245,8 +199,63 @@ class DracoEnv(gym.Env):
         self.client.changeConstraint(c2, gearRatio=-1, maxForce=500, erp=10)
         #pnc interface, sensor_data, command class
 
+
+
+
+
+        self._rpc_draco_interface = draco_interface_py.DracoInterface()
+        self._rpc_draco_sensor_data = draco_interface_py.DracoSensorData()
+        self._rpc_draco_command = draco_interface_py.DracoCommand()
+
+        self.num_envs = 1
+
+        #reward terms
+        self._w_roll_pitch = -0.5
+        self._w_com_height = -0.5
+
+        self._w_desired_Lxy = 5.
+
+        self._w_desired_Lx = 3.
+        self._w_desired_Ly = 5.
+
+        self._w_desired_yaw = -1.
+        self._w_excessive_fp = -0.5
+        self._w_excessive_angle = -0.5
+        self._w_termination = -20.
+        self._w_alive_bonus = 3.
+
+        self._Lx_main = 0.5*AlipParams.WIDTH*AlipParams.MASS*math.sqrt(AlipParams.G/AlipParams.ZH) \
+                        *AlipParams.ZH*math.tanh(math.sqrt(AlipParams.G/AlipParams.ZH)*AlipParams.TS/2)
+       
+        #initialise old_wbc_obs for reward
+        self._old_wbc_obs = np.zeros(18)
+        self._new_wbc_obs = np.zeros(18)
+
+        self._bool = 0
+
+
+
+    def reset(self, seed: int = 0):  #creates env
+        # Environment Setup
+        #self.client.resetSimulation()
+        resetime = TicToc()
+        resetime.tic()
+
+
         self._rpc_draco_interface.Reset()
 
+
+        self.client.configureDebugVisualizer(self.client.COV_ENABLE_RENDERING, 1)
+
+        self.client.resetBasePositionAndOrientation(self.robot, [-0.031658, -3.865e-5, 0.88019], [0., 0., 0., 1.])
+
+        self.client.resetBaseVelocity(self.robot, [0., 0., 0.], [0., 0., 0.])
+        set_init_config_pybullet_robot(self.robot, self.client)
+
+
+        nq, nv, na,self.joint_id,self.link_id_dict, self.pos_basejoint_to_basecom, self.rot_basejoint_to_basecom = pybullet_util_rl.get_robot_config(
+            self.robot, Config.INITIAL_BASE_JOINT_POS,
+            Config.INITIAL_BASE_JOINT_QUAT, Config.PRINT_ROBOT_INFO,  client = self.client)
 
         base_com_pos, base_com_quat = self.client.getBasePositionAndOrientation(self.robot)
         rot_world_basecom = util.quat_to_rot(np.array(base_com_quat))
@@ -262,15 +271,7 @@ class DracoEnv(gym.Env):
 
         # Run Simulation
         self.dt = Config.CONTROLLER_DT
-        count = 0
-        jpg_count = 0
 
-
-        if Config.VIDEO_RECORD:
-            video_dir = 'video/draco'
-            if os.path.exists(video_dir):
-                shutil.rmtree(video_dir)
-            os.makedirs(video_dir)
 
         self.previous_torso_velocity = np.array([0., 0., 0.])
         self.rate = RateLimiter(frequency=1./self.dt)
@@ -282,9 +283,9 @@ class DracoEnv(gym.Env):
             }
         self._iter = 0
 
-        
+        #print(resetime.tocvalue())
         return obs_numpy, info
-    
+   
     def step(self, action):
         #residual, self.gripper_command = action[0], action[1]
         # TODO remove printing
@@ -306,10 +307,10 @@ class DracoEnv(gym.Env):
                 done = True
                 break
             norm = scipy.linalg.norm(base_com_quat)
-            if (norm == 0): 
+            if (norm == 0):
                 done = True
                 self.reset()
-                break 
+                break
 
             rot_world_basecom = util.quat_to_rot(base_com_quat)
             rot_world_basejoint = np.dot(rot_world_basecom,
@@ -352,10 +353,11 @@ class DracoEnv(gym.Env):
             wbc_action = self._denormalise_action(action)
 
             self.pybulled_to_sensor_data(wbc_action)
+
             self._rpc_draco_interface.GetCommand(self._rpc_draco_sensor_data,
                                                  self._rpc_draco_command)
             step_flag = self._rpc_draco_command.rl_trigger_            
-            
+           
             self._set_motor_command(self._rpc_draco_command, self.client)
 
             self.previous_torso_velocity = pybullet_util_rl.get_link_vel(
@@ -372,22 +374,20 @@ class DracoEnv(gym.Env):
         if(self._iter > 60): truncate = True
         else: truncate = False
 
-            
+        self._iter += 1
 
         reward = self._compute_reward(self._rpc_draco_command.wbc_obs_, wbc_action, done)
-        
+       
         info = {
             "reward_components": self.reward_info
         }
 
-        #self.data_save()
-        _policy_obs = self._normalise_observation(self.policy_obs)
-        print(reward, done)
-        return _policy_obs, reward, done, truncate, info # need terminated AND truncated
+        #self.dataf
+        return self.policy_obs, reward, done, truncate, info # need terminated AND truncated
 
     def _denormalise_action(self, action):
         #from -1 to 1 to-0.1 to 1
-        #for now dummy 
+        #for now dummy
         wbc_action = 0.1*action
         return wbc_action
 
@@ -395,7 +395,7 @@ class DracoEnv(gym.Env):
         observation = np.copy(_observation)
         #dummy normalisation para que valla de -1 a 1  #luego mirare lo de vec env
         observation[6] *= 2   #COM x va de 0.5 a -0.5
-        observation[7] *= 2   
+        observation[7] *= 2  
         observation[8] -= AlipParams.ZH #z height
         observation[8] *= 5
         observation[9] /= 5    
@@ -409,7 +409,7 @@ class DracoEnv(gym.Env):
     def _denormalise_obs(self, _observation):
         observation = np.copy(_observation)
         observation[6] /= 2   #COM x va de 0.5 a -0.5
-        observation[7] /= 2 
+        observation[7] /= 2
         observation[8] /= 5
         observation[8] += AlipParams.ZH #z height
         observation[9] *= self._Lx_main    
@@ -434,7 +434,7 @@ class DracoEnv(gym.Env):
     def pybulled_to_sensor_data(self, action):
         imu_frame_quat, imu_ang_vel, imu_dvel, joint_pos, joint_vel, b_lf_contact, b_rf_contact, \
             l_normal_force, r_normal_force = pybullet_util_rl.get_sensor_data_from_pybullet(
-            self.robot, DracoLinkIdx, DracoJointIdx, self.previous_torso_velocity, 
+            self.robot, DracoLinkIdx, DracoJointIdx, self.previous_torso_velocity,
             self.link_id_dict, self.client)
 
         l_normal_force = pybullet_util_rl.simulate_contact_sensor(l_normal_force)
@@ -473,18 +473,18 @@ class DracoEnv(gym.Env):
                                 AlipParams.COM_YAW, AlipParams.TS, AlipParams.TS, 0., 0., 0., 0.,0.,0., 0.,0.,0.,0.,0.,0.])
         policy_obs = np.concatenate((wbc_obs[0:12], wbc_obs[15:18]))             
         #add angular velocity
-        
+       
 
         return policy_obs
 
-    
+   
     def _compute_termination(self, _wbc_obs = None):
         #TODO: add more termination
         if _wbc_obs is not None:
             condition = np.any((_wbc_obs[8] < 0.5) | (_wbc_obs[8] > 0.8))  #0.69
-            if _wbc_obs[8] > 0.75: 
+            if _wbc_obs[8] > 0.75:
                 return True
-            if _wbc_obs[8] < 0.57: 
+            if _wbc_obs[8] < 0.57:
                 return True
             if np.abs(_wbc_obs[9]) > (np.abs(self._Lx_main+AlipParams.LX_OFFSET)+25):
                 return True
@@ -550,8 +550,8 @@ class DracoEnv(gym.Env):
         error = np.square(error)
         error = np.exp(-error*0.1)
 
-        erro*= self._w_desired_Ly
-
+        error *= self._w_desired_Ly
+        return error
 
     def reward_tracking_yaw(self):
         error = self._new_wbc_obs[17] - self._old_wbc_obs[17] - self._old_wbc_obs[3]
@@ -609,19 +609,20 @@ if __name__ == "__main__":
     interface = info["interface"]
     iter = 0
     flag = False
+
     while True:
         iter += 1
-        if iter == 11: 
-            action = 0*np.random.rand(3)
+        if iter == 10:
             iter = 0
+            action = np.random.rand(3)
+            action /=20
             flag = True
         else: action = np.zeros(3)
+        action = np.random.rand(3)
+
         obs, reward, done, trunc, info = env.step(action)
-        if done: 
+        if done:
             obs,info = env.reset()
         if flag:
             flag = False
-            #obs,info = env.reset()
-        
-
-
+            obs,info = env.reset()

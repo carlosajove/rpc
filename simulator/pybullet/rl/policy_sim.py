@@ -33,9 +33,9 @@ if __name__ == "__main__":
     obs, info = env.reset()
     interface = info["interface"]
 
-    model_dir = cwd + "/rl_model/PPO/full_joint_obs"
+    model_dir = cwd + "/rl_model/PPO/redobs_yaw_10"
 
-    model_path = f"{model_dir}/NSTEPS256_LEARNING_RATE0.0003_TIME4096"
+    model_path = f"{model_dir}/NSTEPS256_LEARNING_RATE0.0003_TIME123136"
     model = PPO.load(model_path, env=env)
 
     plot = False
