@@ -40,7 +40,7 @@ imu_ang_vel_noise_std_dev = 0.
 
 import tracemalloc
 
-MEASEURE_TIME = False
+MEASEURE_TIME = True
 
 if MEASEURE_TIME:
     from pytictoc import TicToc
@@ -134,11 +134,13 @@ class DracoEnv(gym.Env):
         )
        
         """
+        
         self.observation_space = gym.spaces.Box(  #observation space
             low = np.array([-50]*15),
             high = np.array([50]*15),
             dtype = np.float64
         )
+        
         """
 
         if (self.render):
@@ -610,13 +612,11 @@ if __name__ == "__main__":
     obs, info = env.reset()
     interface = info["interface"]
     iter = 0
-    flag = Fals
-    all_iter = 0
-    list_snapshot = []
+    flag = False
+
     while True:
-        all_iter += 1
         iter += 1
-        if iter == 5:
+        if iter == 10:
             iter = 0
             action = np.random.rand(3)
             action /=20
@@ -630,6 +630,3 @@ if __name__ == "__main__":
         if flag:
             flag = False
             obs,info = env.reset()
-        
-
-
