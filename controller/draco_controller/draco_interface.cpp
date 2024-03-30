@@ -80,7 +80,7 @@ void DracoInterface::GetCommand(void *sensor_data, void *command_data) {
   se_->UpdateGroundTruthSensorData(draco_sensor_data);
 
   // get control command
-  se_->GetResidualRlpolicy(draco_sensor_data);
+  se_->GetRlpolicy(draco_sensor_data);
   ctrl_arch_->GetCommand(draco_command);
   se_->UpdateWbcObs();
   Eigen::VectorXd wbc_obs = sp_->get_wbc_obs();

@@ -197,8 +197,8 @@ void DracoControlArchitecture::GetCommand(void *command) {
        //alipIter = 0;
        alipIter = -5;
        //exit(0);
-       cfg_ = YAML::LoadFile(THIS_COM "config/draco/pnc.yaml");
-       sp_->outsideCommand(cfg_["alip_mpc_walking"]);
+       //cfg_ = YAML::LoadFile(THIS_COM "config/draco/pnc.yaml");
+       //sp_->outsideCommand(cfg_["alip_mpc_walking"]);
        sp_->rl_trigger_ = true;
     }
   //  std::cout << "ctroarch end Get Command" << std::endl << std::endl;

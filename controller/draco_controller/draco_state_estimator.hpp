@@ -33,7 +33,7 @@ public:
   void UpdateGroundTruthSensorData(DracoSensorData *sensor_data);
   void UpdateFootContact(DracoSensorData *sensor_data);
 
-  void GetResidualRlpolicy(DracoSensorData *sensor_data);
+  void GetRlpolicy(DracoSensorData *sensor_data);
   void UpdateWbcObs();
 
 private:

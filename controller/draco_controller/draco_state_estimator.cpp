@@ -289,8 +289,12 @@ void DracoStateEstimator::UpdateGroundTruthSensorData(
 #endif
 }
 
-void DracoStateEstimator::GetResidualRlpolicy(DracoSensorData *sensor_data){
+void DracoStateEstimator::GetRlpolicy(DracoSensorData *sensor_data){
   sp_-> res_rl_action_ = sensor_data->res_rl_action_;
+  sp_-> initial_stance_leg_ = sensor_data->initial_stance_leg_;
+  sp_-> Lx_offset_des_ = sensor_data->policy_command_[0];
+  sp_-> Ly_des_ = sensor_data->policy_command_[1];
+  sp_-> des_com_yaw_ = sensor_data->policy_command_[2];
 }
 
 void DracoStateEstimator::UpdateWbcObs(){

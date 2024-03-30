@@ -30,6 +30,7 @@ AlipLocomotion::AlipLocomotion(StateId state_id, PinocchioRobotSystem *robot,
 
 void AlipLocomotion::FirstVisit(){
   if(first_ever) {
+    stance_leg = sp_->initial_stance_leg_;
     state_machine_start_time_ = sp_->current_time_;
     first_ever = false;
     if (stance_leg == 1) {
@@ -53,7 +54,7 @@ void AlipLocomotion::FirstVisit(){
   Tr = Ts - state_machine_time_;
 
   sp_->Tr_ = Tr;
-  ctrl_arch_->alip_tm_->MpcSolutions(Tr, stance_leg, sp_->Lx_offset_, sp_->Ly_des_, sp_->des_com_yaw_,
+  ctrl_arch_->alip_tm_->MpcSolutions(Tr, stance_leg, sp_->Lx_offset_des_, sp_->Ly_des_, sp_->des_com_yaw_,
                                         sp_->kx_, sp_->ky_, sp_->mu_);
 
   ctrl_arch_->alip_tm_->add_residual_rl_action(sp_->res_rl_action_);
@@ -167,7 +168,7 @@ void AlipLocomotion::SetParameters(const YAML::Node &node) {
   try {
     util::ReadParameter(node, "swing_height", swing_height_);
     util::ReadParameter(node, "Ts", Ts);
-    util::ReadParameter(node, "stance_leg", stance_leg);
+    //util::ReadParameter(node, "stance_leg", stance_leg);
     util::ReadParameter(node, "verbose", verbose);
     util::ReadParameter(node, "rf_z_MAX", rf_z_MAX_);
     util::ReadParameter(node, "rf_z_max", rf_z_max_);

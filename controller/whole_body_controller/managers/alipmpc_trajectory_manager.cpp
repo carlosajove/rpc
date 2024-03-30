@@ -483,8 +483,8 @@ void AlipMpcTrajectoryManager::SetParameters(const YAML::Node &node) {
     util::ReadParameter(node, "zH", refzH);
     util::ReadParameter(node, "leg_width", indata.leg_width);
     util::ReadParameter(node, "total_mass", mass);
-    util::ReadParameter(node, "Lx_offset", indata.Lx_offset);
-    util::ReadParameter(node, "Ly_des", indata.Ly_des);
+    //util::ReadParameter(node, "Lx_offset", indata.Lx_offset);
+    //util::ReadParameter(node, "Ly_des", indata.Ly_des);
     util::ReadParameter(node, "variable_height", variable_height);
     util::ReadParameter(node, "reference_swing_height", reference_swing_height);
     util::ReadParameter(node, "swing_height", swing_height);

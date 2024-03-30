@@ -3,6 +3,7 @@ import sys
 import numpy as np
 import datetime
 import time
+from math import pi
 
 import gymnasium as gym
 
@@ -20,7 +21,7 @@ import argparse
 
 import argparse
 
-new_model = False
+new_model = True
 
 if __name__ == "__main__":
     if not new_model:
@@ -29,7 +30,8 @@ if __name__ == "__main__":
         args = parser.parse_args()
         bash_timesteps = int(args.timesteps)
 
-    env = DracoEnv(render=False)
+    yaw_max = pi/4
+    env = DracoEnv(5, 20, yaw_max, randomized_command=True, reduced_obs_size=True, render = False)
     #env = VecNormalize(not_norm_env, norm_reward=False, clip_obs=50)
 
     n_steps_ = 256 #512
@@ -41,6 +43,8 @@ if __name__ == "__main__":
     ## train model
     if new_model:
         tensorboard_dir = cwd + "/ppo_rl_log/"
+        #use MlpPolicy
+        #"MultiInputPolicy"
         model = PPO("MlpPolicy", env, verbose=1, n_steps = n_steps_, batch_size=batch_size_, tensorboard_log=tensorboard_dir, learning_rate=learning_rate_, device = "cpu") #policy_kwargs=dict(net_arch=[64,64, dict(vf=[], pi=[])]), 
         startTime = time.time()
         TIMESTEPS = 1*n_steps_
@@ -48,7 +52,7 @@ if __name__ == "__main__":
     else:
         startTime = time.time()
         CURR_TIMESTEP = bash_timesteps
-        model_path = f"{model_dir}/redobs_yaw_10/NSTEPS{n_steps_}_LEARNING_RATE{learning_rate_}_TIME{CURR_TIMESTEP}"
+        model_path = f"{model_dir}/erase/NSTEPS{n_steps_}_LEARNING_RATE{learning_rate_}_TIME{CURR_TIMESTEP}"
         print("model_path", model_path)
         model = PPO.load(model_path, env=env)
         TIMESTEPS =20*n_steps_
@@ -57,12 +61,12 @@ if __name__ == "__main__":
 
     while(True):
         try:
-            model.learn(total_timesteps=TIMESTEPS, progress_bar=True, reset_num_timesteps=False, tb_log_name="reducedObs_Yaw_10")
+            model.learn(total_timesteps=TIMESTEPS, progress_bar=True, reset_num_timesteps=False, tb_log_name="erase")
             endTime = time.time()
             print("Model train time: "+str(datetime.timedelta(seconds=endTime-startTime)))
             ## save the model
             CURR_TIMESTEP += TIMESTEPS
-            save_subdir = f"/redobs_yaw_10/NSTEPS{n_steps_}_LEARNING_RATE{learning_rate_}_TIME{CURR_TIMESTEP}"
+            save_subdir = f"/erase/NSTEPS{n_steps_}_LEARNING_RATE{learning_rate_}_TIME{CURR_TIMESTEP}"
             save_path = model_dir + save_subdir
             print(save_path)
             model.save(save_path)
