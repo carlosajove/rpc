@@ -7,10 +7,8 @@ lbound_time = 5
 ubound_time = 20
 
 script_directory = os.path.dirname(os.path.abspath(__file__))
-file_path1 = os.path.join(script_directory, 'alip_COM_trajectory.txt')
 
 print(script_directory)
-print(file_path1)
 # Read data from the .txt file
 
 
@@ -113,7 +111,6 @@ def normal3Dplot(x, y, z, name):
     ax.set_title(name)
 
 
-trCOM = all_trajectories('alip_COM_trajectory.txt')
 #trSw1 = all_trajectories('Swing1_trajectory.txt')
 #trSw2 = all_trajectories('Swing2_trajectory.txt')
 

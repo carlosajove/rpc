@@ -253,8 +253,7 @@ void AlipMpcTrajectoryManager::GenerateSwingFtraj(const double &tr_){
       swing_height = 0.025;   
     }
   }
-
-  AlipSwingPos = new AlipSwing(Swingfoot_start, Swingfoot_end, swing_height, indata.Ts);
+  if (Alip) AlipSwingPos = new AlipSwing(Swingfoot_start, Swingfoot_end, swing_height, indata.Ts);
   AlipSwingPos2 = new AlipSwing2(Swingfoot_start, Swingfoot_end, swing_height, indata.Ts);
 
   
@@ -525,14 +524,14 @@ void AlipMpcTrajectoryManager::saveTrajectories(const double start_time, const d
     Eigen::VectorXd Swing_part1 = first_half_curve_SwingPos->Evaluate(t/2);
     Eigen::VectorXd Swing_part2 = second_half_curve_SwingPos->Evaluate(t/2);
     Eigen::VectorXd BezierSwing = BezierSwingPos->Evaluate(t);
-    Eigen::Vector3d SwingAlip = AlipSwingPos->Evaluate(t);
+    //Eigen::Vector3d SwingAlip = AlipSwingPos->Evaluate(t);
     Eigen::Vector3d SwingAlip2 = AlipSwingPos2->Evaluate(t);
 
 
     file2 << Swing_part1.transpose() << "  " << t << std::endl;
     file3 << Swing_part2.transpose() << "  " << t <<  std::endl;
     file4 << BezierSwing.transpose() << "  " << t <<  std::endl;
-    file5 << SwingAlip.transpose() << "  " << t <<  std::endl;
+    //file5 << SwingAlip.transpose() << "  " << t <<  std::endl;
     file6 << SwingAlip2.transpose() << "  " << t <<  std::endl;
 
 

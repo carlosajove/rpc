@@ -256,7 +256,7 @@ void DracoControlArchitecture::GetCommand(void *command) {
     upper_body_tm_->UseNominalUpperBodyJointPos(sp_->nominal_jpos_);
     controller_->GetCommand(command);
     alipIter++;
-    //if (alipIter == 2) alipIter = 0;
+    if (mpc_freq_ != 0 && alipIter == mpc_freq_) alipIter = 0;
     alip_tm_->saveRobotCommand(sp_->current_time_);
     alip_tm_->saveCurrentCOMstate(sp_->current_time_);
     alip_tm_->saveMpcCOMstate(sp_->current_time_);
@@ -320,4 +320,6 @@ void DracoControlArchitecture::_InitializeParameters() {
   alip_tm_->SetTaskWeights(cfg_["alip_mpc_walking"]["task"]);
   alip_mpc_->SetParameters(cfg_["alip_mpc_walking"]);
 
+  //draco_control_arch
+  util::ReadParameter(cfg_["alip_mpc_walking"], "mpc_freq", mpc_freq_);
 }

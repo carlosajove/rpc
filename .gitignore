@@ -48,3 +48,6 @@ note.txt
 test/alip/*.txt
 !test/alip/CMakeLists.txt
 
+ppo_rl_log/*
+RL videos/*
+rl_model/*
