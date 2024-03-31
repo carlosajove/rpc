@@ -14,7 +14,7 @@ DCMTrajectoryManager::DCMTrajectoryManager(DCMPlanner *dcm_planner,
       lfoot_idx_(lfoot_idx), rfoot_idx_(rfoot_idx), current_foot_step_idx_(0),
       first_swing_leg_(end_effector::LFoot), /*b_first_visit_(true),*/
       walking_primitive_(-1) {
-  util::PrettyConstructor(2, "DCMTrajectoryManager");
+  //util::PrettyConstructor(2, "DCMTrajectoryManager");
 
 
   foot_step_list_.clear();
@@ -30,7 +30,7 @@ DCMTrajectoryManager::DCMTrajectoryManager(
       lfoot_idx_(lfoot_idx), rfoot_idx_(rfoot_idx), current_foot_step_idx_(0),
       first_swing_leg_(end_effector::LFoot), /*b_first_visit_(true),*/
       walking_primitive_(-1), b_use_base_height_(b_use_base_height) {
-  util::PrettyConstructor(2, "DCMTrajectoryManager");
+  //util::PrettyConstructor(2, "DCMTrajectoryManager");
 
   foot_step_list_.clear();
   foot_step_preview_list_.clear();

@@ -23,6 +23,7 @@ public:
   virtual bool SwitchLeg(){return 0;}
   virtual int GetStance_leg(){return 0;}
   //
+  virtual void Reset() {return ;};
 
   StateId State() const { return this->state_id_; }
 

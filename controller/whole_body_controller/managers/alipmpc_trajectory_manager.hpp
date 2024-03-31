@@ -24,14 +24,18 @@ public:
 
   void initializeOri();
   void setNewOri();
-  void outsideCommand(const YAML::Node &node);
-
-  void MpcSolutions(const double &tr_, const double &st_leg);
+  void MpcSolutions(const double &tr_, const double &st_leg_, 
+                    const double &Lx_offset_, const double &Ly_des_,
+                    const double &com_yaw_, 
+                    const double &kx_, const double &ky_,
+                    const double &mu_);
   void InertiaToMpcCoordinates();
   void OutputMpcToInertiaCoordinates();
 
-  void GenerateSwingFtraj(const double &tr_);
+  void add_residual_rl_action(const Eigen::VectorXd &action);
+  void safety_proj();
 
+  void GenerateTrajs(const double &tr_);
   void UpdateCurrentOri(Task* task);
   void UpdateCurrentPos(Task* task);
 
@@ -73,25 +77,18 @@ private:
   ForceTask *rg_force_task;
   PinocchioRobotSystem *robot_;
 
-  HermiteCurveVec *first_half_curve_SwingPos;
-  HermiteCurveVec *second_half_curve_SwingPos;
-
-  QuadraticBezierCurve *BezierSwingPos;
-  int Bezier;
-
-  AlipSwing *AlipSwingPos;
-  int Alip;
 
   AlipSwing2 *AlipSwingPos2;
-  int Alip2;
+
+  HermiteQuaternionCurve *torso_ori_curve_;
+  HermiteQuaternionCurve *swfoot_ori_curve_;
+
 
   full_horizon_sol fullsol;  //refrence frame wrt current stance leg
   input_data_t indata;       //reference frame wrt current stance leg
   output_data_t outdata;
   double com_yaw;
 
-  Eigen::Vector3d COM_end;
-  Eigen::Vector3d COMvel_end;
 
   Eigen::Vector3d Swingfoot_start;
 
@@ -103,12 +100,10 @@ private:
   Eigen::Vector3d stleg_pos_torso_ori;
 
 
-  Eigen::VectorXd des_ori_lfoot;
-  Eigen::VectorXd des_ori_rfoot;
-  Eigen::VectorXd des_ori_torso;
+  Eigen::Quaterniond des_swfoot_quat_;
+  Eigen::Quaterniond des_torso_quat_;
   Eigen::Isometry3d des_torso_iso;
-  Eigen::Isometry3d des_lfoot_iso;
-  Eigen::Isometry3d des_rfoot_iso;
+
   bool first_ever;
 
 
@@ -145,8 +140,18 @@ private:
   Eigen::VectorXd des_swfoot_vel;
   Eigen::VectorXd des_swfoot_acc;
 
+  Eigen::Quaterniond des_swfoot_quat;
+  Eigen::Vector3d des_swfoot_ang_vel;
+  Eigen::Vector3d des_swfoot_ang_acc;
+
+  Eigen::Quaterniond des_torso_quat;
+  Eigen::Vector3d des_torso_ang_vel;
+  Eigen::Vector3d des_torso_ang_acc;
 
   double indataLz;
+  double ufp_x_max_;
+  double ufp_y_min_;
+  double ufp_y_max_;
 
 
 };

@@ -44,6 +44,9 @@ public:
     state_ = draco_states::AlipLocomotion;
   }
 
+  void Reset() override; 
+
+
 
   DracoTCIContainer *tci_container_;
 
@@ -71,6 +74,7 @@ private:
   NewStep_mpc *alip_mpc_;
 
   int mpc_freq_;
+  bool verbose = false;
   int alipIter;
   double Tr;
   // LMPCHandler *lmpc_handler_;

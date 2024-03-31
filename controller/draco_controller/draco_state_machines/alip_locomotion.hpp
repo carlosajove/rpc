@@ -33,20 +33,29 @@ public:
   bool SwitchLeg() override;
 
   void SetParameters(const YAML::Node &node) override;
+
+  void SetRLaction(const Eigen::VectorXd &action){action_ = action;}
   
   int GetStance_leg() override;
+
+  void Reset() override;
 
 private:
   DracoControlArchitecture *ctrl_arch_;
   DracoStateProvider *sp_;
-
+  int count = 0;
   double swing_height_;
   int stance_leg ;
   double Tr;
   double Ts;
   bool first_ever;
   bool new_leg;
+  bool verbose;
 
+  double rf_z_MAX_;
+  double rf_z_max_;
+
+  Eigen::VectorXd action_;
 
   std::fstream file1;
   // set nominal desired position/orientation (e.g., for zero acceleration cmd)

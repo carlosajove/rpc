@@ -110,8 +110,10 @@ int main() {
 // i want to test the trajectories to watch them
  
   double Tr = 0.3; //Ts = 0
-  alip_tm.MpcSolutions(Tr, 1);  //stance leg right leg
-  alip_tm.GenerateSwingFtraj(Tr);
+  alip_tm.MpcSolutions(Tr, 1, 0, 0,0 ,0,0,0);  //stance leg right leg
+
+  std::terminate();
+  alip_tm.GenerateTrajs(Tr);
 
   alip_tm.saveTrajectories(0, 0.01, Tr);
 

@@ -30,7 +30,7 @@ DracoController::DracoController(DracoTCIContainer *tci_container,
       b_first_visit_wbc_ctrl_(true), b_smoothing_command_(false),
       b_use_modified_swing_foot_jac_(false), smoothing_command_duration_(0.),
       init_joint_pos_(Eigen::VectorXd::Zero(draco::n_adof)) {
-  util::PrettyConstructor(2, "DracoController");
+  //util::PrettyConstructor(2, "DracoController");
   sp_ = DracoStateProvider::GetStateProvider();
 
 #if B_USE_MATLOGGER
@@ -222,6 +222,9 @@ void DracoController::GetCommand(void *command) {
                   tci_container_->internal_constraint_map_,
                   tci_container_->force_task_map_, wbc_qddot_cmd_,
                   joint_trq_cmd_); // joint_trq_cmd_ size: 27
+
+
+    //std::cout << "CONTROLLER GIVE COMMAND" << joint_trq_cmd_ << std::endl;
 
     // joint integrator for real experiment
     Eigen::VectorXd joint_acc_cmd = wbc_qddot_cmd_.tail(robot_->NumActiveDof());

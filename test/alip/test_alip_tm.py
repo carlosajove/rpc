@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
-lbound_time = 5
-ubound_time = 20
+lbound_time = 4
+ubound_time = 6
 
 script_directory = os.path.dirname(os.path.abspath(__file__))
 
@@ -229,6 +229,21 @@ for t in landingTime:
 #normal3Dplot(xCOM, yCOM, zCOM, 'COM st ref')
 
 #normal3Dplot(RobotCommand[:,6], RobotCommand[:,7], RobotCommand[:,8], 'Foot Acceleration')
+
+plt.figure()
+plt.plot(timeCOM, swingXCommand)
+plt.plot(timeCOM, trRobotSwing[:,0])
+plt.title("X foot tracking")
+
+plt.figure()
+plt.plot(timeCOM, swingYCommand)
+plt.plot(timeCOM, trRobotSwing[:,1])
+plt.title("Y foot tracking")
+
+plt.figure()
+plt.plot(timeCOM, swingZCommand)
+plt.plot(timeCOM, trRobotSwing[:,2])
+plt.title("Z foot tracking")
 
 
 fig = plt.figure()

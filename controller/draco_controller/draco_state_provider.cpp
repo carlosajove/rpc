@@ -9,7 +9,7 @@ DracoStateProvider *DracoStateProvider::GetStateProvider() {
 }
 
 DracoStateProvider::DracoStateProvider() {
-  util::PrettyConstructor(1, "DracoStateProvider");
+  //util::PrettyConstructor(1, "DracoStateProvider");
 
   servo_dt_ = 0.00125;
   data_save_freq_ = 1;

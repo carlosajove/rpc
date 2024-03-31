@@ -1,6 +1,7 @@
 #pragma once
 #include <Eigen/Dense>
 #include <vector>
+#include "util/util.hpp"
 
 class DracoStateProvider {
 public:
@@ -48,6 +49,63 @@ public:
   std::vector<int> floating_base_jidx_;
 
   Eigen::Vector3d cam_est_;
+
+  //RL action
+  Eigen::VectorXd res_rl_action_;
+
+  //WBC obs
+  double mass_;
+  int initial_stance_leg_;
+  bool rl_trigger_ = false;
+  double stance_leg_;
+  double Lx_offset_des_;
+  double Ly_des_;
+  double des_com_yaw_;
+  double Ts_;
+  double Tr_;
+  Eigen::Vector3d com_pos_stance_frame_;
+  Eigen::Vector3d L_stance_frame_;
+  Eigen::Vector3d stfoot_pos_;
+  Eigen::Vector3d torso_roll_pitch_yaw_;
+
+  Eigen::VectorXd get_wbc_obs(){
+    Eigen::VectorXd obs(16);
+    obs <<  stance_leg_,
+            Lx_offset_des_,               //2
+            Ly_des_,
+            des_com_yaw_,             //4
+            com_pos_stance_frame_(0), //5
+            com_pos_stance_frame_(1),
+            com_pos_stance_frame_(2),
+            L_stance_frame_(0),       //8
+            L_stance_frame_(1),
+            L_stance_frame_(2),
+            stfoot_pos_(0),           //11
+            stfoot_pos_(1),
+            stfoot_pos_(2),
+            torso_roll_pitch_yaw_(0), //14
+            torso_roll_pitch_yaw_(1),
+            torso_roll_pitch_yaw_(2); //16
+            //Ts_,
+            //Tr_,
+    return obs;
+  }
+
+  double mu_;
+  double kx_;
+  double ky_;
+
+  void outsideCommand(const YAML::Node &node){
+    //util::ReadParameter(node, "Lx_offset", Lx_offset_);
+    //util::ReadParameter(node, "Ly_des", Ly_des_);
+    //util::ReadParameter(node, "com_yaw", des_com_yaw_);
+    util::ReadParameter(node, "mu", mu_);
+    util::ReadParameter(node, "kx", kx_);
+    util::ReadParameter(node, "ky", ky_);
+    //des_com_yaw_ *= M_PI/180;
+
+}
+
 
 private:
   DracoStateProvider();

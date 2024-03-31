@@ -172,11 +172,12 @@ int main(){
    
 
     //print some data
-    cout << fullmpcdata.xlip_sol.size() << " size " << "hey" << endl;
-    cout << "ufp sol:" << endl;
-    for (int i = 0; i < stoi(step_horizon); i++) cout << fullmpcdata.ufp_sol[2*i] << " " << fullmpcdata.ufp_sol[2*i+1] << endl;
-    cout << endl;
-    cout << "x + ufp" << endl;
+    //cout << fullmpcdata.xlip_sol.size() << " size " << "hey" << endl;
+    //cout << "ufp sol:" << endl;
+    //for (int i = 0; i < stoi(step_horizon); i++) cout << fullmpcdata.ufp_sol[2*i] << " " << fullmpcdata.ufp_sol[2*i+1] << endl;
+    //cout << endl;
+    //cout << "x + ufp" << endl;
+    /*
     for (int i = 0; i < stoi(step_horizon); i++){
         cout << fullmpcdata.xlip_sol[4*i]+fullmpcdata.ufp_sol[2*i];
         cout << "  " << fullmpcdata.xlip_sol[4*i+1]+fullmpcdata.ufp_sol[2*i+1] << endl;
@@ -186,6 +187,7 @@ int main(){
         cout << fullmpcdata.xlip_sol[4*i+2];
         cout << " " << fullmpcdata.xlip_sol[4*i+3] << endl;
     }
+    */
 
 
     return 0;
