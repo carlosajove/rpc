@@ -62,8 +62,10 @@ DracoControlArchitecture::DracoControlArchitecture(PinocchioRobotSystem *robot)
   dcm_planner_ = new DCMPlanner();
 
   std::string step_horizon;
+  std::string intervals;
+
   util::ReadParameter(cfg_["alip_mpc_walking"], "step_horizon", step_horizon);
-  std::string intervals = "4";
+  util::ReadParameter(cfg_["alip_mpc_walking"], "intervals", intervals);
   alip_mpc_ = new NewStep_mpc(step_horizon, intervals);
   // mpc handler
   // lmpc_handler_ = new LMPCHandler(

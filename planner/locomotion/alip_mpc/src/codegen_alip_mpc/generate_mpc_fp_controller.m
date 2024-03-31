@@ -56,7 +56,7 @@ for i = 1:length(N_steps_ahead_list)
     N_steps_ahead = N_steps_ahead_list(i);
     mpc_info.opt = struct(...
         'N_steps_ahead',    N_steps_ahead,...   % 2 steps makes the friction constraint get invalidated
-        'N_intervals',      4,...               % Number of output intervals
+        'N_intervals',      2,...               % Number of output intervals
         'Q',                eye(nx,nx),...      % state penalty matrix
         'qpsolver',         "qrqp");            % qp solver    
     formulate_alip_mpc_fp_opt(mpc_info);
