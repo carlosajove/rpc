@@ -53,7 +53,7 @@ void AlipLocomotion::FirstVisit(){
   state_machine_time_ = sp_->current_time_ - state_machine_start_time_;
 
   Tr = Ts - state_machine_time_;
-  if (Tr < Ts / 8) return;
+  //if (Tr < Ts / 8) return;
 
   ctrl_arch_->alip_tm_->MpcSolutions(Tr, stance_leg);
 

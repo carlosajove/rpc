@@ -375,17 +375,18 @@ lmpc_walking:
   n_steps: 1
   first_swing_leg: 0 ## 0: left leg ## 1: right leg
 
-
+#mpc freq == 0 --> mu = 0.4
+#mpc freq == 5 --> mu = 0.1
 alip_mpc_walking:
-  mpc_freq: 5
+  mpc_freq: 0
   step_horizon: "4"
   Ts: 0.25    #0.25  #Greater Ts makes offset increase also
   stance_leg: -1 # -1: RIGHT SWING TO START; 1: LEFT SWING TO START
-  leg_width: 0.13 #0.1
+  leg_width: 0.08 #0.1
   zH: 0.69   #this will be the reference height target. The height for the mpc will be another
-  mu: 0.1
+  mu: 0.4
   total_mass: 39.15342    
-  ufp_x_max: 0.6  #0.6
+  ufp_x_max: 0.55  #0.6
   ufp_y_max: 0.4  #0.4
   ufp_y_min: 0.1 #0.05
   Lx_offset: 0 #0
@@ -395,7 +396,7 @@ alip_mpc_walking:
   ky: 0
 
   variable_height: 0
-  swing_height: 0.05   #0.07  higher swing_height can work for lower zH
+  swing_height: 0.03   #0.07  higher swing_height can work for lower zH
   reference_swing_height: 0.1 #0.08   #for a swing of 0.5m
   Bezier: 0
   Alip: 0
