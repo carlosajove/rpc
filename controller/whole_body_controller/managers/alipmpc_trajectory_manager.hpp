@@ -23,7 +23,7 @@ public:
   virtual ~AlipMpcTrajectoryManager()  = default;
 
   void initializeOri();
-  void setNewOri();
+  void setNewOri(const double &des_com_yaw);
   void MpcSolutions(const double &tr_, const double &st_leg_, 
                     const double &Lx_offset_, const double &Ly_des_,
                     const double &com_yaw_, 
@@ -32,10 +32,10 @@ public:
   void InertiaToMpcCoordinates();
   void OutputMpcToInertiaCoordinates();
 
-  void add_residual_rl_action(const Eigen::VectorXd &action);
+  Eigen::Vector3d add_residual_rl_action(const Eigen::VectorXd &action);
   void safety_proj();
 
-  void GenerateTrajs(const double &tr_);
+  void GenerateTrajs(const double &tr_, const bool &ori_traj);
   void UpdateCurrentOri(Task* task);
   void UpdateCurrentPos(Task* task);
 
@@ -152,6 +152,9 @@ private:
   double ufp_x_max_;
   double ufp_y_min_;
   double ufp_y_max_;
+
+  Eigen::Quaterniond start_torso_quat_;
+  Eigen::Quaterniond start_swfoot_quat_;
 
 
 };

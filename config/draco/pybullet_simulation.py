@@ -1,7 +1,7 @@
 class Config(object):
     #CONTROLLER_DT = 0.00125
-    CONTROLLER_DT = 0.0025
-
+    #CONTROLLER_DT = 0.0025
+    CONTROLLER_DT = 0.00125
     N_SUBSTEP = 1
 
     INITIAL_BASE_JOINT_POS = [0, 0, 0.95 - 0.195]

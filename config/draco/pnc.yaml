@@ -1,5 +1,7 @@
-#servo_dt: 0.0035
-servo_dt: 0.0025
+#servo_dt: 0.00125
+#servo_dt: 0.0025
+servo_dt: 0.00125
+
 
 ip_address: "tcp://127.0.0.1:5557"
 
@@ -379,7 +381,7 @@ lmpc_walking:
 #mpc freq == 0 --> mu = 0.4
 #mpc freq == 5 --> mu = 0.1
 alip_mpc_walking:
-  mpc_freq: 10
+  mpc_freq: 5 #10  #wrt ctrl freq
   step_horizon: "4"
   intervals: "2"
   Ts: 0.3    #0.25  #Greater Ts makes offset increase also

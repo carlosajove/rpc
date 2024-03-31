@@ -113,7 +113,7 @@ int main() {
   alip_tm.MpcSolutions(Tr, 1, 0, 0,0 ,0,0,0);  //stance leg right leg
 
   std::terminate();
-  alip_tm.GenerateTrajs(Tr);
+  alip_tm.GenerateTrajs(Tr, true);
 
   alip_tm.saveTrajectories(0, 0.01, Tr);
 

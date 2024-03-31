@@ -113,7 +113,7 @@ def dict_to_numpy(obs_dict):
    
 class DracoEnv(gym.Env):
     metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 50}
-    def __init__(self, Lx_offset_des, Ly_des, yaw_des, randomized_command: bool = False, reduced_obs_size: bool = False, render: bool = False) -> None:
+    def __init__(self, Lx_offset_des, Ly_des, yaw_des, mpc_freq, sim_dt, randomized_command: bool = False, reduced_obs_size: bool = False, render: bool = False) -> None:
         self.render = render
         self._reduced_obs_size =  reduced_obs_size
         self._randomized_command = randomized_command
@@ -122,6 +122,9 @@ class DracoEnv(gym.Env):
         self._Lx_offset_des = Lx_offset_des     
         self._Ly_des = Ly_des
         self._yaw_des = yaw_des
+        self._mpc_freq = mpc_freq
+        self._sim_dt = sim_dt
+        assert Config.CONTROLLER_DT == sim_dt
 
 
         if self.render:
@@ -138,9 +141,9 @@ class DracoEnv(gym.Env):
         )
        
         if self._reduced_obs_size:
-            self.observation_space = gym.spaces.Box(  #observation space no Ts and Tr, no w
-                low = np.array([-50]*16),
-                high = np.array([50]*16),
+            self.observation_space = gym.spaces.Box(  #observation space added Tr and previous full_action x and y
+                low = np.array([-50]*19),
+                high = np.array([50]*19),
                 dtype = np.float64
             )
             
@@ -154,8 +157,8 @@ class DracoEnv(gym.Env):
             """
         else:
             self.observation_space = gym.spaces.Box(  #observation space
-                low = np.array([-100]*68),
-                high = np.array([100]*68),
+                low = np.array([-100]*74),
+                high = np.array([100]*74),
                 dtype = np.float64
             )
             """
@@ -243,26 +246,29 @@ class DracoEnv(gym.Env):
         self._rpc_draco_command = draco_interface_py.DracoCommand()
 
         #reward terms
-        self._w_roll_pitch = -0.5
-        self._w_com_height = -0.5
+        self._w_roll_pitch = -1
+        self._w_com_height = -1
 
-        self._w_desired_Lxy = 5.
+        self._w_desired_Lxy = 1.
 
-        self._w_desired_Lx = 3.
-        self._w_desired_Ly = 5.
+        self._w_desired_Lx = 2.
+        self._w_desired_Ly = 3.
 
         self._w_desired_yaw = -1.
         self._w_excessive_fp = -0.5
         self._w_excessive_angle = -0.5
         self._w_termination = -20.
         self._w_alive_bonus = 3.
+        self._w_action_diff = -0.001
+        self._w_penalise_trajectory_Lx = -0.0005
+        self._w_penalise_trajectory_Ly = -0.0005
 
         self._Lx_main = 0.5*AlipParams.WIDTH*AlipParams.MASS*math.sqrt(AlipParams.G/AlipParams.ZH) \
                         *AlipParams.ZH*math.tanh(math.sqrt(AlipParams.G/AlipParams.ZH)*AlipParams.TS/2)
        
         #initialise old_wbc_obs for reward
-        self._old_wbc_obs = np.zeros(18)
-        self._new_wbc_obs = np.zeros(18)
+        self._old_wbc_obs = np.zeros(20)
+        self._new_wbc_obs = np.zeros(20)
 
         self._bool = 0
 
@@ -355,7 +361,7 @@ class DracoEnv(gym.Env):
 
         policy_obs = self._get_observation(self._rpc_draco_command.wbc_obs_)
 
-        if(self._iter > 30): truncate = True
+        if(self._iter > 30*48): truncate = True
         else: truncate = False
 
         self._iter += 1
@@ -411,7 +417,7 @@ class DracoEnv(gym.Env):
             limit = np.array([np.abs(self._Lx_offset_des), np.abs(self._Ly_des), np.abs(self._yaw_des)])
             dir_command = np.random.uniform(low = -limit, high = limit)
         else:
-            dir_command = np.array(self._Lx_offset_des, self._Ly_des, self._yaw_des)
+            dir_command = np.array((self._Lx_offset_des, self._Ly_des, self._yaw_des))
 
         initial_stance_leg = np.random.choice(np.array([-1, 1]))
 
@@ -472,7 +478,9 @@ class DracoEnv(gym.Env):
         COM = np.concatenate((wbc_obs[1:10], 
                              wbc_obs[13:16],
                              self._rpc_draco_sensor_data.base_joint_ang_vel_,
-                             stance_leg))
+                             stance_leg,
+                             wbc_obs[16:20]))
+        COM[16] -= self._sim_dt 
         if(self._reduced_obs_size):
             """
             policy_obs = {'stance_foot': stance_leg,
@@ -513,21 +521,26 @@ class DracoEnv(gym.Env):
         self._new_wbc_obs = wbc_obs
         self._rl_action = action
 
-        reward = self._w_alive_bonus
-        #reward += self.reward_tracking_com_L()
-        reward += self.reward_tracking_com_Lx()
-        reward += self.reward_tracking_com_Ly()
-        reward += self.reward_tracking_yaw()
-        reward += self.reward_com_height()
-        reward += self.reward_roll_pitch()
-        reward += self.penalise_excessive_fp()
-        reward += self.penalise_excessive_yaw()
-        #if done: reward -= self._w_termination
-        self.reward_info = np.array([self._w_alive_bonus,  self.reward_tracking_com_L(),
-                                     self.reward_tracking_yaw(), self.reward_com_height(),
-                                     self.reward_roll_pitch(), self.penalise_excessive_fp(),
-                                     self.penalise_excessive_yaw()])
-       
+        if (self._old_wbc_obs[0] != self._new_wbc_obs[0]):
+            reward = self._w_alive_bonus
+            #reward += self.reward_tracking_com_L()
+            reward += self.reward_tracking_com_Lx()
+            reward += self.reward_tracking_com_Ly()
+            reward += self.reward_tracking_yaw()
+            reward += self.reward_com_height()
+            reward += self.reward_roll_pitch()
+            reward += self.penalise_excessive_fp()
+            reward += self.penalise_excessive_yaw()
+            #if done: reward -= self._w_termination
+            self.reward_info = np.array([self._w_alive_bonus,  self.reward_tracking_com_L(),
+                                        self.reward_tracking_yaw(), self.reward_com_height(),
+                                        self.reward_roll_pitch(), self.penalise_excessive_fp(),
+                                        self.penalise_excessive_yaw()])
+        else: #intrastep reward
+            reward = self.penalise_different_policy()
+            reward += self.penalise_excessive_Lx()
+            reward += self.penalise_excessive_Ly()
+            self.reward_info = np.array([self.penalise_different_policy(), self.penalise_excessive_Lx(), self.penalise_excessive_Ly()])
 
         return reward.item()
 
@@ -610,6 +623,27 @@ class DracoEnv(gym.Env):
        
         return error
 
+    def penalise_different_policy(self):
+        error = self._new_wbc_obs - self._old_wbc_obs
+        error /= (self._mpc_freq*self._sim_dt)
+        error = np.sum(np.square(error))
+        error *= self._w_action_diff
+
+        return error
+
+    def penalise_excessive_Lx(self):
+        error = self._new_wbc_obs[8] - self._old_wbc_obs[1]
+        error = np.square(error/self._Lx_main)
+        error *= self._w_penalise_trajectory_Lx
+        return error
+
+    def penalise_excessive_Ly(self):
+        error = self._old_wbc_obs[2] - self._new_wbc_obs[8]
+        error = np.square(error)
+        error *= self._w_penalise_trajectory_Ly
+        return error
+
+
     def _debug_sensor_data(self):
         ###############################################################################
         #Debugging Purpose
@@ -620,6 +654,7 @@ class DracoEnv(gym.Env):
         done = False
         if np.isnan(base_com_quat).any() or np.isinf(base_com_quat).any():
             done = True
+            return True
         norm = scipy.linalg.norm(base_com_quat)
         if (norm == 0):
             done = True
@@ -675,9 +710,8 @@ class DracoEnv(gym.Env):
 
 
 if __name__ == "__main__":
-    tracemalloc.start()
     yaw_max = math.pi/4
-    env = DracoEnv(5, 25, yaw_max, randomized_command=True, reduced_obs_size=True, render = True)
+    env = DracoEnv(0., 0., 0., 5, Config.CONTROLLER_DT, randomized_command=False, reduced_obs_size=False, render = True)
     from stable_baselines3.common.env_checker import check_env
     check_env(env)
 
@@ -689,6 +723,7 @@ if __name__ == "__main__":
     while True:
         action = np.zeros(3)
         obs, reward, done, trunc, info = env.step(action)
+        print(info['reward_components'])
         if done or trunc:
             obs,info = env.reset()
         if flag:

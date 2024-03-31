@@ -28,28 +28,25 @@ AlipLocomotion::AlipLocomotion(StateId state_id, PinocchioRobotSystem *robot,
 }
 
 
-void AlipLocomotion::FirstVisit(){
+void AlipLocomotion::FirstVisit(){  //represents when MPC computation
   if(first_ever) {
     stance_leg = sp_->initial_stance_leg_;
-    state_machine_start_time_ = sp_->current_time_;
+    //state_machine_start_time_ = sp_->current_time_;
     first_ever = false;
     if (stance_leg == 1) {
       ctrl_arch_->alip_tm_->SetSwingFootStart(robot_->GetLinkIsometry(draco_link::l_foot_contact).translation());
     } else {
       ctrl_arch_->alip_tm_->SetSwingFootStart(robot_->GetLinkIsometry(draco_link::r_foot_contact).translation());
     }
-    ctrl_arch_->alip_tm_->initializeOri();
-    
+    ctrl_arch_->alip_tm_->initializeOri(); 
+    new_leg = true;
+   
   }
   else if (new_leg) {
-    new_leg = false;
-
+    //new_leg = false;
     state_machine_start_time_ = sp_->current_time_;
-    ctrl_arch_->alip_tm_->setNewOri();
-
+    ctrl_arch_->alip_tm_->setNewOri(sp_->des_com_yaw_);
   }
-
-  
   
 
   state_machine_time_ = sp_->current_time_ - state_machine_start_time_;
@@ -61,12 +58,12 @@ void AlipLocomotion::FirstVisit(){
   ctrl_arch_->alip_tm_->MpcSolutions(Tr, stance_leg, sp_->Lx_offset_des_, sp_->Ly_des_, sp_->des_com_yaw_,
                                         sp_->kx_, sp_->ky_, sp_->mu_);
 
-  ctrl_arch_->alip_tm_->add_residual_rl_action(sp_->res_rl_action_);
+  sp_->full_policy_ = ctrl_arch_->alip_tm_->add_residual_rl_action(sp_->res_rl_action_);
 
   //ctrl_arch_->alip_tm_->safety_proj();
 
-  ctrl_arch_->alip_tm_->GenerateTrajs(Tr);
-
+  ctrl_arch_->alip_tm_->GenerateTrajs(Tr, new_leg);
+  new_leg = false;
 
   if (stance_leg == 1) {
     sp_->b_lf_contact_ = false;
@@ -88,6 +85,7 @@ void AlipLocomotion::FirstVisit(){
     ctrl_arch_->alip_tm_->saveTrajectories(0, Ts/20, Ts);
     util::PrettyConstructor(3, "Trajectories saved");
   }
+
 
 }
 void AlipLocomotion::OneStep(){

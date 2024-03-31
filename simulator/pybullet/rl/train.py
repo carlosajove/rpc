@@ -15,6 +15,8 @@ from env import DracoEnv
 cwd = os.getcwd()
 sys.path.append(cwd)
 
+from config.draco.pybullet_simulation import Config
+
 model_dir = cwd + "/rl_model/PPO"
 #import tracemalloc
 import argparse
@@ -30,16 +32,30 @@ if __name__ == "__main__":
         args = parser.parse_args()
         bash_timesteps = int(args.timesteps)
 
-    yaw_max = pi/4
-    env = DracoEnv(5, 20, yaw_max, randomized_command=True, reduced_obs_size=True, render = False)
+    yaw_max = 0
+    Lx = 0.
+    Ly = 0.
+    randomized_command = False
+    reduced_obs_size = False
+    mpc_freq = 5
+    sim_dt = Config.CONTROLLER_DT
+
+    env = DracoEnv(Lx, Ly, yaw_max, mpc_freq, sim_dt, randomized_command=randomized_command, reduced_obs_size=reduced_obs_size, render = False)
     #env = VecNormalize(not_norm_env, norm_reward=False, clip_obs=50)
 
-    n_steps_ = 256 #512
-    batch_size_ = 64
+    n_steps_ = 256*10 #512
+    batch_size_ = 64*2
     learning_rate_ = 0.0003
 
+    if reduced_obs_size: str1 = 'redOBS'
+    else: str1 = 'fullOBS'
+    if randomized_command: str2 = 'randCOMMAND'
+    else: str2 = 'detCOMMAND'
 
 
+
+
+    save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}_Lx_{Lx}_Ly_{Ly}_Yaw_{yaw_max}"         
     ## train model
     if new_model:
         tensorboard_dir = cwd + "/ppo_rl_log/"
@@ -52,7 +68,8 @@ if __name__ == "__main__":
     else:
         startTime = time.time()
         CURR_TIMESTEP = bash_timesteps
-        model_path = f"{model_dir}/erase/NSTEPS{n_steps_}_LEARNING_RATE{learning_rate_}_TIME{CURR_TIMESTEP}"
+        save_subdir = f"NSTEPS{n_steps_}_LEARNING_RATE{learning_rate_}_TIME{CURR_TIMESTEP}"
+        model_path = model_dir + '/' + save_dir + '/' + save_subdir
         print("model_path", model_path)
         model = PPO.load(model_path, env=env)
         TIMESTEPS =20*n_steps_
@@ -66,8 +83,8 @@ if __name__ == "__main__":
             print("Model train time: "+str(datetime.timedelta(seconds=endTime-startTime)))
             ## save the model
             CURR_TIMESTEP += TIMESTEPS
-            save_subdir = f"/erase/NSTEPS{n_steps_}_LEARNING_RATE{learning_rate_}_TIME{CURR_TIMESTEP}"
-            save_path = model_dir + save_subdir
+            save_subdir = f"NSTEPS{n_steps_}_LEARNING_RATE{learning_rate_}_TIME{CURR_TIMESTEP}"
+            save_path = model_dir + '/' + save_dir + '/' + save_subdir
             print(save_path)
             model.save(save_path)
             with open('timesteps.txt', 'w') as f:

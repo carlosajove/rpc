@@ -174,19 +174,17 @@ DracoControlArchitecture::~DracoControlArchitecture() {
 void DracoControlArchitecture::GetCommand(void *command) {
   if(state_ == draco_states::AlipLocomotion){
   //  util::PrettyConstructor(1,"ctrlarch GetCommand ") ;
-    //tci_container_->task_map_["com_xy_task"]->SetWeight(Eigen::Vector2d(4000,4000));
 
     if (alipIter == 0) {
         state_machine_container_[draco_states::AlipLocomotion]->FirstVisit();
     }
 
     if (alipIter >= 0 ) state_machine_container_[draco_states::AlipLocomotion]->OneStep();
-    //if (alipIter < 0 ) state_machine_container_[draco_states::AL]
-    //std::cout << "stance: " << state_machine_container_[draco_states::AlipLocomotion]->GetStance_leg() << " actual rf pos: " << robot_->GetLinkIsometry(draco_link::r_foot_contact).translation() << endl;
 
     upper_body_tm_->UseNominalUpperBodyJointPos(sp_->nominal_jpos_);
     controller_->GetCommand(command);
     alipIter++;
+    if (mpc_freq_ != 0 && alipIter == mpc_freq_-1) sp_->rl_trigger_ = true;
     if (mpc_freq_ != 0 && alipIter == mpc_freq_) alipIter = 0;
     if (verbose = true){
         alip_tm_->saveRobotCommand(sp_->current_time_);
@@ -194,10 +192,10 @@ void DracoControlArchitecture::GetCommand(void *command) {
         alip_tm_->saveMpcCOMstate(sp_->current_time_);
         alip_tm_->saveSwingState(sp_->current_time_);
     }
-    
+
     if (state_machine_container_[draco_states::AlipLocomotion]->SwitchLeg()) {
        //alipIter = 0;
-       alipIter = -5;
+       alipIter = -6;
        //exit(0);
        //cfg_ = YAML::LoadFile(THIS_COM "config/draco/pnc.yaml");
        //sp_->outsideCommand(cfg_["alip_mpc_walking"]);

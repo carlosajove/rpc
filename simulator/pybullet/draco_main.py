@@ -496,6 +496,7 @@ if __name__ == "__main__":
         ##############################################################################
 
         # Get Keyboard Event
+        """
         keys = pb.getKeyboardEvents()
         if pybullet_util.is_key_triggered(keys, '1'):
             rpc_draco_interface.interrupt_.PressOne()
@@ -515,7 +516,7 @@ if __name__ == "__main__":
             rpc_draco_interface.interrupt_.PressNine()
         elif pybullet_util.is_key_triggered(keys, 'a'):
             rpc_draco_interface.interrupt_.Pressa()
-
+        """
         #get sensor data
         imu_frame_quat, imu_ang_vel, imu_dvel, joint_pos, joint_vel, b_lf_contact, b_rf_contact, \
             l_normal_force, r_normal_force = get_sensor_data_from_pybullet(
@@ -547,6 +548,11 @@ if __name__ == "__main__":
 
         #rl_policy
         rpc_draco_sensor_data.res_rl_action_ = np.array([0, 0, 0])
+        rpc_draco_sensor_data.initial_stance_leg_ = 1
+        #Lxdes, Lydes, yawdes
+        rpc_draco_sensor_data.policy_command_ = np.array([0,0,0])
+
+
 
         rpc_draco_interface.GetCommand(rpc_draco_sensor_data,
                                        rpc_draco_command)
@@ -597,3 +603,4 @@ if __name__ == "__main__":
         rate.sleep()  # while loop rate limiter
 
         count += 1
+

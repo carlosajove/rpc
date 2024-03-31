@@ -57,7 +57,8 @@ void AlipMpcTrajectoryManager::initializeOri(){
 }
 
 
-void AlipMpcTrajectoryManager::setNewOri(){
+void AlipMpcTrajectoryManager::setNewOri(const double& des_com_yaw){
+    com_yaw = des_com_yaw;
     if (com_yaw != 0){
       des_torso_iso = robot_->GetLinkIsometry(draco_link::torso_link);
       FootStep::MakeHorizontal(des_torso_iso);
@@ -156,11 +157,15 @@ void AlipMpcTrajectoryManager::OutputMpcToInertiaCoordinates(){
   Swingfoot_end(2) = this->ComputeZpos(Swingfoot_end(0), Swingfoot_end(1), 0);
 }
 
-void AlipMpcTrajectoryManager::add_residual_rl_action(const Eigen::VectorXd &action){
+Eigen::Vector3d AlipMpcTrajectoryManager::add_residual_rl_action(const Eigen::VectorXd &action){
   Eigen::Vector3d res_pos(action(0), action(1), 0);
   Swingfoot_end += res_pos;
   Eigen::Quaterniond res_quat = util::EulerZYXtoQuat(0, 0, action(2));
-  des_swfoot_quat_ *= res_quat;
+  des_swfoot_quat_ = res_quat*des_torso_quat_;
+  
+  Eigen::Vector3d res;
+  res << Swingfoot_end.head<2>(), com_yaw + action(2);
+  return res;
 
 }
 
@@ -191,31 +196,31 @@ void AlipMpcTrajectoryManager::safety_proj(){
 
 }
 
-void AlipMpcTrajectoryManager::GenerateTrajs(const double &tr_){  //will only use alip2
+void AlipMpcTrajectoryManager::GenerateTrajs(const double &tr_, const bool &ori_traj){  //will only use alip2
   indata.Tr = tr_;
   Eigen::Isometry3d curr_swfoot_iso;
-  Eigen::Quaterniond start_swfoot_quat;
-  Eigen::Quaterniond start_torso_quat(robot_->GetLinkIsometry(draco_link::torso_com_link).linear());
-
+  if (ori_traj) start_torso_quat_ = Eigen::Quaterniond(robot_->GetLinkIsometry(draco_link::torso_com_link).linear());
 
   if (indata.stance_leg == 1){  //LF is swing foot
     curr_swfoot_iso = robot_->GetLinkIsometry(draco_link::l_foot_contact);  //chequear si contact solo funciona cuando es stance foot
-    start_swfoot_quat = Eigen::Quaterniond(robot_->GetLinkIsometry(draco_link::l_foot_contact).linear());
-
+      if (ori_traj) start_swfoot_quat_ = Eigen::Quaterniond(robot_->GetLinkIsometry(draco_link::l_foot_contact).linear());
   }
   else {
     curr_swfoot_iso = robot_->GetLinkIsometry(draco_link::r_foot_contact);
-    start_swfoot_quat = Eigen::Quaterniond(robot_->GetLinkIsometry(draco_link::r_foot_contact).linear());
+      if (ori_traj) start_swfoot_quat_ = Eigen::Quaterniond(robot_->GetLinkIsometry(draco_link::r_foot_contact).linear());
   }
 
   Eigen::Vector3d curr_swfoot_pos = curr_swfoot_iso.translation();
 
   AlipSwingPos2 = new AlipSwing2(Swingfoot_start, Swingfoot_end, swing_height, indata.Ts);
-  torso_ori_curve_ = new HermiteQuaternionCurve(start_torso_quat, Eigen::Vector3d::Zero(), 
-                                                des_torso_quat_, Eigen::Vector3d::Zero(), indata.Ts);
-
-  swfoot_ori_curve_= new HermiteQuaternionCurve(start_swfoot_quat, Eigen::Vector3d::Zero(),
+  swfoot_ori_curve_= new HermiteQuaternionCurve(start_swfoot_quat_, Eigen::Vector3d::Zero(),
                                                 des_swfoot_quat_, Eigen::Vector3d::Zero(), indata.Ts);
+
+
+  if (ori_traj){
+    torso_ori_curve_ = new HermiteQuaternionCurve(start_torso_quat_, Eigen::Vector3d::Zero(), 
+                                                  des_torso_quat_, Eigen::Vector3d::Zero(), indata.Ts);
+  }
 
 }
 
@@ -223,7 +228,6 @@ void AlipMpcTrajectoryManager::UpdateDesired(const double t){
   //t is the time since last evaluation of Mpc and trajectory was generated so it's the time since Tr was coomputed
   //not sure works fine for every trajectory right now
   //only works for alip2swing
-
   Eigen::Isometry3d curr_swfoot_iso;
   if (indata.stance_leg == 1){  //LF is swing foot
     curr_swfoot_iso = robot_->GetLinkIsometry(draco_link::l_foot_contact);  //chequear si contact solo funciona cuando es stance foot
