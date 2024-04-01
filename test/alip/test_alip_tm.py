@@ -4,7 +4,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
 lbound_time = 5
-ubound_time = 20
+ubound_time = 15
 
 script_directory = os.path.dirname(os.path.abspath(__file__))
 
@@ -164,6 +164,9 @@ stleg_zWorld = CurrentComstate[:,12]
 COMvelx = CurrentComstate[:,13]
 COMvely = CurrentComstate[:,14]
 COMvelz = CurrentComstate[:,15]
+COMLcx = CurrentComstate[:,16]
+COMLcy = CurrentComstate[:,17]
+COMLcz = CurrentComstate[:,18]
 
 
 
@@ -348,10 +351,10 @@ landingTimes_in_range = [t for t in landingTime if lbound_time <= t <= ubound_ti
 
 # Extracting a subset of data within the specified time range
 x = timeCOM[inter]
-y = LxCOM[inter]/(MpcMassCom[inter]*MpczH[inter])
+y = (LxCOM[inter]+COMLcx[inter])#/(MpcMassCom[inter]*MpczH[inter])
 
-yy = Lx_plus[inter]/(MpcMassCom[inter]*MpczH[inter])
-yyy = Lx_minus[inter]/(MpcMassCom[inter]*MpczH[inter])
+yy = Lx_plus[inter]#/(MpcMassCom[inter]*MpczH[inter])
+yyy = Lx_minus[inter]#/(MpcMassCom[inter]*MpczH[inter])
 plt.figure()
 plt.plot(x, y)
 #plt.plot(MpctimeCOM, MpcLxCOM/(MpcMassCom*MpczH))
@@ -362,8 +365,8 @@ for t in landingTimes_in_range:
 plt.title('Lx/mzH paper plot')
 
 
-y = LyCOM[inter]/(MpcMassCom[inter]*MpczH[inter])
-ydes = MpcLy_des[inter]/(MpcMassCom[inter]*MpczH[inter])
+y = (LyCOM[inter]+COMLcy[inter]) #/(MpcMassCom[inter]*MpczH[inter])
+ydes = MpcLy_des[inter] #/(MpcMassCom[inter]*MpczH[inter])
 
 plt.figure()
 plt.plot(x, y, label = 'robot')
@@ -478,4 +481,31 @@ plt.plot(x, y)
 plt.title('stleg z world')
 for t in landingTimes_in_range:
     plt.axvline(x=t, color='black', linestyle='-', linewidth=0.1)
+
+
+
+
+###
+plt.figure()
+plt.plot(timeCOM, COMLcx, label = 'Lst')
+plt.plot(timeCOM, COMLcy, label = 'Lst')
+plt.plot(timeCOM, COMLcz, label = 'Lst')
+plt.title('Lst')
+plt.legend()
+
+plt.figure()
+plt.plot(timeCOM, LxCOM+COMLcx, label = 'L')
+plt.plot(timeCOM, LyCOM+COMLcy, label = 'L')
+plt.plot(timeCOM, LzCOM+COMLcz, label = 'L')
+plt.title('L    ')
+plt.legend()
+
+
+plt.figure()
+plt.plot(timeCOM, LzCOM-COMLcz, label = 'Lcz')
+plt.title('Lc')
+plt.legend()
+
+
+plt.savefig
 plt.show()

@@ -49,6 +49,9 @@ N_steps_ahead_list = [2, 4, 6, 8];
 nx = 4;
 
 Q = eye(nx,nx);
+Q(1,1) = 5
+Q(2,2) = 5
+Q(3,3) = 10
 Q(4,4) = 10
 disp("Begin Formulation of ALIP-based FP Optimization Problem...");
 for i = 1:length(N_steps_ahead_list)

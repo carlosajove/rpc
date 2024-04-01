@@ -148,12 +148,14 @@ void AlipMpcTrajectoryManager::InertiaToMpcCoordinates(){
     //Eigen::Isometry3d torso_iso = robot_->GetLinkIsometry(draco_link::torso_link);
     //FootStep::MakeHorizontal(torso_iso);  
     
-    
+    Eigen::Vector3d Lc = robot_->GetHg().head<3>();
+    std::cout << "Lc" << " " << Lc << std::endl;
     Eigen::Vector3d rotpos = des_torso_iso.linear().transpose() * pos;
     Eigen::Vector3d stleg_pos_torso_ori =  des_torso_iso.linear().transpose() * stleg_pos;
 
     indata.xlip_current[0] = rotpos(0)-stleg_pos_torso_ori(0);
     indata.xlip_current[1] = rotpos(1)-stleg_pos_torso_ori(1);
+    double indataxlip_current_z = rotpos(2) - stleg_pos_torso_ori(2);
 
     /*
     indata.zH = terrain(0)*indata.xlip_current[0];
@@ -163,14 +165,17 @@ void AlipMpcTrajectoryManager::InertiaToMpcCoordinates(){
     indata.zH = refzH;
 
     pos = Eigen::Vector3d(indata.xlip_current[0],indata.xlip_current[1],indata.zH);
+    pos = Eigen::Vector3d(indata.xlip_current[0],indata.xlip_current[1],indataxlip_current_z);
     Eigen::Vector3d vel = robot_->GetRobotComLinVel();   //check? the velocity frame needs to be aligned with the foot frame. 
                                                         //now it is aligned with the inertia frame. Maybe a rotation of robot pos and vel is needed.
     vel = des_torso_iso.linear().transpose() * vel;   //we are assuming that the rotation matrix doens't change with time
 
     Eigen::Vector3d L = pos.cross(mass*vel);
+    L += Lc;
     indata.xlip_current[2]= L[0];             
     indata.xlip_current[3]= L[1];
     indataLz = L[2];
+    std::cout << "L " << L << std::endl;
 
 
 }
@@ -468,12 +473,14 @@ void AlipMpcTrajectoryManager::saveCurrentCOMstate(const double t){
   pos -= stleg_pos_torso_ori;
   vel = torso_iso.linear().transpose() * vel;
   Eigen::Vector3d L = pos.cross(mass*vel);
+  Eigen::Vector3d LCOM = robot_->GetHg().head<3>();
 
   file8 << pos.transpose() << "  ";
   file8 << L.transpose() << " ";
   file8 << t <<  " " << posWorld.transpose() << " ";
   file8 << stleg_pos.transpose() << " ";
-  file8 << vel.transpose() << endl;
+  file8 << vel.transpose() << " ";
+  file8 << LCOM.transpose() << endl;
 }
 
 void AlipMpcTrajectoryManager::saveSwingState(const double t){
