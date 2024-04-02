@@ -63,10 +63,11 @@ DracoControlArchitecture::DracoControlArchitecture(PinocchioRobotSystem *robot)
 
   std::string step_horizon;
   std::string intervals;
-
+  bool new_solver;
   util::ReadParameter(cfg_["alip_mpc_walking"], "step_horizon", step_horizon);
   util::ReadParameter(cfg_["alip_mpc_walking"], "intervals", intervals);
-  alip_mpc_ = new NewStep_mpc(step_horizon, intervals);
+  util::ReadParameter(cfg_["alip_mpc_walking"], "new_solver", new_solver);
+  alip_mpc_ = new NewStep_mpc(step_horizon, intervals, new_solver);
   // mpc handler
   // lmpc_handler_ = new LMPCHandler(
   // dcm_planner_, robot_, tci_container_->com_task_,
@@ -243,33 +244,31 @@ void DracoControlArchitecture::GetCommand(void *command) {
   if(state_ == draco_states::AlipLocomotion){
   //  util::PrettyConstructor(1,"ctrlarch GetCommand ") ;
     //tci_container_->task_map_["com_xy_task"]->SetWeight(Eigen::Vector2d(4000,4000));
-
     if (alipIter == 0) {
         cfg_ = YAML::LoadFile(THIS_COM "config/draco/pnc.yaml");
-
-        alip_tm_->outsideCommand(cfg_["alip_mpc_walking"]);
+        sp_->outsideCommand(cfg_["alip_mpc_walking"]);
         state_machine_container_[draco_states::AlipLocomotion]->FirstVisit();
     }
 
     if (alipIter >= 0 ) state_machine_container_[draco_states::AlipLocomotion]->OneStep();
-    //if (alipIter < 0 ) state_machine_container_[draco_states::AL]
-    //std::cout << "stance: " << state_machine_container_[draco_states::AlipLocomotion]->GetStance_leg() << " actual rf pos: " << robot_->GetLinkIsometry(draco_link::r_foot_contact).translation() << endl;
 
     upper_body_tm_->UseNominalUpperBodyJointPos(sp_->nominal_jpos_);
     controller_->GetCommand(command);
     alipIter++;
+
     if (mpc_freq_ != 0 && alipIter == mpc_freq_) alipIter = 0;
     alip_tm_->saveRobotCommand(sp_->current_time_);
     alip_tm_->saveCurrentCOMstate(sp_->current_time_);
     alip_tm_->saveMpcCOMstate(sp_->current_time_);
     alip_tm_->saveSwingState(sp_->current_time_);
-    
+
     if (state_machine_container_[draco_states::AlipLocomotion]->SwitchLeg()) {
        //alipIter = 0;
-       alipIter = -3;
+       alipIter = -4;
        //exit(0);
        
     }
+
   //  std::cout << "ctroarch end Get Command" << std::endl << std::endl;
 
 

@@ -23,14 +23,18 @@ public:
   virtual ~AlipMpcTrajectoryManager()  = default;
 
   void initializeOri();
-  void setNewOri();
-  void outsideCommand(const YAML::Node &node);
 
-  void MpcSolutions(const double &tr_, const double &st_leg);
-  void InertiaToMpcCoordinates();
+  void setNewOri(const double &des_com_yaw);
+  void MpcSolutions(const double &tr_, const double &st_leg_, 
+                    const double &Lx_offset_, const double &Ly_des_,
+                    const double &com_yaw_, 
+                    const double &kx_, const double &ky_,
+                    const double &mu_, const bool &first);
+  
+  void InertiaToMpcCoordinates(const bool &first);
   void OutputMpcToInertiaCoordinates();
 
-  void GenerateSwingFtraj(const double &tr_);
+  void GenerateTrajs(const double &tr_, const bool &ori_traj);
 
   void UpdateCurrentOri(Task* task);
   void UpdateCurrentPos(Task* task);
@@ -85,10 +89,16 @@ private:
   AlipSwing2 *AlipSwingPos2;
   int Alip2;
 
+  HermiteQuaternionCurve *torso_ori_curve_;
+  HermiteQuaternionCurve *swfoot_ori_curve_;
+
+
+
+
   full_horizon_sol fullsol;  //refrence frame wrt current stance leg
   input_data_t indata;       //reference frame wrt current stance leg
   output_data_t outdata;
-  double com_yaw;
+  double com_yaw_;
 
   Eigen::Vector3d COM_end;
   Eigen::Vector3d COMvel_end;
@@ -103,12 +113,13 @@ private:
   Eigen::Vector3d stleg_pos_torso_ori;
 
 
-  Eigen::VectorXd des_ori_lfoot;
-  Eigen::VectorXd des_ori_rfoot;
-  Eigen::VectorXd des_ori_torso;
-  Eigen::Isometry3d des_torso_iso;
-  Eigen::Isometry3d des_lfoot_iso;
-  Eigen::Isometry3d des_rfoot_iso;
+
+
+  Eigen::Quaterniond des_end_swfoot_quat_;
+  Eigen::Isometry3d des_end_swfoot_iso_;
+  Eigen::Quaterniond des_end_torso_quat_;
+  Eigen::Isometry3d des_end_torso_iso_;
+
   bool first_ever;
 
 
@@ -145,6 +156,16 @@ private:
   Eigen::VectorXd des_swfoot_vel;
   Eigen::VectorXd des_swfoot_acc;
 
+  Eigen::Quaterniond des_swfoot_quat_;
+  Eigen::Vector3d des_swfoot_ang_vel_;
+  Eigen::Vector3d des_swfoot_ang_acc_;
+
+  Eigen::Quaterniond des_torso_quat_;
+  Eigen::Vector3d des_torso_ang_vel_;
+  Eigen::Vector3d des_torso_ang_acc_;
+
+  Eigen::Quaterniond start_torso_quat_;
+  Eigen::Quaterniond start_swfoot_quat_;
 
   double indataLz;
 

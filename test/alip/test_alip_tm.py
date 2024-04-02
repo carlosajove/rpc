@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
-lbound_time = 5
-ubound_time = 15
+lbound_time = 4
+ubound_time = 60
 
 script_directory = os.path.dirname(os.path.abspath(__file__))
 
@@ -233,7 +233,7 @@ for t in landingTime:
 
 #normal3Dplot(RobotCommand[:,6], RobotCommand[:,7], RobotCommand[:,8], 'Foot Acceleration')
 
-
+"""
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.plot(swingXCommand, swingYCommand, swingZCommand, marker='x', label = 'Command')
@@ -308,7 +308,7 @@ plt.scatter(timeCOM, swingVzCommand, label =  'vel command')
 plt.title('time vs Vz')
 plt.legend()
 
-
+"""
 
 
 
@@ -334,8 +334,14 @@ if lbound_time not in timeCOM or ubound_time not in timeCOM:
     print("Error: lbound_time or ubound_time not found in timeCOM vector.")
     print("min time: ", timeCOM[0])
     print("max time: " , timeCOM[-1])
-    plt.show()
-    exit()
+    if lbound_time not in timeCOM:
+        lbound_time = timeCOM[0]
+    if ubound_time not in timeCOM:
+        ubound_time = timeCOM[-1]
+    lbound_idx = np.searchsorted(timeCOM, lbound_time, side='left')
+    ubound_idx = np.searchsorted(timeCOM, ubound_time, side='right')
+    #plt.show()
+    #exit()
     
 else:
     lbound_idx = np.searchsorted(timeCOM, lbound_time, side='left')
@@ -351,10 +357,10 @@ landingTimes_in_range = [t for t in landingTime if lbound_time <= t <= ubound_ti
 
 # Extracting a subset of data within the specified time range
 x = timeCOM[inter]
-y = (LxCOM[inter]+COMLcx[inter])#/(MpcMassCom[inter]*MpczH[inter])
+y = (LxCOM[inter]+COMLcx[inter])/(MpcMassCom[inter]*MpczH[inter])
 
-yy = Lx_plus[inter]#/(MpcMassCom[inter]*MpczH[inter])
-yyy = Lx_minus[inter]#/(MpcMassCom[inter]*MpczH[inter])
+yy = Lx_plus[inter]/(MpcMassCom[inter]*MpczH[inter])
+yyy = Lx_minus[inter]/(MpcMassCom[inter]*MpczH[inter])
 plt.figure()
 plt.plot(x, y)
 #plt.plot(MpctimeCOM, MpcLxCOM/(MpcMassCom*MpczH))
@@ -365,8 +371,8 @@ for t in landingTimes_in_range:
 plt.title('Lx/mzH paper plot')
 
 
-y = (LyCOM[inter]+COMLcy[inter]) #/(MpcMassCom[inter]*MpczH[inter])
-ydes = MpcLy_des[inter] #/(MpcMassCom[inter]*MpczH[inter])
+y = (LyCOM[inter]+COMLcy[inter])/(MpcMassCom[inter]*MpczH[inter])
+ydes = MpcLy_des[inter]/(MpcMassCom[inter]*MpczH[inter])
 
 plt.figure()
 plt.plot(x, y, label = 'robot')

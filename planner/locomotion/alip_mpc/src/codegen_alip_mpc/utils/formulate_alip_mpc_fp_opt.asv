@@ -65,6 +65,7 @@ p_ufp_min = opti.parameter(n_ufp,1);
 p_k = opti.parameter(2,N_steps_ahead); % [kx; ky]
 p_mu = opti.parameter(2,N_steps_ahead); % friction coefficient [mux,muy]
 p_Q_term = opti.parameter(n_x,n_x);
+p_x_step_init = opti.parameter(2);
 
 %% Desired State
 l = sqrt(g/p_zH); % lip constant
@@ -124,6 +125,7 @@ for n = 1:N_steps_ahead
                 Q = p_Q_term;
             end
             X_error = Yk - X_des{n};
+            Lx_offset_error = Yk(3) - p_Lx_
             cost = cost + X_error.'*Q*X_error;
         end
     end
@@ -136,12 +138,21 @@ opti.minimize(cost);
 opti_LS = opti.copy();
 opti_RS = opti.copy();
 
+%{
 %% Foot Placement Constraints
 % Ufp x foot placement constraint
 for n = 1:N_steps_ahead
     opti_LS.subject_to(p_ufp_min(1) <= Ufp_traj(1,n) <= p_ufp_max(1))
     opti_RS.subject_to(p_ufp_min(1) <= Ufp_traj(1,n) <= p_ufp_max(1))
 end
+%}
+
+%wrt com
+% ufp  = usw_w - ust_w
+% ucom = ucom_w - ust_w
+%ufp_com = ufp_w - ucom_w = ufp - ucom
+
+
 
 % Ufp y foot placement constraints... need to correct for signage depending
 % on stance foot
@@ -150,6 +161,7 @@ end
 ufp_y_max = p_ufp_max(2); % absolute values
 ufp_y_min = p_ufp_min(2); % absolute value (always positive)
 
+%{
 % Left Stance
 for n = 1:2:N_steps_ahead
     % y foot placement constraint (don't allow crossover)
@@ -161,6 +173,64 @@ for n = 1:2:N_steps_ahead
     opti_RS.subject_to(ufp_y_min <= Ufp_traj(2,n) <= ufp_y_max);
     opti_RS.subject_to(-ufp_y_max <= Ufp_traj(2,n+1) <= -ufp_y_min);
 end
+%}
+
+
+%{
+for n = 1:N_steps_ahead
+    opti_LS.subject_to(-0.25 <= Ufp_traj(1,n)-X_traj(1,n) <= 0.25)
+    opti_RS.subject_to(-0.25 <= Ufp_traj(1,n)-X_traj(1,n) <= 0.25)
+end
+for n = 1:2:N_steps_ahead
+    opti_RS.subject_to( -0.3 <= Ufp_traj(2,n) - X_traj(2,n) );
+    opti_RS.subject_to(ufp_y_min <= Ufp_traj(2,n));
+    opti_RS.subject_to( Ufp_traj(2,n+1)-X_traj(2,n+1) <= 0.3);
+    opti_RS.subject_to( Ufp_traj(2,n+1) <= -ufp_y_min);
+
+end
+for n = 1:2:N_steps_ahead
+    % y foot placement constraint (don't allow crossover)
+    opti_LS.subject_to(Ufp_traj(2,n)-X_traj(2, n) <= 0.3);
+    opti_LS.subject_to( Ufp_traj(2,n) <= -ufp_y_min);
+
+    opti_LS.subject_to(-0.3 <= Ufp_traj(2,n+1)-X_traj(2,n+1));
+    opti_LS.subject_to(ufp_y_min <= Ufp_traj(2,n+1));
+end
+%}
+opti_LS.subject_to(-0.25 <= Ufp_traj(1,1)-p_x_step_init(1) <= 0.25);
+opti_RS.subject_to(-0.25 <= Ufp_traj(1,1)-p_x_step_init(1) <= 0.25);
+
+for n = 2:N_steps_ahead
+    opti_LS.subject_to(-0.25 <= Ufp_traj(1,n)-X_traj(1,n-1) <= 0.25);
+    opti_RS.subject_to(-0.25 <= Ufp_traj(1,n)-X_traj(1,n-1) <= 0.25);
+end
+
+opti_RS.subject_to(Ufp_traj(2, 1) - p_x_step_init(2) <= 0.2);
+
+for n = 1:2:N_steps_ahead
+    if n ~= 1
+        opti_RS.subject_to(Ufp_traj(2,n) - X_traj(2,n-1) <= 0.2 );
+    end
+    opti_RS.subject_to(ufp_y_min <= Ufp_traj(2,n));
+    opti_RS.subject_to(-0.2 <= Ufp_traj(2,n+1)-X_traj(2,n));
+    opti_RS.subject_to( Ufp_traj(2,n+1) <= -ufp_y_min);
+end
+
+opti_LS.subject_to(-0.25 <= Ufp_traj(2,1)-p_x_step_init(2));
+for n = 1:2:N_steps_ahead
+    % y foot placement constraint (don't allow crossover)
+    if n ~= 1
+        opti_LS.subject_to(-0.2 <= Ufp_traj(2,n)-X_traj(2, n-1));
+    end
+    opti_LS.subject_to( Ufp_traj(2,n) <= -ufp_y_min);
+
+    opti_LS.subject_to(Ufp_traj(2,n+1)-X_traj(2,n) <= 0.2);
+    opti_LS.subject_to(ufp_y_min <= Ufp_traj(2,n+1));
+end
+
+
+
+
 
 %% Choose Opti solver
 if sol_type == "qrqp"
@@ -188,17 +258,18 @@ if sol_type == "qrqp"
         p_ufp_min,...
         p_k,...
         p_mu,...
-        p_Q_term};
+        p_Q_term, ...
+        p_x_step_init};
     ufp_com = X_traj(1:2,1) - Ufp_traj(:,1);
     opt_output = {X_traj, Ufp_traj, ufp_com};
     
-    name_cg_LS = char("draco_LS_simplempc" + ...
+    name_cg_LS = char("cassie_LS_simplempc" + ...
         "_Ns" + N_steps_ahead + ...
         "_Ni" + N_intervals + ...
         "_" + sol_type);
     f_opti_LS = opti_LS.to_function(name_cg_LS,opt_args,opt_output);
     
-    name_cg_RS = char("draco_RS_simplempc" + ...
+    name_cg_RS = char("cassie_RS_simplempc" + ...
         "_Ns" + N_steps_ahead + ...
         "_Ni" + N_intervals + ...
         "_" + sol_type);
@@ -212,7 +283,7 @@ if sol_type == "qrqp"
         disp('Generating LS C code...');
         tic
         cg.generate()
-        movefile([name_cg_LS '.c'],['gen/mpc_fp_solvers/' name_cg_LS '.c'])
+        movefile([name_cg_LS '.c'],['gen/cassie_mpc_fp_solvers/' name_cg_LS '.c'])
         disp("Generation time = " + toc);
         
         % Right stance solver
@@ -222,10 +293,11 @@ if sol_type == "qrqp"
         disp('Generating RS C code...');
         tic
         cg.generate()
-        movefile([name_cg_RS '.c'],['gen/mpc_fp_solvers/' name_cg_RS '.c'])
+        movefile([name_cg_RS '.c'],['gen/cassie_mpc_fp_solvers/' name_cg_RS '.c'])
         disp("Generation time = " + toc);
     end
-
+    
+    
 end
 
 end

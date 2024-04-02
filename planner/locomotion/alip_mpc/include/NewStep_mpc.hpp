@@ -23,7 +23,7 @@ class NewStep_mpc
 public:
     // Constructor
     NewStep_mpc();
-    NewStep_mpc(string & horizon, string & intervals);
+    NewStep_mpc(string & horizon, string & intervals, const bool &new_solver);
 
     // Destructor
     virtual ~NewStep_mpc();
@@ -33,11 +33,18 @@ public:
     // Update
     void Update_(const input_data_t &input_data,
                  output_data_t &output_data, full_horizon_sol &full_sol);
+    void setCOMinit(vector<double> com_init){ std::cout << "HEHE" << std::endl;
+                                              std::cout << com_init[0] <<" " << com_init[1] << std::endl;
+                                              x_com_init_step_ = com_init;
+                                              std::cout << "hooho" << x_com_init_step_[0] << " " << x_com_init_step_[1]<< std::endl;
+}
 
 private:
+    bool new_solver_;
+
+
     // Related to class loop
     int iter_ = 0;
-
     // custom_cassie_out struct // for input
     vector<double> x_lip_current_;
     double stance_leg_;
@@ -86,6 +93,8 @@ private:
     
     vector<double> xlip_guess_;
     vector<double> ufp_guess_;
+
+    vector<double> x_com_init_step_;
 };
 
 #endif

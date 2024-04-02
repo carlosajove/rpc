@@ -75,7 +75,7 @@ int main() {
   ForceTask *lf_force_task(NULL);
   std::string step_horizon = "4";
   std::string intervals = "4";
-  NewStep_mpc alipMpc(step_horizon, intervals);
+  NewStep_mpc alipMpc(step_horizon, intervals, false);
 
 
   AlipMpcTrajectoryManager alip_tm(
@@ -110,8 +110,8 @@ int main() {
 // i want to test the trajectories to watch them
  
   double Tr = 0.3; //Ts = 0
-  alip_tm.MpcSolutions(Tr, 1);  //stance leg right leg
-  alip_tm.GenerateSwingFtraj(Tr);
+  //alip_tm.MpcSolutions(Tr, indata.stance_leg  //stance leg right leg
+  alip_tm.GenerateTrajs(Tr, true);
 
   alip_tm.saveTrajectories(0, 0.01, Tr);
 

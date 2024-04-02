@@ -48,6 +48,8 @@ private:
   bool new_leg;
 
 
+  double rf_z_MAX_;
+  double rf_z_max_;
   std::fstream file1;
   // set nominal desired position/orientation (e.g., for zero acceleration cmd)
 

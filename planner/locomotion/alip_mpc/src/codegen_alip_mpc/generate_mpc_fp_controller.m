@@ -10,8 +10,8 @@ cur = pwd;
 addpath('/home/carlos/Desktop/Austin/SeungHyeonProject/ALIP MPC/cassie_alip_mpc/external_packages/casadi-linux-matlabR2014b-v3.5.5/');
 
 
-if ~exist('gen/cassie_mpc_fp_solvers','dir')
-    mkdir('gen/cassie_mpc_fp_solvers')
+if ~exist('gen/mpc_fp_solvers','dir')
+    mkdir('gen/mpc_fp_solvers')
 end
 addpath(genpath([cur '/gen/']));
 addpath(genpath([cur '/utils/']));
@@ -49,10 +49,10 @@ N_steps_ahead_list = [2, 4, 6, 8];
 nx = 4;
 
 Q = eye(nx,nx);
-Q(1,1) = 5
-Q(2,2) = 5
-Q(3,3) = 10
-Q(4,4) = 10
+Q(1,1) = 1;
+Q(2,2) = 1;
+Q(3,3) = 1;
+Q(4,4) = 5;
 disp("Begin Formulation of ALIP-based FP Optimization Problem...");
 for i = 1:length(N_steps_ahead_list)
     nx = 4;
@@ -60,9 +60,20 @@ for i = 1:length(N_steps_ahead_list)
     mpc_info.opt = struct(...
         'N_steps_ahead',    N_steps_ahead,...   % 2 steps makes the friction constraint get invalidated
         'N_intervals',      2,...               % Number of output intervals
-        'Q',                eye(nx,nx),...      % state penalty matrix
+        'Q',                Q,...      % state penalty matrix
         'qpsolver',         "qrqp");            % qp solver    
     formulate_alip_mpc_fp_opt(mpc_info);
 end
 disp("Formulated ALIP-based FP Optimization (" + toc + " sec)");
 
+for i = 1:length(N_steps_ahead_list)
+    nx = 4;
+    N_steps_ahead = N_steps_ahead_list(i);
+    mpc_info.opt = struct(...
+        'N_steps_ahead',    N_steps_ahead,...   % 2 steps makes the friction constraint get invalidated
+        'N_intervals',      2,...               % Number of output intervals
+        'Q',                Q,...      % state penalty matrix
+        'qpsolver',         "qrqp");            % qp solver    
+    formulate_alip_mpc_fp_opt_new_imp(mpc_info);
+end
+disp("Formulated new ALIP-based FP Optimitzation (" + toc + " sec)");

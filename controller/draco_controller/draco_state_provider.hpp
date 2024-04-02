@@ -1,6 +1,7 @@
 #pragma once
 #include <Eigen/Dense>
 #include <vector>
+#include <util/util.hpp>
 
 class DracoStateProvider {
 public:
@@ -48,6 +49,37 @@ public:
   std::vector<int> floating_base_jidx_;
 
   Eigen::Vector3d cam_est_;
+
+
+
+
+  double mass_;
+  int initial_stance_leg_;
+  double stance_leg_;
+  double Lx_offset_des_;
+  double Ly_des_;
+  double des_com_yaw_;
+  double Ts_;
+  double Tr_;
+
+
+
+
+  double mu_;
+  double kx_;
+  double ky_;
+
+  void outsideCommand(const YAML::Node &node){
+    util::ReadParameter(node, "Lx_offset", Lx_offset_des_);
+    util::ReadParameter(node, "Ly_des", Ly_des_);
+    util::ReadParameter(node, "com_yaw", des_com_yaw_);
+    util::ReadParameter(node, "mu", mu_);
+    util::ReadParameter(node, "kx", kx_);
+    util::ReadParameter(node, "ky", ky_);
+    des_com_yaw_ *= M_PI/180;
+  }
+
+
 
 private:
   DracoStateProvider();
