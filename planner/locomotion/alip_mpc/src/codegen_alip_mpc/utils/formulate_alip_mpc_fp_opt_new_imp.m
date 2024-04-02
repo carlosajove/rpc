@@ -66,6 +66,7 @@ p_k = opti.parameter(2,N_steps_ahead); % [kx; ky]
 p_mu = opti.parameter(2,N_steps_ahead); % friction coefficient [mux,muy]
 p_Q_term = opti.parameter(n_x,n_x);
 p_x_step_init = opti.parameter(2);
+p_x_mech_limit = opti.parameter(1);
 
 %% Desired State
 l = sqrt(g/p_zH); % lip constant
@@ -114,8 +115,8 @@ for n = 1:N_steps_ahead
         opti.subject_to( -yc_slip_limit <= Yk(2) <= yc_slip_limit );
         
         % mechanical constraint
-        xc_mech_limit = p_ufp_max(1)/2;
-        opti.subject_to( -xc_mech_limit <= Yk(1) <= xc_mech_limit );
+        xc_mech_limit = p_x_mech_limit/2;
+        opti.subject_to( -xc_mech_limit <= Yk(1) <= xc_mech_limit);
         
         % cost
         if i == N_intervals
@@ -199,34 +200,34 @@ for n = 1:2:N_steps_ahead
     opti_LS.subject_to(ufp_y_min <= Ufp_traj(2,n+1));
 end
 %}
-opti_LS.subject_to(-px <= Ufp_traj(1,1)-p_x_step_init(1) <= 0.25);
-opti_RS.subject_to(-0.25 <= Ufp_traj(1,1)-p_x_step_init(1) <= 0.25);
+opti_LS.subject_to(p_ufp_min(1) <= Ufp_traj(1,1)-p_x_step_init(1) <= p_ufp_max(1));
+opti_RS.subject_to(p_ufp_min(1) <= Ufp_traj(1,1)-p_x_step_init(1) <= p_ufp_max(1));
 
 for n = 2:N_steps_ahead
-    opti_LS.subject_to(-0.25 <= Ufp_traj(1,n)-X_traj(1,n-1) <= 0.25);
-    opti_RS.subject_to(-0.25 <= Ufp_traj(1,n)-X_traj(1,n-1) <= 0.25);
+    opti_LS.subject_to(p_ufp_min(1) <= Ufp_traj(1,n)-X_traj(1,n-1) <= p_ufp_max(1));
+    opti_RS.subject_to(p_ufp_min(1) <= Ufp_traj(1,n)-X_traj(1,n-1) <= p_ufp_max(1));
 end
 
-opti_RS.subject_to(Ufp_traj(2, 1) - p_x_step_init(2) <= 0.2);
+opti_RS.subject_to(Ufp_traj(2, 1) - p_x_step_init(2) <= p_ufp_max(2));
 
 for n = 1:2:N_steps_ahead
     if n ~= 1
-        opti_RS.subject_to(Ufp_traj(2,n) - X_traj(2,n-1) <= 0.2 );
+        opti_RS.subject_to(Ufp_traj(2,n) - X_traj(2,n-1) <= p_ufp_max(2) );
     end
     opti_RS.subject_to(ufp_y_min <= Ufp_traj(2,n));
-    opti_RS.subject_to(-0.2 <= Ufp_traj(2,n+1)-X_traj(2,n));
+    opti_RS.subject_to(-p_ufp_max(2) <= Ufp_traj(2,n+1)-X_traj(2,n));
     opti_RS.subject_to( Ufp_traj(2,n+1) <= -ufp_y_min);
 end
 
-opti_LS.subject_to(-0.25 <= Ufp_traj(2,1)-p_x_step_init(2));
+opti_LS.subject_to(-p_ufp_max(2) <= Ufp_traj(2,1)-p_x_step_init(2));
 for n = 1:2:N_steps_ahead
     % y foot placement constraint (don't allow crossover)
     if n ~= 1
-        opti_LS.subject_to(-0.2 <= Ufp_traj(2,n)-X_traj(2, n-1));
+        opti_LS.subject_to(-p_ufp_max(2) <= Ufp_traj(2,n)-X_traj(2, n-1));
     end
     opti_LS.subject_to( Ufp_traj(2,n) <= -ufp_y_min);
 
-    opti_LS.subject_to(Ufp_traj(2,n+1)-X_traj(2,n) <= 0.2);
+    opti_LS.subject_to(Ufp_traj(2,n+1)-X_traj(2,n) <= p_ufp_max(2));
     opti_LS.subject_to(ufp_y_min <= Ufp_traj(2,n+1));
 end
 
@@ -261,7 +262,8 @@ if sol_type == "qrqp"
         p_k,...
         p_mu,...
         p_Q_term, ...
-        p_x_step_init};
+        p_x_step_init, ...
+        p_x_mech_limit};
     ufp_com = X_traj(1:2,1) - Ufp_traj(:,1);
     opt_output = {X_traj, Ufp_traj, ufp_com};
     

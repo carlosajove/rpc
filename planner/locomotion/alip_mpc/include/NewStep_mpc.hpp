@@ -76,6 +76,9 @@ private:
     double ufp_y_max_;
     double ufp_y_min_;
     int leg_identity_ = -1;             // leg swap parameter
+    double new_ufp_x_max_;
+    double new_ufp_y_max_;
+
 
     // Casadi fp solver info
     const int n_xlip_ = 4;

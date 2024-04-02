@@ -86,8 +86,20 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
     // vector<double> xlip_init = {xc_this_, yc_this_, Lx_this_, Ly_this_};   // x_init is 4 x 1
 
     // C: haber que hacer con estos limites, los puedo poner en hpp?
-    vector<double> ufp_max = {ufp_x_max / 2, ufp_y_max_};  // Max distance of step length x
-    vector<double> ufp_min = {-ufp_x_max / 2, ufp_y_min_}; // Max distance of step length y
+    vector<double> ufp_max;
+    vector<double> ufp_min;
+    cout << "MPC 1" << endl;
+    double mech_limit;
+    if (new_solver_){
+        mech_limit = ufp_x_max / 2;
+        ufp_max = {new_ufp_x_max_ / 2, new_ufp_y_max_};  // Max distance of step length x
+        ufp_min = {-new_ufp_x_max_ / 2, ufp_y_min_}; // Max distance of step length y
+    }
+    else {
+        ufp_max = {ufp_x_max / 2, ufp_y_max_};  // Max distance of step length x
+        ufp_min = {-ufp_x_max / 2, ufp_y_min_}; // Max distance of step length y
+    }
+    cout << "MPC 2" << endl;
 
     // Update Terrain traj parameters
     kx_traj_.assign(N_steps_, kx_new_);
@@ -124,6 +136,7 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
     double ufp_x_sol, ufp_y_sol;
     double xfp, yfp; //Lx, Ly;
 
+    cout << "MPC 3" << endl;
 
     casadi::Matrix<double> xlip_guess(n_xlip_, N_steps_);
     casadi::Matrix<double> ufp_guess(n_ufp_, N_steps_);
@@ -133,28 +146,32 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
         casadi::Matrix<double> xlip_guess = reshape(casadi::Matrix<double>(xlip_guess_), n_xlip_, N_steps_);
         casadi::Matrix<double> ufp_guess = reshape(casadi::Matrix<double>(ufp_guess_), n_ufp_, N_steps_);
     }
+    cout << "MPC 4" << endl;
 
     vector<casadi::DM> arg;
     if (new_solver_){
         casadi::Matrix<double> cas_x_com_init_step = casadi::Matrix<double>(x_com_init_step_);
 
         // Solve optimization problem
-        arg = {xlip_guess, ufp_guess, x_lip_current_, stance_leg_, mass_, zH_, Ts_, Tr_, leg_width_, Lx_offset_, Ly_des_, ufp_max, ufp_min, k_traj, mu_traj, Q_term, cas_x_com_init_step};
+        arg = {xlip_guess, ufp_guess, x_lip_current_, stance_leg_, mass_, zH_, Ts_, Tr_, leg_width_, Lx_offset_, Ly_des_, ufp_max, ufp_min, k_traj, mu_traj, Q_term, cas_x_com_init_step, mech_limit};
     }
     else{
         // Solve optimization problem
         arg = {xlip_guess, ufp_guess, x_lip_current_, stance_leg_, mass_, zH_, Ts_, Tr_, leg_width_, Lx_offset_, Ly_des_, ufp_max, ufp_min, k_traj, mu_traj, Q_term};
     }
+    cout << "MPC 5" << endl;
 
     vector<casadi::DM> result_solver;
     //Different solver for each leg
     if (stance_leg_ == -1) result_solver = f_solver_LS_(arg); //left_stance, means i want to calculate right stance next.
     else result_solver = f_solver_RS_(arg);   //i want to calculate left stance. First result will be left
+    cout << "MPC 6" << endl;
 
     vector<double> xlip_sol = (vector<double>)result_solver.at(0);
     vector<double> ufp_sol = (vector<double>)result_solver.at(1);
     vector<double> ufp_wrt_com_sol = (vector<double>)result_solver.at(2);
-    
+    cout << ufp_sol << endl;
+    cout << "MPC 7" << endl;
 
     //cout << "xlip_sol" << xlip_sol.size() << endl << xlip_sol;
     //cout << "ufp sol " << ufp_sol.size() << endl << ufp_sol;
@@ -165,7 +182,10 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
     // Safety check for bad solutions
     // median of ufpxsol and limits
 
-    //  C: FOR NOW KEEP COMMENTED 
+    cout << ufp_x_sol << endl;
+    cout << ufp_max << endl;
+    cout << ufp_min << endl;
+
     vector<double> ufpx_check{ufp_x_sol, ufp_max[0], ufp_min[0]};
     auto m = ufpx_check.begin() + ufpx_check.size() / 2;
     nth_element(ufpx_check.begin(), m, ufpx_check.end());
@@ -189,7 +209,9 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
         nth_element(ufpy_check.begin(), l, ufpy_check.end());
         ufp_y_sol = ufpy_check[ufpy_check.size() / 2];
     }
-*/
+    */
+    cout << "MPC 8" << endl;
+
    if (new_solver_){
     if (stance_leg_ == -1){
             vector<double> ufpy_check{x_com_init_step_[1]-0.2, ufp_y_sol, -ufp_min[1]};
@@ -224,6 +246,7 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
         }
     }
 
+    cout << "MPC 9" << endl;
 
     /* Foot placement relative to current COM */
     xfp = xlip_sol[0];
@@ -247,6 +270,7 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
     //new output data full solver solution
     full_sol.xlip_sol = xlip_sol;
     full_sol.ufp_sol = ufp_sol;
+    cout << "MPC 10" << endl;
 
     return;
 }
@@ -258,6 +282,8 @@ void NewStep_mpc::SetParameters(const YAML::Node &node) {
     util::ReadParameter(node, "ufp_x_max", ufp_x_max);
     util::ReadParameter(node, "ufp_y_max", ufp_y_max_);
     util::ReadParameter(node, "ufp_y_min", ufp_y_min_);
+    util::ReadParameter(node, "new_ufp_x_max", new_ufp_x_max_);
+    util::ReadParameter(node, "new_ufp_y_max", new_ufp_y_max_);
 
   } catch (const std::runtime_error &e) {
     std::cerr << "Error reading parameter [" << e.what() << "] at file: ["
