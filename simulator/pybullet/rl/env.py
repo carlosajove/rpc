@@ -178,6 +178,9 @@ class DracoEnv(gym.Env):
 
         #self.observation_space = gym.spaces.Dict(obs_space)
 
+        
+        #pnc interface, sensor_data, command class
+
         if (self.render):
             self.client.resetDebugVisualizerCamera(
                 cameraDistance=1.0,
@@ -188,7 +191,6 @@ class DracoEnv(gym.Env):
             fixedTimeStep=Config.CONTROLLER_DT, numSubSteps=Config.N_SUBSTEP)
         self.client.setGravity(0, 0, -9.81)
 
-        self.client.configureDebugVisualizer(self.client.COV_ENABLE_RENDERING, 0)
 
         # Create Robot, Ground
         self.client.configureDebugVisualizer(self.client.COV_ENABLE_RENDERING, 0)
@@ -241,6 +243,9 @@ class DracoEnv(gym.Env):
 
 
 
+
+
+
         self._rpc_draco_interface = draco_interface_py.DracoInterface()
         self._rpc_draco_sensor_data = draco_interface_py.DracoSensorData()
         self._rpc_draco_command = draco_interface_py.DracoCommand()
@@ -251,17 +256,17 @@ class DracoEnv(gym.Env):
 
         self._w_desired_Lxy = 1.
 
-        self._w_desired_Lx = 2.
+        self._w_desired_Lx = 3.
         self._w_desired_Ly = 3.
 
         self._w_desired_yaw = -1.
         self._w_excessive_fp = -0.5
         self._w_excessive_angle = -0.5
         self._w_termination = -20.
-        self._w_alive_bonus = 3.
-        self._w_action_diff = -0.001
-        self._w_penalise_trajectory_Lx = -0.0005
-        self._w_penalise_trajectory_Ly = -0.0005
+        self._w_alive_bonus = 4.
+        self._w_action_diff = 0.001
+        self._w_penalise_trajectory_Lx = -0.000015
+        self._w_penalise_trajectory_Ly = -0.000015
 
         self._Lx_main = 0.5*AlipParams.WIDTH*AlipParams.MASS*math.sqrt(AlipParams.G/AlipParams.ZH) \
                         *AlipParams.ZH*math.tanh(math.sqrt(AlipParams.G/AlipParams.ZH)*AlipParams.TS/2)
@@ -272,11 +277,13 @@ class DracoEnv(gym.Env):
 
         self._bool = 0
 
+        self.reset()
+
 
 
     def reset(self, seed: int = 0):  #creates env
         # Environment Setup
-        #self.client.resetSimulation()
+#       self.client.resetSimulation()
 
         self._rpc_draco_interface.Reset()
 
@@ -303,13 +310,12 @@ class DracoEnv(gym.Env):
         rot_basejoint_to_basecom = np.dot(rot_world_basejoint.transpose(),
                                         rot_world_basecom)
 
-
         # Run Simulation
         self.dt = Config.CONTROLLER_DT
 
 
         self.previous_torso_velocity = np.array([0., 0., 0.])
-        self.rate = RateLimiter(frequency=1./self.dt)
+        self.rate = RateLimiter(frequency=1./(self.dt))
 
 
         self.set_action_command_in_sensor_data()
@@ -324,7 +330,6 @@ class DracoEnv(gym.Env):
         self._iter = 0
 
         #ACTION COMMAND WILL CHANGE ONCE PER EPISODE NOT DURING STEPS
-
 
         return obs_numpy, info
    
@@ -355,7 +360,7 @@ class DracoEnv(gym.Env):
                             self.robot, self.link_id_dict['torso_imu'], self.client)[3:6]
 
             self.client.stepSimulation()
-            if self.render: self.rate.sleep()
+            #if self.render: self.rate.sleep()
             done = self._compute_termination(self._rpc_draco_command.wbc_obs_)
             if done: break
 
@@ -376,9 +381,9 @@ class DracoEnv(gym.Env):
         return policy_obs, reward, done, truncate, info # need terminated AND truncated
 
     def _denormalise_action(self, action):
-        #from -1 to 1 to-0.1 to 1
-        #for now dummy
-        wbc_action = 0.1*action
+        #from -1 to 1 to-0.1 to 0.1
+        #for now dummy  
+        wbc_action = 0.1*action  
         return wbc_action
 
     def _normalise_observation(self, _observation):
@@ -512,16 +517,17 @@ class DracoEnv(gym.Env):
                 return True
             if np.abs(_wbc_obs[7]) > (np.abs(self._Lx_main+AlipParams.LX_OFFSET)+25):
                 return True
+            if np.abs(_wbc_obs[8]-_wbc_obs[2]) > 25:
+                return True
         return False
 
 
     def _compute_reward(self, wbc_obs, action, done):
         if wbc_obs is None: return 0
-        self._old_wbc_obs = self._new_wbc_obs
-        self._new_wbc_obs = wbc_obs
-        self._rl_action = action
-
-        if (self._old_wbc_obs[0] != self._new_wbc_obs[0]):
+        self._old_wbc_obs = np.copy(self._new_wbc_obs)
+        self._new_wbc_obs = np.copy(wbc_obs)
+        self._rl_action = np.copy(action)
+        if (self._old_wbc_obs[0] != self._new_wbc_obs[0]): 
             reward = self._w_alive_bonus
             #reward += self.reward_tracking_com_L()
             reward += self.reward_tracking_com_Lx()
@@ -625,17 +631,21 @@ class DracoEnv(gym.Env):
 
     def penalise_different_policy(self):
         error = self._new_wbc_obs - self._old_wbc_obs
-        error /= (self._mpc_freq*self._sim_dt)
+        #error = (self._mpc_freq*self._sim_dt)
         error = np.sum(np.square(error))
+        error = np.exp(-error)
         error *= self._w_action_diff
 
         return error
 
     def penalise_excessive_Lx(self):
-        error = self._new_wbc_obs[8] - self._old_wbc_obs[1]
-        error = np.square(error/self._Lx_main)
-        error *= self._w_penalise_trajectory_Lx
-        return error
+        error = np.abs(self._new_wbc_obs[8] - self._old_wbc_obs[1])
+        if error > self._Lx_main:
+            error -= self._Lx_main
+            error = np.square(error)
+            error *= self._w_penalise_trajectory_Lx
+            return error
+        return 0
 
     def penalise_excessive_Ly(self):
         error = self._old_wbc_obs[2] - self._new_wbc_obs[8]
@@ -723,7 +733,9 @@ if __name__ == "__main__":
     while True:
         action = np.zeros(3)
         obs, reward, done, trunc, info = env.step(action)
-        print(info['reward_components'])
+        print("new action")
+        print("reward", reward)
+        print("reward info", info["reward_components"])
         if done or trunc:
             obs,info = env.reset()
         if flag:

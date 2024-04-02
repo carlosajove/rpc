@@ -184,7 +184,7 @@ void DracoControlArchitecture::GetCommand(void *command) {
     upper_body_tm_->UseNominalUpperBodyJointPos(sp_->nominal_jpos_);
     controller_->GetCommand(command);
     alipIter++;
-    if (mpc_freq_ != 0 && alipIter == mpc_freq_-1) sp_->rl_trigger_ = true;
+    if (mpc_freq_ != 0 && alipIter == mpc_freq_) sp_->rl_trigger_ = true;
     if (mpc_freq_ != 0 && alipIter == mpc_freq_) alipIter = 0;
     if (verbose = true){
         alip_tm_->saveRobotCommand(sp_->current_time_);

@@ -141,7 +141,7 @@ wbc:
       ########################################################################
      # sim_com_weight : [1000.]  Carlos
       sim_com_weight : [1000.] #Carlos
-      sim_com_kp : [100.]
+      sim_com_kp : [1000.]
       sim_com_kd : [50.]
 
       #sim_com_weight : [1000.]
@@ -381,7 +381,7 @@ lmpc_walking:
 #mpc freq == 0 --> mu = 0.4
 #mpc freq == 5 --> mu = 0.1
 alip_mpc_walking:
-  mpc_freq: 5 #10  #wrt ctrl freq
+  mpc_freq: 10 #10  #wrt ctrl freq
   step_horizon: "4"
   intervals: "2"
   Ts: 0.3    #0.25  #Greater Ts makes offset increase also

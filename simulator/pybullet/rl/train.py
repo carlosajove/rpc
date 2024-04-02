@@ -23,7 +23,7 @@ import argparse
 
 import argparse
 
-new_model = True
+new_model = False
 
 if __name__ == "__main__":
     if not new_model:
@@ -34,17 +34,18 @@ if __name__ == "__main__":
 
     yaw_max = 0
     Lx = 0.
-    Ly = 0.
+    Ly = 10.
     randomized_command = False
     reduced_obs_size = False
-    mpc_freq = 5
+    mpc_freq = 10
     sim_dt = Config.CONTROLLER_DT
+    render = False
 
-    env = DracoEnv(Lx, Ly, yaw_max, mpc_freq, sim_dt, randomized_command=randomized_command, reduced_obs_size=reduced_obs_size, render = False)
+    env = DracoEnv(Lx, Ly, yaw_max, mpc_freq, sim_dt, randomized_command=randomized_command, reduced_obs_size=reduced_obs_size, render = render)
     #env = VecNormalize(not_norm_env, norm_reward=False, clip_obs=50)
 
-    n_steps_ = 256*10 #512
-    batch_size_ = 64*2
+    n_steps_ = 2048*4 #512
+    batch_size_ = 64*4
     learning_rate_ = 0.0003
 
     if reduced_obs_size: str1 = 'redOBS'
@@ -55,7 +56,7 @@ if __name__ == "__main__":
 
 
 
-    save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}_Lx_{Lx}_Ly_{Ly}_Yaw_{yaw_max}"         
+    save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}_Lx_{Lx}_Ly_{Ly}_Yaw_{yaw_max}"       
     ## train model
     if new_model:
         tensorboard_dir = cwd + "/ppo_rl_log/"
@@ -72,13 +73,13 @@ if __name__ == "__main__":
         model_path = model_dir + '/' + save_dir + '/' + save_subdir
         print("model_path", model_path)
         model = PPO.load(model_path, env=env)
-        TIMESTEPS =20*n_steps_
+        TIMESTEPS =10*n_steps_
 
 
 
     while(True):
         try:
-            model.learn(total_timesteps=TIMESTEPS, progress_bar=True, reset_num_timesteps=False, tb_log_name="erase")
+            model.learn(total_timesteps=TIMESTEPS, progress_bar=True, reset_num_timesteps=False, tb_log_name=save_dir)
             endTime = time.time()
             print("Model train time: "+str(datetime.timedelta(seconds=endTime-startTime)))
             ## save the model

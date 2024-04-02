@@ -115,7 +115,7 @@ def normal3Dplot(x, y, z, name):
 #trSw2 = all_trajectories('Swing2_trajectory.txt')
 
 #trBezier = all_trajectories('BezierSwing_trajectory.txt')
-trAlip = all_trajectories('AlipSwing_trajectory.txt')
+#trAlip = all_trajectories('AlipSwing_trajectory.txt')
 trAlip2 = all_trajectories('Alip2Swing_trajectory.txt')
 trRobotSwing = readRobotSwTr('robotSwingFootTraj.txt')
 #trSw = merge_swing_traj(trSw1, trSw2)
