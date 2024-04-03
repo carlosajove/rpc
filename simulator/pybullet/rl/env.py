@@ -144,6 +144,9 @@ class DracoEnv(gym.Env):
 
         self._set_observation_space()
 
+        
+        #pnc interface, sensor_data, command class
+
         if (self.render):
             self.client.resetDebugVisualizerCamera(
                 cameraDistance=1.0,
@@ -154,7 +157,6 @@ class DracoEnv(gym.Env):
             fixedTimeStep=Config.CONTROLLER_DT, numSubSteps=Config.N_SUBSTEP)
         self.client.setGravity(0, 0, -9.81)
 
-        self.client.configureDebugVisualizer(self.client.COV_ENABLE_RENDERING, 0)
 
         # Create Robot, Ground
         self.client.configureDebugVisualizer(self.client.COV_ENABLE_RENDERING, 0)
@@ -207,6 +209,9 @@ class DracoEnv(gym.Env):
 
 
 
+
+
+
         self._rpc_draco_interface = draco_interface_py.DracoInterface()
         self._rpc_draco_sensor_data = draco_interface_py.DracoSensorData()
         self._rpc_draco_command = draco_interface_py.DracoCommand()
@@ -222,7 +227,7 @@ class DracoEnv(gym.Env):
 
     def reset(self, seed: int = 0):  #creates env
         # Environment Setup
-        #self.client.resetSimulation()
+#       self.client.resetSimulation()
 
         self._rpc_draco_interface.Reset()
 
@@ -258,13 +263,12 @@ class DracoEnv(gym.Env):
         rot_basejoint_to_basecom = np.dot(rot_world_basejoint.transpose(),
                                         rot_world_basecom)
 
-
         # Run Simulation
         self.dt = Config.CONTROLLER_DT
 
 
         self.previous_torso_velocity = np.array([0., 0., 0.])
-        self.rate = RateLimiter(frequency=1./self.dt)
+        self.rate = RateLimiter(frequency=1./(self.dt))
 
 
         self.set_action_command_in_sensor_data()
@@ -279,7 +283,6 @@ class DracoEnv(gym.Env):
         self._iter = 0
 
         #ACTION COMMAND WILL CHANGE ONCE PER EPISODE NOT DURING STEPS
-
 
         return obs_numpy, info
    
@@ -320,7 +323,7 @@ class DracoEnv(gym.Env):
                 self.client.applyExternalForce(self.robot, -1, rand_force, np.zeros(3), flags = self.client.WORLD_FRAME)
             """
             self.client.stepSimulation()
-            if self.render: self.rate.sleep()
+            #if self.render: self.rate.sleep()
             done = self._compute_termination(self._rpc_draco_command.wbc_obs_)
             if done: break
 
