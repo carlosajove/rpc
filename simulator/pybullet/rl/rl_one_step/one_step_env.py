@@ -20,13 +20,15 @@ class DracoEnvOneStepMpc(DracoEnv):
             print("FREQ != 0. PLEASE SET FREQ == 0")
             raise Warning
 
+        assert randomized_command == False
+
         self._set_max_steps_iter(30)
     
     def _set_observation_space(self):
         if self._reduced_obs_size:
             self.observation_space = gym.spaces.Box(  #observation space added Tr and previous full_action x and y
-                low = np.array([-50]*19),
-                high = np.array([50]*19),
+                low = np.array([-100]*13),
+                high = np.array([100]*13),
                 dtype = np.float64
             )
         else:
@@ -37,18 +39,18 @@ class DracoEnvOneStepMpc(DracoEnv):
             )
 
     def _get_observation(self, wbc_obs) -> dict:
-        """
+        """ Desired state is not an input to nn implicit in the env
         stance_leg
+        com_pos_desired_frame x3
+        L_desired_frame       x3
+        torso_roll_pitch_yaw  x3
+        swfoot_roll_pitch_yaw x3
+
+
         
         """
-        stance_leg = np.array([int(wbc_obs[0])])
-        COM = np.concatenate((wbc_obs[1:10], 
-                             wbc_obs[13:16],
-                             self._rpc_draco_sensor_data.base_joint_ang_vel_,
-                             stance_leg,
-                             wbc_obs[16:20]))
-        COM[16] -= self._sim_dt 
-        if(self._reduced_obs_size):
+        COM = np.concatenate((np.array([wbc_obs[0]]), wbc_obs[4:10], wbc_obs[13:19]))
+        if self._reduced_obs_size:
             policy_obs = COM
         else:
             imu_frame_quat, imu_ang_vel, imu_dvel, joint_pos, joint_vel, b_lf_contact, b_rf_contact, \
@@ -196,7 +198,7 @@ class DracoEnvOneStepMpc(DracoEnv):
 if __name__ == "__main__":
     import math
     yaw = 10*math.pi/180
-    env = DracoEnvOneStepMpc(0., 0., yaw, 0, Config.CONTROLLER_DT, randomized_command=False, reduced_obs_size=False, render = True)
+    env = DracoEnvOneStepMpc(0., 0., yaw, 0, Config.CONTROLLER_DT, randomized_command=False, reduced_obs_size=True, render = True)
     from stable_baselines3.common.env_checker import check_env
     #check_env(env)
 

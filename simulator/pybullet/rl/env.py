@@ -283,7 +283,6 @@ class DracoEnv(gym.Env):
         self._iter = 0
 
         #ACTION COMMAND WILL CHANGE ONCE PER EPISODE NOT DURING STEPS
-
         return obs_numpy, info
    
     def step(self, action):

@@ -36,7 +36,7 @@ if __name__ == "__main__":
     Lx = 0.
     Ly = 0.
     randomized_command = False
-    reduced_obs_size = False
+    reduced_obs_size = True
     mpc_freq = 0
     sim_dt = Config.CONTROLLER_DT
 
