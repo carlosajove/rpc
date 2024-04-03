@@ -73,7 +73,6 @@ private:
   DCMPlanner *dcm_planner_;
   NewStep_mpc *alip_mpc_;
 
-  int mpc_freq_;
   bool verbose = false;
   int alipIter;
   double Tr;

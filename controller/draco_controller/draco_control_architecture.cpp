@@ -63,10 +63,11 @@ DracoControlArchitecture::DracoControlArchitecture(PinocchioRobotSystem *robot)
 
   std::string step_horizon;
   std::string intervals;
-
+  bool new_solver;
   util::ReadParameter(cfg_["alip_mpc_walking"], "step_horizon", step_horizon);
   util::ReadParameter(cfg_["alip_mpc_walking"], "intervals", intervals);
-  alip_mpc_ = new NewStep_mpc(step_horizon, intervals);
+  util::ReadParameter(cfg_["alip_mpc_walking"], "new_solver", new_solver);
+  alip_mpc_ = new NewStep_mpc(step_horizon, intervals, new_solver);
   // mpc handler
   // lmpc_handler_ = new LMPCHandler(
   // dcm_planner_, robot_, tci_container_->com_task_,
@@ -184,8 +185,10 @@ void DracoControlArchitecture::GetCommand(void *command) {
     upper_body_tm_->UseNominalUpperBodyJointPos(sp_->nominal_jpos_);
     controller_->GetCommand(command);
     alipIter++;
-    if (mpc_freq_ != 0 && alipIter == mpc_freq_-1) sp_->rl_trigger_ = true;
-    if (mpc_freq_ != 0 && alipIter == mpc_freq_) alipIter = 0;
+    if (sp_->mpc_freq_ != 0 && alipIter == sp_->mpc_freq_) {
+        alipIter = 0;
+        sp_->rl_trigger_ = true;
+    }
     if (verbose = true){
         alip_tm_->saveRobotCommand(sp_->current_time_);
         alip_tm_->saveCurrentCOMstate(sp_->current_time_);
@@ -201,6 +204,7 @@ void DracoControlArchitecture::GetCommand(void *command) {
        //sp_->outsideCommand(cfg_["alip_mpc_walking"]);
        sp_->rl_trigger_ = true;
     }
+
   //  std::cout << "ctroarch end Get Command" << std::endl << std::endl;
 
 
@@ -241,7 +245,7 @@ void DracoControlArchitecture::_InitializeParameters() {
   alip_mpc_->SetParameters(cfg_["alip_mpc_walking"]);
 
   //draco_control_arch
-  util::ReadParameter(cfg_["alip_mpc_walking"], "mpc_freq", mpc_freq_);
+  //util::ReadParameter(cfg_["alip_mpc_walking"], "mpc_freq", mpc_freq_);
 }
 
 void DracoControlArchitecture::Reset(){

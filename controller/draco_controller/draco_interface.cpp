@@ -81,12 +81,13 @@ void DracoInterface::GetCommand(void *sensor_data, void *command_data) {
 
   // get control command
   se_->GetRlpolicy(draco_sensor_data);
+  sp_->mpc_freq_ = draco_sensor_data->MPC_freq_;
+
   ctrl_arch_->GetCommand(draco_command);
   se_->UpdateWbcObs();
   Eigen::VectorXd wbc_obs = sp_->get_wbc_obs();
   draco_command->wbc_obs_ = wbc_obs;
   draco_command->rl_trigger_ = sp_->rl_trigger_;
-
 
 #if B_USE_ZMQ
   if (sp_->count_ % sp_->data_save_freq_ == 0) {

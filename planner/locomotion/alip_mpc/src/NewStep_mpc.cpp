@@ -5,21 +5,29 @@ using namespace std;
 
 
 // Constructor
-NewStep_mpc::NewStep_mpc(string & horizon, string & intervals)
+NewStep_mpc::NewStep_mpc(string & horizon, string & intervals, const bool &new_solver)
 {
     //util::PrettyConstructor(2, "Alip Mpc");
 
+    new_solver_ = new_solver;
     // Casadi function definitions
     N_steps_ = stoi(horizon); //C: ver que significa stoi
     //N_xsol_ = n_xlip_ * N_steps_;
     //N_ufpsol_ = n_ufp_ * N_steps_;
+    if (new_solver){
+        solver_LS_ = "new_draco3_LS_simplempc_Ns" + horizon + "_Ni" + intervals + "_qrqp";
+        f_solver_LS_ = casadi::external(solver_LS_);
 
-    solver_LS_ = "cassie_LS_simplempc_Ns" + horizon + "_Ni" + intervals + "_qrqp";
-    f_solver_LS_ = casadi::external(solver_LS_);
+        solver_RS_ = "new_draco3_RS_simplempc_Ns" + horizon + "_Ni" + intervals + "_qrqp";
+        f_solver_RS_ = casadi::external(solver_RS_);
+    }
+    else{
+        solver_LS_ = "draco_LS_simplempc_Ns" + horizon + "_Ni" + intervals + "_qrqp";
+        f_solver_LS_ = casadi::external(solver_LS_);
 
-    solver_RS_ = "cassie_RS_simplempc_Ns" + horizon + "_Ni" + intervals + "_qrqp";
-    f_solver_RS_ = casadi::external(solver_RS_);
-
+        solver_RS_ = "draco_RS_simplempc_Ns" + horizon + "_Ni" + intervals + "_qrqp";
+        f_solver_RS_ = casadi::external(solver_RS_);
+    }   
     // cout << "--> Casadi Solvers Generated\n";
 
     // Initialize terrain deques
@@ -79,8 +87,18 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
     // vector<double> xlip_init = {xc_this_, yc_this_, Lx_this_, Ly_this_};   // x_init is 4 x 1
 
     // C: haber que hacer con estos limites, los puedo poner en hpp?
-    vector<double> ufp_max = {ufp_x_max / 2, ufp_y_max_};  // Max distance of step length x
-    vector<double> ufp_min = {-ufp_x_max / 2, ufp_y_min_}; // Max distance of step length y
+    vector<double> ufp_max;
+    vector<double> ufp_min;
+    double mech_limit;
+    if (new_solver_){
+        mech_limit = ufp_x_max / 2;
+        ufp_max = {new_ufp_x_max_ / 2, new_ufp_y_max_};  // Max distance of step length x
+        ufp_min = {-new_ufp_x_max_ / 2, ufp_y_min_}; // Max distance of step length y
+    }
+    else {
+        ufp_max = {ufp_x_max / 2, ufp_y_max_};  // Max distance of step length x
+        ufp_min = {-ufp_x_max / 2, ufp_y_min_}; // Max distance of step length y
+    }
 
     // Update Terrain traj parameters
     kx_traj_.assign(N_steps_, kx_new_);
@@ -110,8 +128,8 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
 
     /* Terminal cost parameter */
     casadi::DM Q_term = casadi::DM::eye(n_xlip_);
-    Q_term *= 100;
-    Q_term(3,3) = 1000;
+    Q_term *= 50;
+    Q_term(3,3) = 50;
 
     /* MPC Solution */
     double ufp_x_sol, ufp_y_sol;
@@ -127,48 +145,74 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
         casadi::Matrix<double> ufp_guess = reshape(casadi::Matrix<double>(ufp_guess_), n_ufp_, N_steps_);
     }
 
-    // Solve optimization problem
-    vector<casadi::DM> arg = {xlip_guess, ufp_guess, x_lip_current_, stance_leg_, mass_, zH_, Ts_, Tr_, leg_width_, Lx_offset_, Ly_des_, ufp_max, ufp_min, k_traj, mu_traj, Q_term};
+    vector<casadi::DM> arg;
+    if (new_solver_){
+        casadi::Matrix<double> cas_x_com_init_step = casadi::Matrix<double>(x_com_init_step_);
+
+        // Solve optimization problem
+        arg = {xlip_guess, ufp_guess, x_lip_current_, stance_leg_, mass_, zH_, Ts_, Tr_, leg_width_, Lx_offset_, Ly_des_, ufp_max, ufp_min, k_traj, mu_traj, Q_term, cas_x_com_init_step, mech_limit};
+    }
+    else{
+        // Solve optimization problem
+        arg = {xlip_guess, ufp_guess, x_lip_current_, stance_leg_, mass_, zH_, Ts_, Tr_, leg_width_, Lx_offset_, Ly_des_, ufp_max, ufp_min, k_traj, mu_traj, Q_term};
+    }
+
     vector<casadi::DM> result_solver;
-    
     //Different solver for each leg
     if (stance_leg_ == -1) result_solver = f_solver_LS_(arg); //left_stance, means i want to calculate right stance next.
     else result_solver = f_solver_RS_(arg);   //i want to calculate left stance. First result will be left
 
     vector<double> xlip_sol = (vector<double>)result_solver.at(0);
     vector<double> ufp_sol = (vector<double>)result_solver.at(1);
-    
-    //cout << "xlip_sol" << xlip_sol.size() << endl;
-    //cout << "ufp sol " << ufp_sol.size() << endl;
+    vector<double> ufp_wrt_com_sol = (vector<double>)result_solver.at(2);
+
+    //cout << "xlip_sol" << xlip_sol.size() << endl << xlip_sol;
+    //cout << "ufp sol " << ufp_sol.size() << endl << ufp_sol;
 
     ufp_x_sol = ufp_sol[0];
     ufp_y_sol = ufp_sol[1];
 
     // Safety check for bad solutions
     // median of ufpxsol and limits
-    
-    //  C: FOR NOW KEEP COMMENTED 
+
+
     vector<double> ufpx_check{ufp_x_sol, ufp_max[0], ufp_min[0]};
     auto m = ufpx_check.begin() + ufpx_check.size() / 2;
     nth_element(ufpx_check.begin(), m, ufpx_check.end());
     ufp_x_sol = ufpx_check[ufpx_check.size() / 2];
     // median of ufpysol and limits
-    // cout << "stanceleg: " << stance_leg_ << endl;
-    if (stance_leg_ == -1) // left stance next left swing
-    {
-        vector<double> ufpy_check{-ufp_max[1], ufp_y_sol, -ufp_min[1]};
-        // cout << "median vector: " << ufpy_check << endl;
-        auto l = ufpy_check.begin() + ufpy_check.size() / 2;
-        nth_element(ufpy_check.begin(), l, ufpy_check.end());
-        ufp_y_sol = ufpy_check[ufpy_check.size() / 2];
+   if (new_solver_){
+    if (stance_leg_ == -1){
+            vector<double> ufpy_check{x_com_init_step_[1]-0.2, ufp_y_sol, -ufp_min[1]};
+            auto l = ufpy_check.begin() + ufpy_check.size() /2;
+            nth_element(ufpy_check.begin(), l, ufpy_check.end());
+            ufp_y_sol = ufpy_check[ufpy_check.size() / 2];
     }
-    else // right stance
-    {
-        vector<double> ufpy_check{ufp_min[1], ufp_y_sol, ufp_max[1]};
-        // cout << "median vector: " << ufpy_check << endl;
-        auto l = ufpy_check.begin() + ufpy_check.size() / 2;
-        nth_element(ufpy_check.begin(), l, ufpy_check.end());
-        ufp_y_sol = ufpy_check[ufpy_check.size() / 2];
+    else{
+            vector<double> ufpy_check{ufp_min[1], ufp_y_sol, x_com_init_step_[1]+0.2};
+            // cout << "median vector: " << ufpy_check << endl;
+            auto l = ufpy_check.begin() + ufpy_check.size() / 2;
+            nth_element(ufpy_check.begin(), l, ufpy_check.end());
+            ufp_y_sol = ufpy_check[ufpy_check.size() / 2];
+        }
+    }
+    else{
+        if (stance_leg_ == -1) // left stance next left swing
+        {
+            vector<double> ufpy_check{-ufp_max[1], ufp_y_sol, -ufp_min[1]};
+            // cout << "median vector: " << ufpy_check << endl;
+            auto l = ufpy_check.begin() + ufpy_check.size() / 2;
+            nth_element(ufpy_check.begin(), l, ufpy_check.end());
+            ufp_y_sol = ufpy_check[ufpy_check.size() / 2];
+        }
+        else // right stance
+        {
+            vector<double> ufpy_check{ufp_min[1], ufp_y_sol, ufp_max[1]};
+            // cout << "median vector: " << ufpy_check << endl;
+            auto l = ufpy_check.begin() + ufpy_check.size() / 2;
+            nth_element(ufpy_check.begin(), l, ufpy_check.end());
+            ufp_y_sol = ufpy_check[ufpy_check.size() / 2];
+        }
     }
 
 
@@ -205,6 +249,8 @@ void NewStep_mpc::SetParameters(const YAML::Node &node) {
     util::ReadParameter(node, "ufp_x_max", ufp_x_max);
     util::ReadParameter(node, "ufp_y_max", ufp_y_max_);
     util::ReadParameter(node, "ufp_y_min", ufp_y_min_);
+    util::ReadParameter(node, "new_ufp_x_max", new_ufp_x_max_);
+    util::ReadParameter(node, "new_ufp_y_max", new_ufp_y_max_);
 
   } catch (const std::runtime_error &e) {
     std::cerr << "Error reading parameter [" << e.what() << "] at file: ["

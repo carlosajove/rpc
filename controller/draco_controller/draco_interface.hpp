@@ -25,6 +25,7 @@ public:
         base_joint_ang_vel_(Eigen::Vector3d::Zero()),
         res_rl_action_(Eigen::VectorXd::Zero(3)),
         initial_stance_leg_(0),
+        MPC_freq_(0),
         policy_command_(Eigen::VectorXd::Zero(3)){};
   virtual ~DracoSensorData() = default;
 
@@ -50,6 +51,7 @@ public:
   //Command that rl_action, can be randomized
   Eigen::VectorXd policy_command_;
   int initial_stance_leg_;
+  int MPC_freq_;
 
 };
 
@@ -59,7 +61,7 @@ public:
       : joint_pos_cmd_(Eigen::VectorXd::Zero(draco::n_adof)),
         joint_vel_cmd_(Eigen::VectorXd::Zero(draco::n_adof)),
         joint_trq_cmd_(Eigen::VectorXd::Zero(draco::n_adof)),
-        wbc_obs_(Eigen::VectorXd::Zero(20)),
+        wbc_obs_(Eigen::VectorXd::Zero(24)),
         rl_trigger_(false){};
   virtual ~DracoCommand() = default;
 

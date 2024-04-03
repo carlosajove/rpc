@@ -115,7 +115,7 @@ int main(){
     string step_horizon = "4";
     string intervals = "4";
     //choose duration of test, number of iterations
-    NewStep_mpc newStep_mpc(step_horizon, intervals);
+    NewStep_mpc newStep_mpc(step_horizon, intervals, false);
 
     initialize_data(indata, outdata, 2 , 5);
 

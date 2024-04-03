@@ -31,50 +31,54 @@ AlipLocomotion::AlipLocomotion(StateId state_id, PinocchioRobotSystem *robot,
 void AlipLocomotion::FirstVisit(){  //represents when MPC computation
   if(first_ever) {
     stance_leg = sp_->initial_stance_leg_;
-    //state_machine_start_time_ = sp_->current_time_;
+    state_machine_start_time_ = sp_->current_time_;
     first_ever = false;
     if (stance_leg == 1) {
       ctrl_arch_->alip_tm_->SetSwingFootStart(robot_->GetLinkIsometry(draco_link::l_foot_contact).translation());
     } else {
       ctrl_arch_->alip_tm_->SetSwingFootStart(robot_->GetLinkIsometry(draco_link::r_foot_contact).translation());
     }
-    ctrl_arch_->alip_tm_->initializeOri(); 
+    ctrl_arch_->alip_tm_->initializeOri();
+    ctrl_arch_->alip_tm_->setNewOri(sp_->des_com_yaw_);
+    sp_->des_end_torso_iso_ = ctrl_arch_->alip_tm_->Get_des_end_torso_iso();
     new_leg = true;
-   
   }
   else if (new_leg) {
-    //new_leg = false;
     state_machine_start_time_ = sp_->current_time_;
     ctrl_arch_->alip_tm_->setNewOri(sp_->des_com_yaw_);
+    sp_->des_end_torso_iso_ = ctrl_arch_->alip_tm_->Get_des_end_torso_iso();
   }
-  
 
   state_machine_time_ = sp_->current_time_ - state_machine_start_time_;
 
   Tr = Ts - state_machine_time_;
-  //if (Tr < Ts / 8) return;
-
   sp_->Tr_ = Tr;
+
+
+
+
   ctrl_arch_->alip_tm_->MpcSolutions(Tr, stance_leg, sp_->Lx_offset_des_, sp_->Ly_des_, sp_->des_com_yaw_,
-                                        sp_->kx_, sp_->ky_, sp_->mu_);
+                                        sp_->kx_, sp_->ky_, sp_->mu_, new_leg);
 
   sp_->full_policy_ = ctrl_arch_->alip_tm_->add_residual_rl_action(sp_->res_rl_action_);
-
-  //ctrl_arch_->alip_tm_->safety_proj();
-
+  
   ctrl_arch_->alip_tm_->GenerateTrajs(Tr, new_leg);
   new_leg = false;
 
+  if (verbose){
+    ctrl_arch_->alip_tm_->saveTrajectories(0, Ts/20, Ts);
+    util::PrettyConstructor(3, "Trajectories saved");
+  }
   if (stance_leg == 1) {
     sp_->b_lf_contact_ = false;
     sp_->b_rf_contact_ = true;
 
-    ctrl_arch_->tci_container_->contact_map_["rf_contact"]->SetMaxFz(rf_z_MAX_);
-    ctrl_arch_->tci_container_->contact_map_["lf_contact"]->SetMaxFz(rf_z_max_);
+    ctrl_arch_->tci_container_->contact_map_["rf_contact"]->SetMaxFz(rf_z_MAX_); //rf_z_MAX_);
+    ctrl_arch_->tci_container_->contact_map_["lf_contact"]->SetMaxFz(rf_z_max_); //rf_z_max_);
   }
   else {
-    ctrl_arch_->tci_container_->contact_map_["lf_contact"]->SetMaxFz(rf_z_MAX_);
-    ctrl_arch_->tci_container_->contact_map_["rf_contact"]->SetMaxFz(rf_z_max_);
+    ctrl_arch_->tci_container_->contact_map_["lf_contact"]->SetMaxFz(rf_z_MAX_); //rf_z_MAX_);
+    ctrl_arch_->tci_container_->contact_map_["rf_contact"]->SetMaxFz(rf_z_max_); //rf_z_max_);
     sp_->b_rf_contact_ = false;
     sp_->b_lf_contact_ = true;
 
@@ -127,7 +131,7 @@ bool AlipLocomotion::SwitchLeg(){  //ahora asume que tocamos en Tr o antes. Que 
 
       state_machine_start_time_ = sp_->current_time_; //this should go to new leg
 
-      ctrl_arch_->tci_container_->contact_map_["lf_contact"]->SetMaxFz(500);
+      ctrl_arch_->tci_container_->contact_map_["lf_contact"]->SetMaxFz(rf_z_MAX_);
       new_leg = true;
 
 
@@ -147,7 +151,7 @@ bool AlipLocomotion::SwitchLeg(){  //ahora asume que tocamos en Tr o antes. Que 
 
       state_machine_start_time_ = sp_->current_time_; //same thing than before
 
-      ctrl_arch_->tci_container_->contact_map_["rf_contact"]->SetMaxFz(500);
+      ctrl_arch_->tci_container_->contact_map_["rf_contact"]->SetMaxFz(rf_z_MAX_);
       new_leg = true;
 
       ctrl_arch_->alip_tm_->SetSwingFootStart(robot_->GetLinkIsometry(draco_link::l_foot_contact).translation());
@@ -161,20 +165,23 @@ bool AlipLocomotion::SwitchLeg(){  //ahora asume que tocamos en Tr o antes. Que 
   if (switch_leg){ 
     file1 << sp_->current_time_ << endl; 
   }
+  sp_->stance_leg_ = stance_leg;
+  sp_->Ts_ = Ts;
+  sp_->Tr_ = Tr;
   
   return switch_leg;
-
 }
 
 void AlipLocomotion::SetParameters(const YAML::Node &node) {
   try {
     util::ReadParameter(node, "swing_height", swing_height_);
     util::ReadParameter(node, "Ts", Ts);
-    //util::ReadParameter(node, "stance_leg", stance_leg);
-    util::ReadParameter(node, "verbose", verbose);
+    util::ReadParameter(node, "stance_leg", stance_leg);
     util::ReadParameter(node, "rf_z_MAX", rf_z_MAX_);
     util::ReadParameter(node, "rf_z_max", rf_z_max_);
+    util::ReadParameter(node, "stance_leg", sp_->initial_stance_leg_);
     util::ReadParameter(node, "total_mass", sp_->mass_);
+    util::ReadParameter(node, "verbose", verbose);
 
   } catch (const std::runtime_error &e) {
     std::cerr << "Error reading parameter [" << e.what() << "] at file: ["

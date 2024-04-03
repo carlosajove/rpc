@@ -23,7 +23,7 @@ class NewStep_mpc
 public:
     // Constructor
     NewStep_mpc();
-    NewStep_mpc(string & horizon, string & intervals);
+    NewStep_mpc(string & horizon, string & intervals, const bool &new_solver);
 
     // Destructor
     virtual ~NewStep_mpc();
@@ -33,11 +33,14 @@ public:
     // Update
     void Update_(const input_data_t &input_data,
                  output_data_t &output_data, full_horizon_sol &full_sol);
+    void setCOMinit(vector<double> com_init){x_com_init_step_ = com_init;}
 
 private:
+    bool new_solver_;
+
+
     // Related to class loop
     int iter_ = 0;
-
     // custom_cassie_out struct // for input
     vector<double> x_lip_current_;
     double stance_leg_;
@@ -69,6 +72,9 @@ private:
     double ufp_y_max_;
     double ufp_y_min_;
     int leg_identity_ = -1;             // leg swap parameter
+    double new_ufp_x_max_;
+    double new_ufp_y_max_;
+
 
     // Casadi fp solver info
     const int n_xlip_ = 4;
@@ -86,6 +92,8 @@ private:
     
     vector<double> xlip_guess_;
     vector<double> ufp_guess_;
+
+    vector<double> x_com_init_step_;
 };
 
 #endif

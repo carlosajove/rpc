@@ -300,20 +300,32 @@ void DracoStateEstimator::GetRlpolicy(DracoSensorData *sensor_data){
 void DracoStateEstimator::UpdateWbcObs(){
   Eigen::Vector3d com_pos = robot_->GetRobotComPos();
   Eigen::Vector3d com_vel = robot_->GetRobotComLinVel();
+  Eigen::Isometry3d des_torso_iso = sp_->des_end_torso_iso_;
   Eigen::Isometry3d torso_iso = robot_->GetLinkIsometry(draco_link::torso_com_link);
+  Eigen::Isometry3d swfoot_iso;
 
   Eigen::Vector3d stfoot_pos;
-  if (sp_->stance_leg_ == 1) stfoot_pos = robot_->GetLinkIsometry(draco_link::r_foot_contact).translation();
-  else stfoot_pos = robot_->GetLinkIsometry(draco_link::l_foot_contact).translation();
+  if (sp_->stance_leg_ == 1) {
+    stfoot_pos = robot_->GetLinkIsometry(draco_link::r_foot_contact).translation();
+    swfoot_iso = robot_->GetLinkIsometry(draco_link::l_foot_contact);
+  }
+  else {
+    stfoot_pos = robot_->GetLinkIsometry(draco_link::l_foot_contact).translation();
+    swfoot_iso = robot_->GetLinkIsometry(draco_link::r_foot_contact);
+  }
 
   Eigen::Vector3d com_pos_stfoot = com_pos - stfoot_pos;
-  Eigen::Vector3d com_pos_stfoot_torso_ori = torso_iso.linear().transpose() * com_pos_stfoot;
-  Eigen::Vector3d com_vel_torso_ori = torso_iso.linear().transpose() * com_vel;
+  Eigen::Vector3d com_pos_stfoot_torso_ori = des_torso_iso.linear().transpose() * com_pos_stfoot;
+  Eigen::Vector3d com_vel_torso_ori = des_torso_iso.linear().transpose() * com_vel;
 
   Eigen::Vector3d L = sp_->mass_ * com_pos_stfoot_torso_ori.cross(com_vel);
+  Eigen::Vector3d Lc = robot_->GetHg().head<3>();
+  Lc = des_torso_iso.linear().transpose() * Lc;
+  L += Lc;
 
   sp_->com_pos_stance_frame_ = com_pos_stfoot_torso_ori;
   sp_->L_stance_frame_ = L;
   sp_->stfoot_pos_ = stfoot_pos;
   sp_->torso_roll_pitch_yaw_ = util::QuatToEulerZYX(Eigen::Quaterniond(torso_iso.linear()));
+  sp_->swfoot_roll_pitch_yaw_ = util::QuatToEulerZYX(Eigen::Quaterniond(swfoot_iso.linear()));
 }

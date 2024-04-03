@@ -4,7 +4,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
 lbound_time = 4
-ubound_time = 6
+ubound_time = 60
 
 script_directory = os.path.dirname(os.path.abspath(__file__))
 
@@ -164,6 +164,9 @@ stleg_zWorld = CurrentComstate[:,12]
 COMvelx = CurrentComstate[:,13]
 COMvely = CurrentComstate[:,14]
 COMvelz = CurrentComstate[:,15]
+COMLcx = CurrentComstate[:,16]
+COMLcy = CurrentComstate[:,17]
+COMLcz = CurrentComstate[:,18]
 
 
 
@@ -230,22 +233,7 @@ for t in landingTime:
 
 #normal3Dplot(RobotCommand[:,6], RobotCommand[:,7], RobotCommand[:,8], 'Foot Acceleration')
 
-plt.figure()
-plt.plot(timeCOM, swingXCommand)
-plt.plot(timeCOM, trRobotSwing[:,0])
-plt.title("X foot tracking")
-
-plt.figure()
-plt.plot(timeCOM, swingYCommand)
-plt.plot(timeCOM, trRobotSwing[:,1])
-plt.title("Y foot tracking")
-
-plt.figure()
-plt.plot(timeCOM, swingZCommand)
-plt.plot(timeCOM, trRobotSwing[:,2])
-plt.title("Z foot tracking")
-
-
+"""
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.plot(swingXCommand, swingYCommand, swingZCommand, marker='x', label = 'Command')
@@ -320,7 +308,7 @@ plt.scatter(timeCOM, swingVzCommand, label =  'vel command')
 plt.title('time vs Vz')
 plt.legend()
 
-
+"""
 
 
 
@@ -346,8 +334,14 @@ if lbound_time not in timeCOM or ubound_time not in timeCOM:
     print("Error: lbound_time or ubound_time not found in timeCOM vector.")
     print("min time: ", timeCOM[0])
     print("max time: " , timeCOM[-1])
-    plt.show()
-    exit()
+    if lbound_time not in timeCOM:
+        lbound_time = timeCOM[0]
+    if ubound_time not in timeCOM:
+        ubound_time = timeCOM[-1]
+    lbound_idx = np.searchsorted(timeCOM, lbound_time, side='left')
+    ubound_idx = np.searchsorted(timeCOM, ubound_time, side='right')
+    #plt.show()
+    #exit()
     
 else:
     lbound_idx = np.searchsorted(timeCOM, lbound_time, side='left')
@@ -363,7 +357,7 @@ landingTimes_in_range = [t for t in landingTime if lbound_time <= t <= ubound_ti
 
 # Extracting a subset of data within the specified time range
 x = timeCOM[inter]
-y = LxCOM[inter]/(MpcMassCom[inter]*MpczH[inter])
+y = (LxCOM[inter]+COMLcx[inter])/(MpcMassCom[inter]*MpczH[inter])
 
 yy = Lx_plus[inter]/(MpcMassCom[inter]*MpczH[inter])
 yyy = Lx_minus[inter]/(MpcMassCom[inter]*MpczH[inter])
@@ -377,7 +371,7 @@ for t in landingTimes_in_range:
 plt.title('Lx/mzH paper plot')
 
 
-y = LyCOM[inter]/(MpcMassCom[inter]*MpczH[inter])
+y = (LyCOM[inter]+COMLcy[inter])/(MpcMassCom[inter]*MpczH[inter])
 ydes = MpcLy_des[inter]/(MpcMassCom[inter]*MpczH[inter])
 
 plt.figure()
@@ -493,4 +487,31 @@ plt.plot(x, y)
 plt.title('stleg z world')
 for t in landingTimes_in_range:
     plt.axvline(x=t, color='black', linestyle='-', linewidth=0.1)
+
+
+
+
+###
+plt.figure()
+plt.plot(timeCOM, COMLcx, label = 'Lst')
+plt.plot(timeCOM, COMLcy, label = 'Lst')
+plt.plot(timeCOM, COMLcz, label = 'Lst')
+plt.title('Lst')
+plt.legend()
+
+plt.figure()
+plt.plot(timeCOM, LxCOM+COMLcx, label = 'L')
+plt.plot(timeCOM, LyCOM+COMLcy, label = 'L')
+plt.plot(timeCOM, LzCOM+COMLcz, label = 'L')
+plt.title('L    ')
+plt.legend()
+
+
+plt.figure()
+plt.plot(timeCOM, LzCOM-COMLcz, label = 'Lcz')
+plt.title('Lc')
+plt.legend()
+
+
+plt.savefig
 plt.show()

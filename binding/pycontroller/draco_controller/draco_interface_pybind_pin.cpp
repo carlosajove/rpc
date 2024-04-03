@@ -43,6 +43,7 @@ PYBIND11_MODULE(draco_interface_py, m) {
       .def_readwrite("res_rl_action_", &DracoSensorData::res_rl_action_)
       .def_readwrite("policy_command_", &DracoSensorData::policy_command_)
       .def_readwrite("initial_stance_leg_", &DracoSensorData::initial_stance_leg_)
+      .def_readwrite("MPC_freq_", &DracoSensorData::MPC_freq_)
 
       // Debug
       .def_readwrite("base_joint_pos_", &DracoSensorData::base_joint_pos_)

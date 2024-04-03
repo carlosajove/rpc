@@ -53,6 +53,8 @@ public:
   //RL action
   Eigen::VectorXd res_rl_action_;
 
+  //mpc 
+  int mpc_freq_;
   //WBC obs
   double mass_;
   int initial_stance_leg_;
@@ -63,14 +65,16 @@ public:
   double des_com_yaw_;
   double Ts_;
   double Tr_;
-  Eigen::Vector3d com_pos_stance_frame_;
+  Eigen::Isometry3d des_end_torso_iso_;   //at the end of the swing
+  Eigen::Vector3d com_pos_stance_frame_;  //rotatin frame is at the end of the swing
   Eigen::Vector3d L_stance_frame_;
   Eigen::Vector3d stfoot_pos_;
-  Eigen::Vector3d torso_roll_pitch_yaw_;
+  Eigen::Vector3d torso_roll_pitch_yaw_;   //at the time of the computation
   Eigen::Vector3d full_policy_;
+  Eigen::Vector3d swfoot_roll_pitch_yaw_;  //at the time of the computation
 
   Eigen::VectorXd get_wbc_obs(){
-    Eigen::VectorXd obs(20);
+    Eigen::VectorXd obs(24);
     obs <<  stance_leg_,
             Lx_offset_des_,           //2
             Ly_des_,
@@ -87,10 +91,14 @@ public:
             torso_roll_pitch_yaw_(0), //14
             torso_roll_pitch_yaw_(1),
             torso_roll_pitch_yaw_(2), //16
-            Tr_,                      //17              //Ts_,
-            full_policy_(0),          //18
+            swfoot_roll_pitch_yaw_(0),//17
+            swfoot_roll_pitch_yaw_(1),
+            swfoot_roll_pitch_yaw_(2),//19
+            Tr_,                      //20              //Ts_,
+            full_policy_(0),          //21
             full_policy_(1),
-            full_policy_(2);          //20
+            full_policy_(2),          //23
+            state_;                   //24
     return obs;
   }
 
