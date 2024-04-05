@@ -110,6 +110,9 @@ void DracoInterface::_SafeCommand(DracoSensorData *data,
 
 void DracoInterface::Reset(){
   ctrl_arch_->Reset();
+  //se_->Reset();
+  //robot_->Reset();
+  //sp_->Reset();
   sp_->b_lf_contact_ = true;
   sp_->b_rf_contact_ = true;
 }

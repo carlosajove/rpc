@@ -254,5 +254,7 @@ void DracoControlArchitecture::Reset(){
     alipIter = 0;
     b_state_first_visit_ = true;
     state_machine_container_[draco_states::AlipLocomotion]->Reset();
+    //controller_->Reset();
+
     //alip_tm_->initializeOri();
 }

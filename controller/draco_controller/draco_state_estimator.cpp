@@ -329,3 +329,9 @@ void DracoStateEstimator::UpdateWbcObs(){
   sp_->torso_roll_pitch_yaw_ = util::QuatToEulerZYX(Eigen::Quaterniond(torso_iso.linear()));
   sp_->swfoot_roll_pitch_yaw_ = util::QuatToEulerZYX(Eigen::Quaterniond(swfoot_iso.linear()));
 }
+
+void DracoStateEstimator::Reset(){
+      R_imu_base_com_ = Eigen::Matrix3d::Identity();
+      global_leg_odometry_ = Eigen::Vector3d::Zero();
+      prev_base_joint_pos_ = Eigen::Vector3d::Zero();
+}

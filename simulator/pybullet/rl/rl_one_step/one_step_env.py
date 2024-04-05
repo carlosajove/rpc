@@ -33,8 +33,8 @@ class DracoEnvOneStepMpc(DracoEnv):
             )
         else:
             self.observation_space = gym.spaces.Box(  #observation space
-                low = np.array([-100]*74),
-                high = np.array([100]*74),
+                low = np.array([-100]*67),
+                high = np.array([100]*67),
                 dtype = np.float64
             )
 
@@ -197,10 +197,10 @@ class DracoEnvOneStepMpc(DracoEnv):
 
 if __name__ == "__main__":
     import math
-    yaw = 10*math.pi/180
-    env = DracoEnvOneStepMpc(0., 0., yaw, 0, Config.CONTROLLER_DT, randomized_command=False, reduced_obs_size=True, render = True)
+    yaw = 10
+    env = DracoEnvOneStepMpc(0., 0., yaw, 0, Config.CONTROLLER_DT, randomized_command=False, reduced_obs_size=False, render = True)
     from stable_baselines3.common.env_checker import check_env
-    #check_env(env)
+    check_env(env)
 
     obs, info = env.reset()
     interface = info["interface"]

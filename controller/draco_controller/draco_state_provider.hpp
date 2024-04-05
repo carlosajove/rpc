@@ -117,6 +117,8 @@ public:
 
 }
 
+void Reset();
+
 
 private:
   DracoStateProvider();

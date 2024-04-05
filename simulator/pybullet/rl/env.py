@@ -79,10 +79,10 @@ def set_init_config_pybullet_robot(robot, client = None):
                        np.radians(hip_yaw_angle), 0.)
 
 def print_command(rpc_command):
-
     print("pos cmd", rpc_command.joint_pos_cmd_)
     print("joint vel cmd", rpc_command.joint_vel_cmd_)
     print("joint acc cmd", rpc_command.joint_trq_cmd_)
+    print("wbc_obs ",  rpc_command.wbc_obs_)
 
 def print_sensor_data(data):
     print("imu sens", data.imu_frame_quat_)
@@ -95,7 +95,8 @@ def print_sensor_data(data):
     print("rf contact", data.b_rf_contact_)
     print("lf contact normal", data.lf_contact_normal_)
     print("rf contact normal", data.rf_contact_normal_)
-
+    print("initial stance_leg", data.initial_stance_leg_)
+    print("policy_command_", data.policy_command_)
 
 
 def dict_to_numpy(obs_dict):
@@ -227,7 +228,7 @@ class DracoEnv(gym.Env):
 
     def reset(self, seed: int = 0):  #creates env
         # Environment Setup
-#       self.client.resetSimulation()
+        # self.client.resetSimulation()
 
         self._rpc_draco_interface.Reset()
 
@@ -305,6 +306,15 @@ class DracoEnv(gym.Env):
             
             self._rpc_draco_interface.GetCommand(self._rpc_draco_sensor_data,
                                                  self._rpc_draco_command)
+            if (np.isnan(self._rpc_draco_command.joint_trq_cmd_).any()):
+                print_command(self._rpc_draco_command)
+                print_sensor_data(self._rpc_draco_sensor_data)
+                done = True
+                                
+                assert False
+
+                break
+            
             step_flag = self._rpc_draco_command.rl_trigger_            
            
             self._set_motor_command(self._rpc_draco_command, self.client)
@@ -322,7 +332,7 @@ class DracoEnv(gym.Env):
                 self.client.applyExternalForce(self.robot, -1, rand_force, np.zeros(3), flags = self.client.WORLD_FRAME)
             """
             self.client.stepSimulation()
-            #if self.render: self.rate.sleep()
+            if self.render: self.rate.sleep()
             done = self._compute_termination(self._rpc_draco_command.wbc_obs_)
             if done: break
 
@@ -362,7 +372,8 @@ class DracoEnv(gym.Env):
 
     def _set_motor_command(self, command, client) -> None:
         rpc_trq_command = command.joint_trq_cmd_
-
+        if np.isnan(rpc_trq_command).any():
+            print("NANANS", rpc_trq_command)
         pybullet_util_rl.apply_control_input_to_pybullet(self.robot, rpc_trq_command, DracoJointIdx, client)
 
     def pybulled_to_sensor_data(self, action):
@@ -420,8 +431,7 @@ class DracoEnv(gym.Env):
         norm = scipy.linalg.norm(base_com_quat)
         if (norm == 0):
             done = True
-            self.reset()
-
+            return True
         if done: 
             return True
 

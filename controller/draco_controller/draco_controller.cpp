@@ -260,6 +260,25 @@ void DracoController::GetCommand(void *command) {
   }
 }
 
+
+void DracoController::Reset(){
+  joint_pos_cmd_ = Eigen::VectorXd::Zero(draco::n_adof);
+  joint_vel_cmd_ = Eigen::VectorXd::Zero(draco::n_adof);
+  joint_trq_cmd_ = Eigen::VectorXd::Zero(draco::n_adof);
+  joint_trq_cmd_prev_ = Eigen::VectorXd::Zero(draco::n_adof);
+  wbc_qddot_cmd_ = Eigen::VectorXd::Zero(draco::n_qdot);
+  b_sim_ = false;
+  b_int_constraint_first_visit_ = true; 
+  b_first_visit_pos_ctrl_ = true;
+  b_first_visit_wbc_ctrl_ = true; 
+  b_smoothing_command_ = false;
+  b_use_modified_swing_foot_jac_ = false;
+  smoothing_command_duration_ = 0.;
+  init_joint_pos_ = Eigen::VectorXd::Zero(draco::n_adof);
+  //ihwbc_->Reset();
+  //joint_integrator_->Reset();
+}
+
 void DracoController::_SaveData() {
 #if B_USE_ZMQ
   DracoDataManager *dm = DracoDataManager::GetDataManager();

@@ -323,3 +323,12 @@ void PinocchioRobotSystem::_PrintRobotInfo() {
 void PinocchioRobotSystem::SetRobotComOffset(const Eigen::Vector3d &com_offset) {
   com_offset_ = com_offset;
 }
+
+
+void PinocchioRobotSystem::Reset(){
+  q_ = Eigen::VectorXd::Zero(n_q_);
+  qdot_ = Eigen::VectorXd::Zero(n_qdot_);
+  Ig_.setZero();
+  Hg_.setZero();
+  Ag_ = Eigen::MatrixXd::Zero(6, n_qdot_);
+}

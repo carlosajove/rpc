@@ -23,7 +23,7 @@ import argparse
 
 import argparse
 
-new_model = True
+new_model = False
 
 if __name__ == "__main__":
     if not new_model:
@@ -36,11 +36,11 @@ if __name__ == "__main__":
     Lx = 0.
     Ly = 0.
     randomized_command = False
-    reduced_obs_size = True
+    reduced_obs_size = False
     mpc_freq = 0
     sim_dt = Config.CONTROLLER_DT
 
-    render = True
+    render = False
 
     env = DracoEnvOneStepMpc(Lx, Ly, yaw_max, mpc_freq, sim_dt, randomized_command=randomized_command, reduced_obs_size=reduced_obs_size, render = render)
     #env = VecNormalize(not_norm_env, norm_reward=False, clip_obs=50)
@@ -80,7 +80,7 @@ if __name__ == "__main__":
 
     while(True):
         try:
-            model.learn(total_timesteps=TIMESTEPS, progress_bar=True, reset_num_timesteps=False, tb_log_name="save_dir")
+            model.learn(total_timesteps=TIMESTEPS, progress_bar=True, reset_num_timesteps=False, tb_log_name=save_dir)
             endTime = time.time()
             print("Model train time: "+str(datetime.timedelta(seconds=endTime-startTime)))
             ## save the model
@@ -95,4 +95,8 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"An error occurred during training: {e}")
             endTime = time.time()
-            model = PPO.load(save_path, env = env)
+            #except ValueError:
+            # close the progress bar
+            #callbacks[1].on_training_end()
+            #pbar_callback = ProgressBarCallback()
+            #model = PPO.load(save_path, env = env)
