@@ -36,6 +36,7 @@ public:
   void InertiaToMpcCoordinates(const bool &first);
   void OutputMpcToInertiaCoordinates();
 
+  void turning_self_collision();
   void GenerateTrajs(const double &tr_, const bool &ori_traj);
 
   void UpdateCurrentOri(Task* task);

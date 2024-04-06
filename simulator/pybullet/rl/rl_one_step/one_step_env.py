@@ -22,7 +22,7 @@ class DracoEnvOneStepMpc(DracoEnv):
 
         assert randomized_command == False
 
-        self._set_max_steps_iter(30)
+        self._set_max_steps_iter(10)
     
     def _set_observation_space(self):
         if self._reduced_obs_size:
@@ -81,9 +81,9 @@ class DracoEnvOneStepMpc(DracoEnv):
         self._w_roll_pitch = -0.5
         self._w_com_height = -1
         self._w_penalise_excessive_Lx = -0.5 
-        self._w_desired_Lx = -3.
-        self._w_desired_Ly = -3.
-        self._w_desired_yaw = -2.
+        self._w_desired_Lx = -2.
+        self._w_desired_Ly = -2.
+        self._w_desired_yaw = -5.
         self._w_excessive_fp = -0.5
         self._w_excessive_angle = -0.5
         self._w_termination = -10.
@@ -93,6 +93,7 @@ class DracoEnvOneStepMpc(DracoEnv):
     def _compute_reward(self, wbc_obs, action, done):
         if (done): 
             self.reward_info = self._w_termination
+            return self._w_termination/self._iter
             return self._w_termination
         if wbc_obs is None: return 0
 
@@ -197,10 +198,10 @@ class DracoEnvOneStepMpc(DracoEnv):
 
 if __name__ == "__main__":
     import math
-    yaw = 10
+    yaw = 20
     env = DracoEnvOneStepMpc(0., 0., yaw, 0, Config.CONTROLLER_DT, randomized_command=False, reduced_obs_size=False, render = True)
-    from stable_baselines3.common.env_checker import check_env
-    check_env(env)
+    #from stable_baselines3.common.env_checker import check_env
+    #check_env(env)
 
     obs, info = env.reset()
     interface = info["interface"]

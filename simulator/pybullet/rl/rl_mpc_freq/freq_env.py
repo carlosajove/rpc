@@ -19,10 +19,10 @@ class DracoEnvMpcFreq(DracoEnv):
         if mpc_freq == 0:
             print("FREQ SET TO 0. PLEASE INCREASE FREQ")
             raise Warning
-        self._set_max_steps_iter(30*48)
+        self._set_max_steps_iter(30*100)
 
         print("WBC obs changed, change observation and reward")
-        raise Warning
+        #raise Warning
 
     def _set_observation_space(self):
         if self._reduced_obs_size:
@@ -95,17 +95,17 @@ class DracoEnvMpcFreq(DracoEnv):
         return policy_obs
 
     def _compute_termination(self, _wbc_obs=None):
-        #TODO: add more termination
-        if _wbc_obs is not None:
-            #condition = np.any((_wbc_obs[6] < 0.5) | (_wbc_obs[6] > 0.8))  #0.69
-            if _wbc_obs[6] > 0.75:
-                return True
-            if _wbc_obs[6] < 0.57:
-                return True
-            if np.abs(_wbc_obs[7]) > (np.abs(self._Lx_main+_wbc_obs[1])+25):
-                return True
-            if np.abs(_wbc_obs[8] - _wbc_obs[2]) > 25:
-                return True
+        if np.abs(_wbc_obs[23] - 12) < 0.5:  #12 is the alip state
+            if _wbc_obs is not None:
+                #condition = np.any((_wbc_obs[6] < 0.5) | (_wbc_obs[6] > 0.8))  #0.69
+                if _wbc_obs[6] > 0.75:
+                    return True
+                if _wbc_obs[6] < 0.55:
+                    return True
+                if np.abs(_wbc_obs[7]) > (np.abs(self._Lx_main+_wbc_obs[1])+25):
+                    return True
+                if np.abs(_wbc_obs[8] - _wbc_obs[2]) > 25:
+                    return True
         return False
 
     def _set_reward_coeffs(self):
@@ -133,7 +133,7 @@ class DracoEnvMpcFreq(DracoEnv):
         self._old_wbc_obs = np.copy(self._new_wbc_obs)
         self._new_wbc_obs = np.copy(wbc_obs)
         self._rl_action = np.copy(action)
-        
+        """
         if (self._old_wbc_obs[0] != self._new_wbc_obs[0]):
             
             reward = self._w_alive_bonus
@@ -155,7 +155,9 @@ class DracoEnvMpcFreq(DracoEnv):
             reward += self.penalise_excessive_Lx()
             reward += self.penalise_excessive_Ly()
             self.reward_info = np.array([self.penalise_different_policy(), self.penalise_excessive_Lx(), self.penalise_excessive_Ly()])
-
+        """
+        reward = np.zeros(1)
+        self.reward_info = reward
         return reward.item()
 
     def reward_tracking_com_Lx(self):
@@ -223,7 +225,7 @@ class DracoEnvMpcFreq(DracoEnv):
 
 
 if __name__ == "__main__":
-    env = DracoEnvMpcFreq(0., 0., 0., 5, Config.CONTROLLER_DT, randomized_command=False, reduced_obs_size=False, render = True)
+    env = DracoEnvMpcFreq(0., 0., 0., 1, Config.CONTROLLER_DT, randomized_command=False, reduced_obs_size=False, render = True)
     from stable_baselines3.common.env_checker import check_env
     check_env(env)
 
