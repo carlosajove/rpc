@@ -20,22 +20,51 @@ import shutil
 
 import cv2
 
-
-from simulator.pybullet.rl.env import DracoEnv
+from config.draco.pybullet_simulation import Config
+from simulator.pybullet.rl.rl_one_step.one_step_env import DracoEnvOneStepMpc
 
 
 if __name__ == "__main__":
-    env = DracoEnv(render=True)
 
     from stable_baselines3.common.env_checker import check_env
     #check_env(env)
 
+    
+
+
+    model_dir = cwd + "/rl_model/one_step/PPO/"
+
+    yaw_max = 10
+    Lx = 0.
+    Ly = 0.
+    randomized_command = False
+    reduced_obs_size = True
+    mpc_freq = 0
+    sim_dt = Config.CONTROLLER_DT
+    render = True
+
+    env = DracoEnvOneStepMpc(Lx, Ly, 15, mpc_freq, sim_dt, randomized_command=randomized_command, reduced_obs_size=reduced_obs_size, render = render)
+
     obs, info = env.reset()
     interface = info["interface"]
 
-    model_dir = cwd + "/rl_model/PPO/redobs_yaw_10"
+    n_steps_ = 256 #512
+    batch_size_ = 64
+    learning_rate_ = 0.0003
 
-    model_path = f"{model_dir}/NSTEPS256_LEARNING_RATE0.0003_TIME128256"
+    if reduced_obs_size: str1 = 'redOBS'
+    else: str1 = 'fullOBS'
+    if randomized_command: str2 = 'randCOMMAND'
+    else: str2 = 'detCOMMAND'
+
+
+
+    CURR_TIMESTEP = 260000
+    save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}_Lx_{Lx}_Ly_{Ly}_Yaw_{yaw_max}_changed params/"  
+    save_subdir = f"NSTEPS{n_steps_}_LEARNING_RATE{learning_rate_}_TIME{CURR_TIMESTEP}"
+
+
+    model_path = model_dir + save_dir + save_subdir
     model = PPO.load(model_path, env=env)
 
     plot = False
@@ -43,7 +72,7 @@ if __name__ == "__main__":
     if plot == False:
         while True:
             #action = torch.ones(AlipParams.N_BATCH,3)
-            action, _ = model.predict(obs, deterministic=False)
+            action, _ = model.predict(obs, deterministic=True)
             print(action)
             obs, reward, done, trunc, info = env.step(action)
             print("reward", reward)

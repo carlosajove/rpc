@@ -83,6 +83,7 @@ def print_command(rpc_command):
     print("pos cmd", rpc_command.joint_pos_cmd_)
     print("joint vel cmd", rpc_command.joint_vel_cmd_)
     print("joint acc cmd", rpc_command.joint_trq_cmd_)
+    print("wbc_obs ",  rpc_command.wbc_obs_)
 
 def print_sensor_data(data):
     print("imu sens", data.imu_frame_quat_)
@@ -95,7 +96,8 @@ def print_sensor_data(data):
     print("rf contact", data.b_rf_contact_)
     print("lf contact normal", data.lf_contact_normal_)
     print("rf contact normal", data.rf_contact_normal_)
-
+    print("initial stance_leg", data.initial_stance_leg_)
+    print("policy_command_", data.policy_command_)
 
 
 def dict_to_numpy(obs_dict):
@@ -159,7 +161,7 @@ class DracoEnv(gym.Env):
 
 
         # Create Robot, Ground
-        self.client.configureDebugVisualizer(self.client.COV_ENABLE_RENDERING, 0)
+        if (self.render): self.client.configureDebugVisualizer(self.client.COV_ENABLE_RENDERING, 0)
         self.robot = self.client.loadURDF(cwd +
                                  "/robot_model/draco/draco_modified.urdf",
                                  Config.INITIAL_BASE_JOINT_POS,
@@ -170,7 +172,7 @@ class DracoEnv(gym.Env):
         ground = self.client.loadURDF(cwd + "/robot_model/ground/plane.urdf",
                     useFixedBase=1)
 
-        self.client.configureDebugVisualizer(self.client.COV_ENABLE_RENDERING, 1)
+        if (self.render): self.client.configureDebugVisualizer(self.client.COV_ENABLE_RENDERING, 1)
 
         set_init_config_pybullet_robot(self.robot, self.client)
 
@@ -227,36 +229,48 @@ class DracoEnv(gym.Env):
 
     def reset(self, seed: int = 0):  #creates env
         # Environment Setup
-#       self.client.resetSimulation()
-
+        # self.client.resetSimulation()
+        #timer1 = TicToc()
+        #timer1.tic()
         self._rpc_draco_interface.Reset()
-
+        #print("t1", timer1.tocvalue())
+        #timer2 = TicToc()
+        #timer2.tic()
         self._DELETE()
+        #print("t2", timer2.tocvalue())
 
         #initialise old_wbc_obs for reward
         self._old_wbc_obs = np.zeros(20)
         self._new_wbc_obs = np.zeros(20)
 
+        #self._rpc_draco_interface = draco_interface_py.DracoInterface()
+        #timer3 = TicToc()
+        #timer3.tic()
         self._rpc_draco_sensor_data = draco_interface_py.DracoSensorData()
         self._rpc_draco_command = draco_interface_py.DracoCommand()
+        #print("t3", timer2.tocvalue())
 
         self._rpc_draco_sensor_data.MPC_freq_ = int(self._mpc_freq)
 
+        #timer4 = TicToc()
+        #timer4.tic()
         self.client.resetBasePositionAndOrientation(self.robot, [-0.031658, -3.865e-5, 0.88019], [0., 0., 0., 1.])
 
         self.client.resetBaseVelocity(self.robot, [0., 0., 0.], [0., 0., 0.])
+        #print("t4", timer2.tocvalue())
+        #timer5 = TicToc()
+        #timer5.tic()
         set_init_config_pybullet_robot(self.robot, self.client)
 
 
         nq, nv, na,self.joint_id,self.link_id_dict, self.pos_basejoint_to_basecom, self.rot_basejoint_to_basecom = pybullet_util_rl.get_robot_config(
             self.robot, Config.INITIAL_BASE_JOINT_POS,
             Config.INITIAL_BASE_JOINT_QUAT, Config.PRINT_ROBOT_INFO,  client = self.client)
-
+        
         base_com_pos, base_com_quat = self.client.getBasePositionAndOrientation(self.robot)
         rot_world_basecom = util.quat_to_rot(np.array(base_com_quat))
         rot_world_basejoint = util.quat_to_rot(
             np.array(Config.INITIAL_BASE_JOINT_QUAT))
-
         pos_basejoint_to_basecom = np.dot(
             rot_world_basejoint.transpose(),
             base_com_pos - np.array(Config.INITIAL_BASE_JOINT_POS))
@@ -268,11 +282,11 @@ class DracoEnv(gym.Env):
 
 
         self.previous_torso_velocity = np.array([0., 0., 0.])
-        self.rate = RateLimiter(frequency=1./(self.dt))
+        if (self.render): self.rate = RateLimiter(frequency=1./(self.dt))
 
 
         self.set_action_command_in_sensor_data()
-
+        self._low_iter = 0
         self._debug_sensor_data()
 
         obs_numpy = self._get_observation(self._rpc_draco_command.wbc_obs_)
@@ -283,9 +297,12 @@ class DracoEnv(gym.Env):
         self._iter = 0
 
         #ACTION COMMAND WILL CHANGE ONCE PER EPISODE NOT DURING STEPS
+        #print("t5", timer5.tocvalue())
         return obs_numpy, info
    
     def step(self, action):
+        #timer6= TicToc()
+        #timer6.tic()
         #residual, self.gripper_command = action[0], action[1]
         # TODO remove printing
         step_flag = False
@@ -293,9 +310,10 @@ class DracoEnv(gym.Env):
             l_normal_volt_noise = np.random.normal(0, l_contact_volt_noise)
             r_normal_volt_noise = np.random.normal(0, r_contact_volt_noise)
             imu_ang_vel_noise = np.random.normal(0, imu_ang_vel_noise_std_dev)
-
+            self._low_iter += 1
             if self._debug_sensor_data(): 
                 done = True
+                print("hehe")
                 break
 
             wbc_action = self._normalise_action(action)
@@ -305,6 +323,11 @@ class DracoEnv(gym.Env):
             
             self._rpc_draco_interface.GetCommand(self._rpc_draco_sensor_data,
                                                  self._rpc_draco_command)
+            if (np.isnan(self._rpc_draco_command.joint_trq_cmd_).any()):
+                print_command(self._rpc_draco_command)
+                print_sensor_data(self._rpc_draco_sensor_data)
+                done = True
+                break
             step_flag = self._rpc_draco_command.rl_trigger_            
            
             self._set_motor_command(self._rpc_draco_command, self.client)
@@ -337,6 +360,8 @@ class DracoEnv(gym.Env):
         info = {
             "reward_components": self.reward_info
         }
+        #print("t6", timer6.tocvalue())
+
         #self.dataf
         return policy_obs, reward, done, truncate, info # need terminated AND truncated
 
@@ -415,12 +440,14 @@ class DracoEnv(gym.Env):
             self.robot)
         done = False
         if np.isnan(base_com_quat).any() or np.isinf(base_com_quat).any():
+            print("exit 1", "iter" , self._low_iter, "big iter", self._iter, base_com_pos, base_com_quat)
             done = True
             return True
         norm = scipy.linalg.norm(base_com_quat)
         if (norm == 0):
+            print("exit 2", base_com_pos, base_com_quat)
+
             done = True
-            self.reset()
 
         if done: 
             return True

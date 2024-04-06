@@ -51,4 +51,4 @@ test/alip/*.txt
 ppo_rl_log/*
 RL videos/*
 rl_model/*
-
+rl_log/*

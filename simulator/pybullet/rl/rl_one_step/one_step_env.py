@@ -81,9 +81,9 @@ class DracoEnvOneStepMpc(DracoEnv):
         self._w_roll_pitch = -0.5
         self._w_com_height = -1
         self._w_penalise_excessive_Lx = -0.5 
-        self._w_desired_Lx = -3.
-        self._w_desired_Ly = -3.
-        self._w_desired_yaw = -2.
+        self._w_desired_Lx = -2.
+        self._w_desired_Ly = -2.
+        self._w_desired_yaw = -3.
         self._w_excessive_fp = -0.5
         self._w_excessive_angle = -0.5
         self._w_termination = -10.
@@ -197,7 +197,7 @@ class DracoEnvOneStepMpc(DracoEnv):
 
 if __name__ == "__main__":
     import math
-    yaw = 10*math.pi/180
+    yaw = 10
     env = DracoEnvOneStepMpc(0., 0., yaw, 0, Config.CONTROLLER_DT, randomized_command=False, reduced_obs_size=True, render = True)
     from stable_baselines3.common.env_checker import check_env
     #check_env(env)
@@ -210,7 +210,7 @@ if __name__ == "__main__":
     while True:
         action = np.zeros(3)
         obs, reward, done, trunc, info = env.step(action)
-        print(info['reward_components'])
+        #print(info['reward_components'])
         if done or trunc:
             obs,info = env.reset()
         if flag:
