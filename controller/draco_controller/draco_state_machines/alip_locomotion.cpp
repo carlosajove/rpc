@@ -60,7 +60,10 @@ void AlipLocomotion::FirstVisit(){  //represents when MPC computation
   ctrl_arch_->alip_tm_->MpcSolutions(Tr, stance_leg, sp_->Lx_offset_des_, sp_->Ly_des_, sp_->des_com_yaw_,
                                         sp_->kx_, sp_->ky_, sp_->mu_, new_leg);
 
+  if (sp_->des_com_yaw_ != 0) ctrl_arch_->alip_tm_->turning_self_collision();
+
   sp_->full_policy_ = ctrl_arch_->alip_tm_->add_residual_rl_action(sp_->res_rl_action_);
+
   
   ctrl_arch_->alip_tm_->GenerateTrajs(Tr, new_leg);
   new_leg = false;

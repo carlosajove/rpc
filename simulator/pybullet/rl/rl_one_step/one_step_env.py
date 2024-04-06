@@ -22,7 +22,7 @@ class DracoEnvOneStepMpc(DracoEnv):
 
         assert randomized_command == False
 
-        self._set_max_steps_iter(30)
+        self._set_max_steps_iter(10)
     
     def _set_observation_space(self):
         if self._reduced_obs_size:
@@ -33,8 +33,8 @@ class DracoEnvOneStepMpc(DracoEnv):
             )
         else:
             self.observation_space = gym.spaces.Box(  #observation space
-                low = np.array([-100]*74),
-                high = np.array([100]*74),
+                low = np.array([-100]*67),
+                high = np.array([100]*67),
                 dtype = np.float64
             )
 
@@ -93,6 +93,7 @@ class DracoEnvOneStepMpc(DracoEnv):
     def _compute_reward(self, wbc_obs, action, done):
         if (done): 
             self.reward_info = self._w_termination
+            return self._w_termination/self._iter
             return self._w_termination
         if wbc_obs is None: return 0
 
@@ -197,9 +198,9 @@ class DracoEnvOneStepMpc(DracoEnv):
 
 if __name__ == "__main__":
     import math
-    yaw = 10
-    env = DracoEnvOneStepMpc(0., 0., yaw, 0, Config.CONTROLLER_DT, randomized_command=False, reduced_obs_size=True, render = True)
-    from stable_baselines3.common.env_checker import check_env
+    yaw = 20
+    env = DracoEnvOneStepMpc(0., 0., yaw, 0, Config.CONTROLLER_DT, randomized_command=False, reduced_obs_size=False, render = True)
+    #from stable_baselines3.common.env_checker import check_env
     #check_env(env)
 
     obs, info = env.reset()

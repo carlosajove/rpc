@@ -445,7 +445,7 @@ if __name__ == "__main__":
         os.makedirs(video_dir)
 
     previous_torso_velocity = np.array([0., 0., 0.])
-    rate = RateLimiter(frequency=1. / dt)
+    rate = RateLimiter(frequency=1. / (dt*2))
 
     while (True):
         l_normal_volt_noise = np.random.normal(0, l_contact_volt_noise)
@@ -550,7 +550,8 @@ if __name__ == "__main__":
         rpc_draco_sensor_data.res_rl_action_ = np.array([0, 0, 0])
         rpc_draco_sensor_data.initial_stance_leg_ = 1
         #Lxdes, Lydes, yawdes
-        rpc_draco_sensor_data.policy_command_ = np.array([0,0,0])
+        yaw = -20* math.pi/180
+        rpc_draco_sensor_data.policy_command_ = np.array([0, 0, yaw])
 
 
 

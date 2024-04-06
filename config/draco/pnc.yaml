@@ -1,6 +1,6 @@
 #servo_dt: 0.00125
 #servo_dt: 0.0025
-servo_dt: 0.00125
+servo_dt: 0.002
 
 
 ip_address: "tcp://127.0.0.1:5557"
@@ -217,8 +217,10 @@ wbc:
       sim_weight_at_swing : [8000., 8000., 8000.]
       #sim_kp : [800., 800., 700.]
       #sim_kd : [25., 25., 20.]
-      sim_kp : [200., 200., 350.]
-      sim_kd : [20., 20., 30.]
+      sim_kp: [500, 500, 500]
+      sim_kd: [25, 25, 100]
+      #sim_kp : [200., 200., 350.]
+      #sim_kd : [20., 20., 30.]
       #sim_kp : [300., 300., 300.]
       #sim_kd : [30., 30., 30.]
 
@@ -238,7 +240,7 @@ wbc:
       sim_weight_at_swing : [5000., 5000., 5000.]
       #sim_kp : [80., 80., 80.]
       #sim_kd : [4., 4., 4.]
-      sim_kp : [800., 800., 800.]  #good change 800
+      sim_kp : [400., 400., 400.]  #good change 800
       sim_kd : [40., 40., 40.]  #40
 
       ########################################################################
@@ -385,7 +387,7 @@ alip_mpc_walking:
   mpc_freq: 0  #50aag
   step_horizon: "4"
   intervals: "2"
-  Ts: 0.3    #0.25  #Greater Ts makes offset increase also
+  Ts: 0.275    #0.25  #Greater Ts makes offset increase also
   stance_leg: 1 # -1: RIGHT SWING TO START; 1: LEFT SWING TO START
   leg_width: 0.1 #0.1
   zH: 0.69   #this will be the reference height target. The height for the mpc will be another
@@ -396,7 +398,7 @@ alip_mpc_walking:
   ufp_y_min: 0.1 #0.05
   Lx_offset: 0 #0
   Ly_des: 0 #3
-  com_yaw: 0  #degrees
+  com_yaw: 10  #degrees
   kx: 0
   ky: 0
   #new solver params:
@@ -410,11 +412,11 @@ alip_mpc_walking:
   Alip: 0
   Alip2: 1
   task: #not implemente yet
-    com_z_pos: [1000]  
+    com_z_pos: [9000]  
     com_xy_pos: [0,0] 
     torso_ori: [9000, 9000, 9000]
     stance_foot_weight: [6000, 6000, 6000]
-    stance_foot_ori_weight: [6000, 6000, 6000]
+    stance_foot_ori_weight: [8000, 8000, 8000]
     swing_foot_weight: [8000, 8000, 8000] #8000 
     swing_foot_ori_weight: [7000, 7000, 7000]
 

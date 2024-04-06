@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
 
 
-    save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}_Lx_{Lx}_Ly_{Ly}_Yaw_{yaw_max}"         
+    save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}_Lx_{Lx}_Ly_{Ly}_Yaw_{yaw_max}_new_reward"         
     ## train model
     if new_model:
         tensorboard_dir = cwd + "/rl_log/one_step/ppo/"
@@ -74,13 +74,13 @@ if __name__ == "__main__":
         model_path = model_dir + '/' + save_dir + '/' + save_subdir
         print("model_path", model_path)
         model = PPO.load(model_path, env=env)
-        TIMESTEPS =20*n_steps_
+        TIMESTEPS =25*n_steps_
 
 
 
     while(True):
         try:
-            model.learn(total_timesteps=TIMESTEPS, progress_bar=True, reset_num_timesteps=False, tb_log_name="save_dir")
+            model.learn(total_timesteps=TIMESTEPS, progress_bar=False, reset_num_timesteps=False, tb_log_name=save_dir)
             endTime = time.time()
             print("Model train time: "+str(datetime.timedelta(seconds=endTime-startTime)))
             ## save the model
@@ -95,4 +95,8 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"An error occurred during training: {e}")
             endTime = time.time()
-            model = PPO.load(save_path, env = env)
+            #except ValueError:
+            # close the progress bar
+            #callbacks[1].on_training_end()
+            #pbar_callback = ProgressBarCallback()
+            #model = PPO.load(save_path, env = env)

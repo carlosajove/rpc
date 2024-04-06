@@ -36,6 +36,8 @@ public:
   void GetRlpolicy(DracoSensorData *sensor_data);
   void UpdateWbcObs();
 
+  void Reset();
+
 private:
   void _ComputeDCM();
 

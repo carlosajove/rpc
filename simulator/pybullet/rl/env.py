@@ -79,7 +79,6 @@ def set_init_config_pybullet_robot(robot, client = None):
                        np.radians(hip_yaw_angle), 0.)
 
 def print_command(rpc_command):
-
     print("pos cmd", rpc_command.joint_pos_cmd_)
     print("joint vel cmd", rpc_command.joint_vel_cmd_)
     print("joint acc cmd", rpc_command.joint_trq_cmd_)
@@ -116,7 +115,7 @@ def dict_to_numpy(obs_dict):
 class DracoEnv(gym.Env):
     metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 50}
     def __init__(self, Lx_offset_des, Ly_des, yaw_des, mpc_freq, sim_dt, randomized_command: bool = False, reduced_obs_size: bool = False, render: bool = False) -> None:
-        self.render = render
+        self._render = render
         self._reduced_obs_size =  reduced_obs_size
         self._randomized_command = randomized_command
         #if randomized command = false, desired will be the command
@@ -130,7 +129,7 @@ class DracoEnv(gym.Env):
         assert Config.CONTROLLER_DT == sim_dt
 
 
-        if self.render:
+        if self._render:
             self.client = bc.BulletClient(connection_mode=p.GUI)
             self.client.configureDebugVisualizer(p.COV_ENABLE_GUI,0)
         else:
@@ -149,7 +148,7 @@ class DracoEnv(gym.Env):
         
         #pnc interface, sensor_data, command class
 
-        if (self.render):
+        if (self._render):
             self.client.resetDebugVisualizerCamera(
                 cameraDistance=1.0,
                 cameraYaw=120,
@@ -345,7 +344,7 @@ class DracoEnv(gym.Env):
                 self.client.applyExternalForce(self.robot, -1, rand_force, np.zeros(3), flags = self.client.WORLD_FRAME)
             """
             self.client.stepSimulation()
-            #if self.render: self.rate.sleep()
+            if self._render: self.rate.sleep()
             done = self._compute_termination(self._rpc_draco_command.wbc_obs_)
             if done: break
 
@@ -387,7 +386,8 @@ class DracoEnv(gym.Env):
 
     def _set_motor_command(self, command, client) -> None:
         rpc_trq_command = command.joint_trq_cmd_
-
+        if np.isnan(rpc_trq_command).any():
+            print("NANANS", rpc_trq_command)
         pybullet_util_rl.apply_control_input_to_pybullet(self.robot, rpc_trq_command, DracoJointIdx, client)
 
     def pybulled_to_sensor_data(self, action):
@@ -448,7 +448,6 @@ class DracoEnv(gym.Env):
             print("exit 2", base_com_pos, base_com_quat)
 
             done = True
-
         if done: 
             return True
 
@@ -540,4 +539,8 @@ class DracoEnv(gym.Env):
             del self._rl_action
         except AttributeError:
             pass
+    
+    def render(self):
+        print("RENDER")
+
 

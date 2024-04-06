@@ -177,6 +177,31 @@ Eigen::Vector3d AlipMpcTrajectoryManager::add_residual_rl_action(const Eigen::Ve
   return res;
 }
 
+
+void AlipMpcTrajectoryManager::turning_self_collision(){
+  Eigen::Isometry3d stfoot_iso;
+  if (indata.stance_leg == 1) stfoot_iso = robot_->GetLinkIsometry(draco_link::r_foot_contact);
+  else stfoot_iso = robot_->GetLinkIsometry(draco_link::l_foot_contact);
+  Eigen::Vector3d swfoot_end_h = Swingfoot_end;
+  swfoot_end_h -= stfoot_iso.translation();
+  swfoot_end_h = stfoot_iso.linear().transpose()*swfoot_end_h;
+
+  if (indata.stance_leg == 1) {
+    if (swfoot_end_h(1) < ufp_y_min_) swfoot_end_h(1) = ufp_y_min_;
+  }
+  else{
+    if (swfoot_end_h(1) > -ufp_y_min_) swfoot_end_h(1) = -ufp_y_min_;
+  }
+  swfoot_end_h = stfoot_iso.linear()*swfoot_end_h;
+  swfoot_end_h += stfoot_iso.translation();
+  Swingfoot_end(0) = swfoot_end_h(0);
+  Swingfoot_end(1) = swfoot_end_h(1);
+
+
+
+}
+
+
 void AlipMpcTrajectoryManager::safety_proj(){
   Eigen::VectorXd v_min(3);
   Eigen::VectorXd v_max(3);
