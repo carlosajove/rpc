@@ -22,7 +22,7 @@ class DracoEnvOneStepMpc(DracoEnv):
 
         assert randomized_command == False
 
-        self._set_max_steps_iter(10)
+        self._set_max_steps_iter(30)
     
     def _set_observation_space(self):
         if self._reduced_obs_size:
@@ -62,15 +62,20 @@ class DracoEnvOneStepMpc(DracoEnv):
 
         return policy_obs
 
+    def _normalise_action(self, action):
+        _wbc_action = 0.15*action
+        return _wbc_action
+
+
     def _compute_termination(self, _wbc_obs=None):
         if np.abs(_wbc_obs[23] - 12) < 0.5:  #12 is the alip state
             if _wbc_obs is not None:
                 #condition = np.any((_wbc_obs[6] < 0.5) | (_wbc_obs[6] > 0.8))  #0.69
                 if _wbc_obs[6] > 0.75:
                     return True
-                if _wbc_obs[6] < 0.55:
+                if _wbc_obs[6] < 0.5:
                     return True
-                if np.abs(_wbc_obs[7]) > (np.abs(self._Lx_main+_wbc_obs[1])+25):
+                if np.abs(_wbc_obs[7]) > (np.abs(self._Lx_main+_wbc_obs[1])+100):
                     return True
                 if np.abs(_wbc_obs[8] - _wbc_obs[2]) > 25:
                     return True

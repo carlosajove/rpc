@@ -32,7 +32,7 @@ if __name__ == "__main__":
         args = parser.parse_args()
         bash_timesteps = int(args.timesteps)
 
-    yaw_max = 10
+    yaw_max = 20
     Lx = 0.
     Ly = 0.
     randomized_command = False
@@ -74,13 +74,13 @@ if __name__ == "__main__":
         model_path = model_dir + '/' + save_dir + '/' + save_subdir
         print("model_path", model_path)
         model = PPO.load(model_path, env=env)
-        TIMESTEPS =25*n_steps_
+        TIMESTEPS =20*n_steps_
 
 
 
     while(True):
         try:
-            model.learn(total_timesteps=TIMESTEPS, progress_bar=False, reset_num_timesteps=False, tb_log_name=save_dir)
+            model.learn(total_timesteps=TIMESTEPS, progress_bar=True, reset_num_timesteps=False, tb_log_name=save_dir)
             endTime = time.time()
             print("Model train time: "+str(datetime.timedelta(seconds=endTime-startTime)))
             ## save the model

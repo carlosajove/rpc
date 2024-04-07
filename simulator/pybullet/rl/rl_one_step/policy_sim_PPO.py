@@ -34,7 +34,7 @@ if __name__ == "__main__":
 
     model_dir = cwd + "/rl_model/one_step/PPO/"
 
-    yaw_max = 10
+    yaw_max = 20
     Lx = 0.
     Ly = 0.
     randomized_command = False
@@ -59,8 +59,8 @@ if __name__ == "__main__":
 
 
 
-    CURR_TIMESTEP = 260000
-    save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}_Lx_{Lx}_Ly_{Ly}_Yaw_{yaw_max}_changed params/"  
+    CURR_TIMESTEP = 333056
+    save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}_Lx_{Lx}_Ly_{Ly}_Yaw_{yaw_max}_new_reward/"  
     save_subdir = f"NSTEPS{n_steps_}_LEARNING_RATE{learning_rate_}_TIME{CURR_TIMESTEP}"
 
 

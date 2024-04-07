@@ -32,7 +32,7 @@ if __name__ == "__main__":
         args = parser.parse_args()
         bash_timesteps = int(args.timesteps)
 
-    yaw_max = 10
+    yaw_max = 20
     Lx = 0.
     Ly = 0.
     randomized_command = False

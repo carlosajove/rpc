@@ -34,7 +34,7 @@ if __name__ == "__main__":
 
     model_dir = cwd + "/rl_model/one_step/SAC/"
 
-    yaw_max = 10
+    yaw_max = 20
     Lx = 0.
     Ly = 0.
     randomized_command = False
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     batch_size_ = 256
 
 
-    CURR_TIMESTEP = 260000
+    CURR_TIMESTEP = 280000
     save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}_Lx_{Lx}_Ly_{Ly}_Yaw_{yaw_max}_changed params/"  
     save_subdir = f"lstarts{learning_starts_}buffSize{buffer_size_}LEARNING_RATE{learning_rate_}_TIME{CURR_TIMESTEP}"
 

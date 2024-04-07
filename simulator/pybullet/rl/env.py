@@ -365,10 +365,7 @@ class DracoEnv(gym.Env):
         return policy_obs, reward, done, truncate, info # need terminated AND truncated
 
     def _normalise_action(self, action):
-        #from -1 to 1 to-0.1 to 1
-        #for now dummy
-        wbc_action = 0.1*action
-        return wbc_action
+        raise NotImplementedError
 
     def set_action_command_in_sensor_data(self):
         #maybe set also time in newer version
