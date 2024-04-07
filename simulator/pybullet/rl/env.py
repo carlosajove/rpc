@@ -38,9 +38,8 @@ l_contact_volt_noise = 0.001
 r_contact_volt_noise = 0.001
 imu_ang_vel_noise_std_dev = 0.
 
-import tracemalloc
 
-MEASEURE_TIME = True
+MEASEURE_TIME = False
 
 if MEASEURE_TIME:
     from pytictoc import TicToc
@@ -274,27 +273,21 @@ class DracoEnv(gym.Env):
 
         self.set_action_command_in_sensor_data()
 
-        self._debug_sensor_data()
+        self._iter = 0
+        pol_obs, reward, done, truncate, info_ = self.step(np.zeros(3))
+        #ACTION COMMAND WILL CHANGE ONCE PER EPISODE NOT DURING STEPS
 
-        obs_numpy = self._get_observation(self._rpc_draco_command.wbc_obs_)
 
         info = {
             "interface" : self._rpc_draco_interface,
             }
-        self._iter = 0
-
-        #ACTION COMMAND WILL CHANGE ONCE PER EPISODE NOT DURING STEPS
-        return obs_numpy, info
+        return pol_obs, info
    
     def step(self, action):
         #residual, self.gripper_command = action[0], action[1]
         # TODO remove printing
         step_flag = False
         while not step_flag:
-            l_normal_volt_noise = np.random.normal(0, l_contact_volt_noise)
-            r_normal_volt_noise = np.random.normal(0, r_contact_volt_noise)
-            imu_ang_vel_noise = np.random.normal(0, imu_ang_vel_noise_std_dev)
-
             if self._debug_sensor_data(): 
                 done = True
                 break
