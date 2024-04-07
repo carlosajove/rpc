@@ -292,6 +292,7 @@ void DracoStateEstimator::UpdateGroundTruthSensorData(
 void DracoStateEstimator::GetRlpolicy(DracoSensorData *sensor_data){
   sp_-> res_rl_action_ = sensor_data->res_rl_action_;
   sp_-> initial_stance_leg_ = sensor_data->initial_stance_leg_;
+  sp_-> stance_leg_ = sp_->initial_stance_leg_;
   sp_-> Lx_offset_des_ = sensor_data->policy_command_[0];
   sp_-> Ly_des_ = sensor_data->policy_command_[1];
   sp_-> des_com_yaw_ = sensor_data->policy_command_[2];
@@ -303,7 +304,6 @@ void DracoStateEstimator::UpdateWbcObs(){
   Eigen::Isometry3d des_torso_iso = sp_->des_end_torso_iso_;
   Eigen::Isometry3d torso_iso = robot_->GetLinkIsometry(draco_link::torso_com_link);
   Eigen::Isometry3d swfoot_iso;
-
   Eigen::Vector3d stfoot_pos;
   if (sp_->stance_leg_ == 1) {
     stfoot_pos = robot_->GetLinkIsometry(draco_link::r_foot_contact).translation();
@@ -322,7 +322,6 @@ void DracoStateEstimator::UpdateWbcObs(){
   Eigen::Vector3d Lc = robot_->GetHg().head<3>();
   Lc = des_torso_iso.linear().transpose() * Lc;
   L += Lc;
-
   sp_->com_pos_stance_frame_ = com_pos_stfoot_torso_ori;
   sp_->L_stance_frame_ = L;
   sp_->stfoot_pos_ = stfoot_pos;
