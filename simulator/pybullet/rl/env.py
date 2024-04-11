@@ -125,7 +125,7 @@ class DracoEnv(gym.Env):
         self._yaw_des = yaw_des
         self._mpc_freq = mpc_freq
         self._sim_dt = sim_dt
-        assert Config.CONTROLLER_DT == sim_dt
+        #assert Config.CONTROLLER_DT == sim_dt
 
 
         if self._render:
@@ -315,8 +315,9 @@ class DracoEnv(gym.Env):
             self._rpc_draco_interface.GetCommand(self._rpc_draco_sensor_data,
                                                  self._rpc_draco_command)
             if (np.isnan(self._rpc_draco_command.joint_trq_cmd_).any()):
-                print_command(self._rpc_draco_command)
-                print_sensor_data(self._rpc_draco_sensor_data)
+                #print_command(self._rpc_draco_command)
+                #print_sensor_data(self._rpc_draco_sensor_data)
+                print("FOUND NAN'S")
                 done = True
                 break
             step_flag = self._rpc_draco_command.rl_trigger_            

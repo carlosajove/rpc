@@ -24,6 +24,7 @@ import argparse
 import argparse
 
 new_model = True
+render = False
 
 if __name__ == "__main__":
     if not new_model:
@@ -40,7 +41,6 @@ if __name__ == "__main__":
     mpc_freq = 0
     sim_dt = Config.CONTROLLER_DT
 
-    render = False
 
     env = DracoEnvOneStepMpc(Lx, Ly, yaw_max, mpc_freq, sim_dt, randomized_command=randomized_command, reduced_obs_size=reduced_obs_size, render = render)
     #env = VecNormalize(not_norm_env, norm_reward=False, clip_obs=50)
@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
     #TODO: save replay buffer and add replay buffer
 
-    save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}_Lx_{Lx}_Ly_{Ly}_Yaw_{yaw_max}_changed params"         
+    save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}_Lx_{Lx}_Ly_{Ly}_Yaw_{yaw_max}_new_start"         
     ## train model
     if new_model:
         tensorboard_dir = cwd + "/rl_log/one_step/sac/"
@@ -91,7 +91,7 @@ if __name__ == "__main__":
             save_path = model_dir + '/' + save_dir + '/' + save_subdir
             print(save_path)
             model.save(save_path)
-            with open('timesteps.txt', 'w') as f:
+            with open('timesteps_SAC.txt', 'w') as f:
                 f.write(str(CURR_TIMESTEP))
                 f.flush()
         except Exception as e:
