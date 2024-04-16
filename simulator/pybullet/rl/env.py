@@ -481,8 +481,9 @@ class DracoEnv(gym.Env):
         return False
 
     def close(self):
-        self.client.disconnect()
-        self.client = None
+        print("close")
+        #self.client.disconnect()
+        #self.client = None
 
     def _DELETE(self):
         try:

@@ -305,6 +305,8 @@ void DracoStateEstimator::UpdateWbcObs(){
   Eigen::Isometry3d torso_iso = robot_->GetLinkIsometry(draco_link::torso_com_link);
   Eigen::Isometry3d swfoot_iso;
   Eigen::Vector3d stfoot_pos;
+  Eigen::Vector3d torso_com_ang_vel = robot_->GetLinkSpatialVel(draco_link::torso_com_link).head<3>();
+
   if (sp_->stance_leg_ == 1) {
     stfoot_pos = robot_->GetLinkIsometry(draco_link::r_foot_contact).translation();
     swfoot_iso = robot_->GetLinkIsometry(draco_link::l_foot_contact);
@@ -327,6 +329,7 @@ void DracoStateEstimator::UpdateWbcObs(){
   sp_->stfoot_pos_ = stfoot_pos;
   sp_->torso_roll_pitch_yaw_ = util::QuatToEulerZYX(Eigen::Quaterniond(torso_iso.linear()));
   sp_->swfoot_roll_pitch_yaw_ = util::QuatToEulerZYX(Eigen::Quaterniond(swfoot_iso.linear()));
+  sp_->torso_com_ang_vel_ = torso_com_ang_vel;
 }
 
 void DracoStateEstimator::Reset(){

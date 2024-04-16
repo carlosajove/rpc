@@ -27,14 +27,14 @@ class DracoEnvOneStepMpc(DracoEnv):
     def _set_observation_space(self):
         if self._reduced_obs_size:
             self.observation_space = gym.spaces.Box(  #observation space added Tr and previous full_action x and y
-                low = np.array([-100]*13),
-                high = np.array([100]*13),
+                low = np.array([-100]*16),
+                high = np.array([100]*16),
                 dtype = np.float64
             )
         else:
             self.observation_space = gym.spaces.Box(  #observation space
-                low = np.array([-100]*67),
-                high = np.array([100]*67),
+                low = np.array([-100]*70),
+                high = np.array([100]*70),
                 dtype = np.float64
             )
 
@@ -45,11 +45,9 @@ class DracoEnvOneStepMpc(DracoEnv):
         L_desired_frame       x3
         torso_roll_pitch_yaw  x3
         swfoot_roll_pitch_yaw x3
-
-
-        
+        torso_ang_vel         x3
         """
-        COM = np.concatenate((np.array([wbc_obs[0]]), wbc_obs[4:10], wbc_obs[13:19]))
+        COM = np.concatenate((np.array([wbc_obs[0]]), wbc_obs[4:10], wbc_obs[13:19], wbc_obs[24:27]))
         if self._reduced_obs_size:
             policy_obs = COM
         else:
