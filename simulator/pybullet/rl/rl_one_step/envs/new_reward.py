@@ -27,14 +27,14 @@ class DracoEnvOneStepMpc(DracoEnv):
     def _set_observation_space(self):
         if self._reduced_obs_size:
             self.observation_space = gym.spaces.Box(  #observation space added Tr and previous full_action x and y
-                low = np.array([-100]*13),
-                high = np.array([100]*13),
+                low = np.array([-100]*16),
+                high = np.array([100]*16),
                 dtype = np.float64
             )
         else:
             self.observation_space = gym.spaces.Box(  #observation space
-                low = np.array([-100]*67),
-                high = np.array([100]*67),
+                low = np.array([-100]*70),
+                high = np.array([100]*70),
                 dtype = np.float64
             )
 
@@ -45,11 +45,9 @@ class DracoEnvOneStepMpc(DracoEnv):
         L_desired_frame       x3
         torso_roll_pitch_yaw  x3
         swfoot_roll_pitch_yaw x3
-
-
-        
+        torso_ang_vel         x3
         """
-        COM = np.concatenate((np.array([wbc_obs[0]]), wbc_obs[4:10], wbc_obs[13:19]))
+        COM = np.concatenate((np.array([wbc_obs[0]]), wbc_obs[4:10], wbc_obs[13:19], wbc_obs[24:27]))
         if self._reduced_obs_size:
             policy_obs = COM
         else:
@@ -71,13 +69,13 @@ class DracoEnvOneStepMpc(DracoEnv):
         if np.abs(_wbc_obs[23] - 12) < 0.5:  #12 is the alip state
             if _wbc_obs is not None:
                 #condition = np.any((_wbc_obs[6] < 0.5) | (_wbc_obs[6] > 0.8))  #0.69
-                if _wbc_obs[6] > 0.75:
+                if _wbc_obs[6] > 1:
                     return True
-                if _wbc_obs[6] < 0.5:
+                if _wbc_obs[6] < 0.45:
                     return True
                 if np.abs(_wbc_obs[7]) > (np.abs(self._Lx_main+_wbc_obs[1])+100):
                     return True
-                if np.abs(_wbc_obs[8] - _wbc_obs[2]) > 25:
+                if np.abs(_wbc_obs[8] - _wbc_obs[2]) > 50:
                     return True
         return False
 
@@ -86,19 +84,19 @@ class DracoEnvOneStepMpc(DracoEnv):
         self._w_roll_pitch = -0.5
         self._w_com_height = -1
         self._w_penalise_excessive_Lx = -0.5 
-        self._w_desired_Lx = -2.
-        self._w_desired_Ly = -2.
+        self._w_desired_Lx = -3.
+        self._w_desired_Ly = -3.
         self._w_desired_yaw = -3.
         self._w_excessive_fp = -0.5
         self._w_excessive_angle = -0.5
         self._w_termination = -10.
-        self._w_alive_bonus = 3.
+        self._w_alive_bonus = 5.
 
 
     def _compute_reward(self, wbc_obs, action, done):
         if (done): 
             self.reward_info = self._w_termination
-            return self._w_termination/self._iter
+            #return self._w_termination/self._iter
             return self._w_termination
         if wbc_obs is None: return 0
 

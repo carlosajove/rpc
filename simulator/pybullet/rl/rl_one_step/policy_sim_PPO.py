@@ -21,7 +21,7 @@ import shutil
 import cv2
 
 from config.draco.pybullet_simulation import Config
-from simulator.pybullet.rl.rl_one_step.one_step_env import DracoEnvOneStepMpc
+from simulator.pybullet.rl.rl_one_step.one_step_env_n_ import DracoEnvOneStepMpc
 
 
 if __name__ == "__main__":
@@ -40,10 +40,10 @@ if __name__ == "__main__":
     randomized_command = False
     reduced_obs_size = True
     mpc_freq = 0
-    sim_dt = Config.CONTROLLER_DT
+    sim_dt = 0.002
     render = True
 
-    env = DracoEnvOneStepMpc(Lx, Ly, 15, mpc_freq, sim_dt, randomized_command=randomized_command, reduced_obs_size=reduced_obs_size, render = render)
+    env = DracoEnvOneStepMpc(Lx, Ly, 20, mpc_freq, sim_dt, randomized_command=randomized_command, reduced_obs_size=reduced_obs_size, render = render)
 
     obs, info = env.reset()
     interface = info["interface"]
@@ -59,8 +59,8 @@ if __name__ == "__main__":
 
 
 
-    CURR_TIMESTEP = 333056
-    save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}_Lx_{Lx}_Ly_{Ly}_Yaw_{yaw_max}_new_reward/"  
+    CURR_TIMESTEP = 804096
+    save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}_Lx_{Lx}_Ly_{Ly}_Yaw_{yaw_max}_new_reward_2/"  
     save_subdir = f"NSTEPS{n_steps_}_LEARNING_RATE{learning_rate_}_TIME{CURR_TIMESTEP}"
 
 
@@ -73,10 +73,10 @@ if __name__ == "__main__":
         while True:
             #action = torch.ones(AlipParams.N_BATCH,3)
             action, _ = model.predict(obs, deterministic=True)
-            print(action)
+            #print(action)
             obs, reward, done, trunc, info = env.step(action)
-            print("reward", reward)
-            print("reward info", info["reward_components"])
+            #print("reward", reward)
+            #print("reward info", info["reward_components"])
             if done:
                 print(done)
                 obs,info = env.reset()
