@@ -1542,7 +1542,7 @@ static const casadi_int casadi_s45[5] = {1, 1, 0, 1, 0};
 static const casadi_int casadi_s46[6] = {2, 1, 0, 2, 0, 1};
 static const casadi_int casadi_s47[23] = {4, 4, 0, 4, 8, 12, 16, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
 
-static const casadi_real casadi_c0[16] = {1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 5.};
+static const casadi_real casadi_c0[16] = {1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1.};
 
 /* f_xc_slip_limit:(i0,i1,i2)->(o0) */
 static int casadi_f1(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, int mem) {
@@ -1826,7 +1826,7 @@ static int casadi_f4(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   [[1, 0, 0, 0], 
    [0, 1, 0, 0], 
    [0, 0, 1, 0], 
-   [0, 0, 0, 5]] */
+   [0, 0, 0, 1]] */
   casadi_copy(casadi_c0, 16, w19);
   /* #83: @1 = mac(@24,@19,@1) */
   for (i=0, rr=w1; i<4; ++i) for (j=0; j<1; ++j, ++rr) for (k=0, ss=w24+j, tt=w19+i*4; k<4; ++k) *rr += ss[k*1]**tt++;
@@ -3319,7 +3319,7 @@ static int casadi_f6(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   [[1, 0, 0, 0], 
    [0, 1, 0, 0], 
    [0, 0, 1, 0], 
-   [0, 0, 0, 5]] */
+   [0, 0, 0, 1]] */
   casadi_copy(casadi_c0, 16, w26);
   /* #83: @1 = mac(@25,@26,@1) */
   for (i=0, rr=w1; i<4; ++i) for (j=0; j<1; ++j, ++rr) for (k=0, ss=w25+j, tt=w26+i*4; k<4; ++k) *rr += ss[k*1]**tt++;
@@ -7209,7 +7209,7 @@ static int casadi_f10(const casadi_real** arg, casadi_real** res, casadi_int* iw
   [[1, 0, 0, 0], 
    [0, 1, 0, 0], 
    [0, 0, 1, 0], 
-   [0, 0, 0, 5]] */
+   [0, 0, 0, 1]] */
   casadi_copy(casadi_c0, 16, w48);
   /* #459: @78 = mac(@45,@48,@78) */
   for (i=0, rr=w78; i<4; ++i) for (j=0; j<1; ++j, ++rr) for (k=0, ss=w45+j, tt=w48+i*4; k<4; ++k) *rr += ss[k*1]**tt++;
@@ -7728,7 +7728,7 @@ static int casadi_f13(const casadi_real** arg, casadi_real** res, casadi_int* iw
   [[1, 0, 0, 0], 
    [0, 1, 0, 0], 
    [0, 0, 1, 0], 
-   [0, 0, 0, 5]] */
+   [0, 0, 0, 1]] */
   casadi_copy(casadi_c0, 16, w49);
   /* #83: @1 = mac(@48,@49,@1) */
   for (i=0, rr=w1; i<4; ++i) for (j=0; j<1; ++j, ++rr) for (k=0, ss=w48+j, tt=w49+i*4; k<4; ++k) *rr += ss[k*1]**tt++;

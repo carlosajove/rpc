@@ -26,8 +26,6 @@ import shutil
 import cv2
 
 from loop_rate_limiters import RateLimiter
-import configparser
-
 
 import draco_interface_py
 
@@ -41,11 +39,6 @@ r_contact_volt_noise = 0.001
 imu_ang_vel_noise_std_dev = 0.      # based on real IMU: 0.0052
 
 
-# Function to read configuration from file
-def read_config(filename):
-    config = configparser.ConfigParser()
-    config.read(filename)
-    return config
 
 def print_command(rpc_command):
 
@@ -66,7 +59,7 @@ def print_sensor_data(data):
     print("rf contact normal", data.rf_contact_normal_)
 
 
-def get_sensor_data_from_pybullet(robot):
+def get_sensor_data_from_pybullet(robot, link_id_dict, previous_torso_velocity):
 
     #follow pinocchio robotsystem urdf reading convention
     joint_pos, joint_vel = np.zeros(27), np.zeros(27)
@@ -345,15 +338,21 @@ def signal_handler(signal, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
-if __name__ == "__main__":
+
+
+from pybullet_utils import bullet_client
+import multiprocessing as mp
+from multiprocessing import Process, Pipe
+from pybullet_utils import bullet_client
+def simulation_loop(process_id):
 
     ## connect pybullet sim server
     pb.connect(pb.GUI)
 
-    pb.resetDebugVisualizerCamera(cameraDistance=1,
-                                  cameraYaw=90,   #120
-                                  cameraPitch=-15,  #-30
-                                  cameraTargetPosition=[0.5, 0, 0.9])
+    pb.resetDebugVisualizerCamera(cameraDistance=4,
+                                  cameraYaw=120,   #120
+                                  cameraPitch=-30,  #-30
+                                  cameraTargetPosition=[2, 0, 0.68])
     ## sim physics setting
     pb.setPhysicsEngineParameter(fixedTimeStep=Config.CONTROLLER_DT,
                                  numSubSteps=Config.N_SUBSTEP)
@@ -361,10 +360,7 @@ if __name__ == "__main__":
 
     ## robot spawn & initial kinematics and dynamics setting
     pb.configureDebugVisualizer(pb.COV_ENABLE_RENDERING, 0)
-    # draco_humanoid = pb.loadURDF(cwd + "/robot_model/draco/draco_modified.urdf",
-    # Config.INITIAL_BASE_JOINT_POS,
-    # Config.INITIAL_BASE_JOINT_QUAT,
-    # useFixedBase=0)
+
     draco_humanoid = pb.loadURDF(cwd +
                                  "/robot_model/draco/draco_modified.urdf",
                                  Config.INITIAL_BASE_JOINT_POS,
@@ -374,9 +370,7 @@ if __name__ == "__main__":
 
     ground = pb.loadURDF(cwd + "/robot_model/ground/plane.urdf",
                          useFixedBase=1)
-    """ground = pb.loadURDF(cwd + "/robot_model/ground/plane100.urdf",
-                         [0, 0, 0], pb.getQuaternionFromEuler([0, 0, 0]))"""
-    """ground = pb.loadURDF(cwd + "/robot_model/ground/model.urdf") """            
+           
     pb.configureDebugVisualizer(pb.COV_ENABLE_RENDERING, 1)
 
     #TODO:modify this function without dictionary container
@@ -440,16 +434,6 @@ if __name__ == "__main__":
     count = 0
     jpg_count = 0
 
-    ## simulation options
-    if Config.MEASURE_COMPUTATION_TIME:
-        timer = TicToc()
-        compuation_cal_list = []
-
-    if Config.VIDEO_RECORD:
-        video_dir = 'video/draco'
-        if os.path.exists(video_dir):
-            shutil.rmtree(video_dir)
-        os.makedirs(video_dir)
 
     previous_torso_velocity = np.array([0., 0., 0.])
     rate = RateLimiter(frequency=1. / (dt*2))
@@ -527,7 +511,7 @@ if __name__ == "__main__":
         #get sensor data
         imu_frame_quat, imu_ang_vel, imu_dvel, joint_pos, joint_vel, b_lf_contact, b_rf_contact, \
             l_normal_force, r_normal_force = get_sensor_data_from_pybullet(
-            draco_humanoid)
+            draco_humanoid, link_id_dict, previous_torso_velocity)
         l_normal_force = pybullet_util.simulate_contact_sensor(l_normal_force)
         r_normal_force = pybullet_util.simulate_contact_sensor(r_normal_force)
         imu_dvel = pybullet_util.add_sensor_noise(imu_dvel, imu_dvel_bias)
@@ -550,49 +534,21 @@ if __name__ == "__main__":
         ##Debugging
 
         ##compute control command
-        if Config.MEASURE_COMPUTATION_TIME:
-            timer.tic()
 
-
-        rand_num = np.random.randint(0,2400)
-        if rand_num == 0: 
-            rand_num = np.random.randint(0,2)
-            rand_force = np.zeros(3)
-            if rand_num == 0: 
-                rand_force[0] = 500
-                print("long")
-            elif rand_num == 1: 
-                rand_force[1] = 1000
-                print("lat")
-            #pb.applyExternalForce(draco_humanoid, 1, rand_force, np.zeros(3), flags = pb.WORLD_FRAME)
-            #pb.applyExternalForce(draco_humanoid, , rand_force, np.zeros(3), flags = pb.WORLD_FRAME)
-
-        config = read_config('/home/carlos/Desktop/Austin/SeungHyeonProject/rpc/config/draco/alip_command.ini')
-        PARAMS = config['Parameters']
-        Ly_des    = PARAMS.getfloat('LY_DES')    
-        des_com_yaw = PARAMS.getfloat('COM_YAW') 
-        des_com_yaw = des_com_yaw* math.pi/180
-
-        Lx_offset = PARAMS.getfloat('LX_OFFSET')
-        MPC_freq = int(PARAMS.getfloat('MPC_FREQ'))
-
-        #Lxdes, Lydes, yawdes
-        yaw = 0* math.pi/180
-
-        #compute imput
-        rpc_draco_sensor_data.MPC_freq_ = MPC_freq
+        #rl_policy
         rpc_draco_sensor_data.res_rl_action_ = np.array([0, 0, 0])
         rpc_draco_sensor_data.initial_stance_leg_ = 1
-        rpc_draco_sensor_data.policy_command_ = np.array([Lx_offset, Ly_des, des_com_yaw])
+        #Lxdes, Lydes, yawdes
+        yaw = -20* math.pi/180
+        rpc_draco_sensor_data.policy_command_ = np.array([0, 0, yaw])
+
+
 
         rpc_draco_interface.GetCommand(rpc_draco_sensor_data,
                                        rpc_draco_command)
 
 
-        
-        if Config.MEASURE_COMPUTATION_TIME:
-            comp_time = timer.tocvalue()
-            compuation_cal_list.append(comp_time)
+
 
         #copy command data from rpc command class
         rpc_trq_command = rpc_draco_command.joint_trq_cmd_
@@ -621,17 +577,23 @@ if __name__ == "__main__":
         # print(rpc_joint_vel_command)
 
         # Save Image file
-        if (Config.VIDEO_RECORD) and (count % Config.RECORD_FREQ == 0):
-            frame = pybullet_util.get_camera_image([1., 0.5, 1.], 1.0, 120,
-                                                   -15, 0, 60., 1920, 1080,
-                                                   0.1, 100.)
-            frame = frame[:, :, [2, 1, 0]]  # << RGB to BGR
-            filename = video_dir + '/step%06d.jpg' % jpg_count
-            cv2.imwrite(filename, frame)
-            jpg_count += 1
 
         pb.stepSimulation()  #step simulation
         rate.sleep()  # while loop rate limiter
 
         count += 1
 
+
+if __name__ == "__main__":
+    num_processes = mp.cpu_count()
+    print("num processes", num_processes)
+    processes = []
+    for i in range(2):
+        process = mp.Process(target = simulation_loop, args=(i,))
+        processes.append(process)
+    
+    for process in processes:
+        process.start()
+
+    for process in processes:
+        process.join()

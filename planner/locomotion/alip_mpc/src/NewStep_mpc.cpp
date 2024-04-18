@@ -128,8 +128,12 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
 
     /* Terminal cost parameter */
     casadi::DM Q_term = casadi::DM::eye(n_xlip_);
-    Q_term *= 50;
-    Q_term(3,3) = 50;
+    //Q_term *= 50;
+    //Q_term(3,3) = 50;
+    Q_term(0,0) = q_term_0_;
+    Q_term(1,1) = q_term_1_;
+    Q_term(2,2) = q_term_2_;
+    Q_term(3,3) = q_term_3_; 
 
     /* MPC Solution */
     double ufp_x_sol, ufp_y_sol;
@@ -154,7 +158,7 @@ void NewStep_mpc::Update_(const input_data_t &input_data,
     }
     else{
         // Solve optimization problem
-        arg = {xlip_guess, ufp_guess, x_lip_current_, stance_leg_, mass_, zH_, Ts_, Tr_, leg_width_, Lx_offset_, Ly_des_, ufp_max, ufp_min, k_traj, mu_traj, Q_term};
+        arg = {xlip_guess, ufp_guess, x_lip_current_, stance_leg_, mass_, zH_, Ts_, Tr_, leg_width_, Lx_offset_, Ly_des_, ufp_max, ufp_min, k_traj, mu_traj, Q_term, y_mech_max_};
     }
 
     vector<casadi::DM> result_solver;
@@ -251,6 +255,12 @@ void NewStep_mpc::SetParameters(const YAML::Node &node) {
     util::ReadParameter(node, "ufp_y_min", ufp_y_min_);
     util::ReadParameter(node, "new_ufp_x_max", new_ufp_x_max_);
     util::ReadParameter(node, "new_ufp_y_max", new_ufp_y_max_);
+    util::ReadParameter(node, "q_term_0", q_term_0_);
+    util::ReadParameter(node, "q_term_1", q_term_1_);
+    util::ReadParameter(node, "q_term_2", q_term_2_);
+    util::ReadParameter(node, "q_term_3", q_term_3_);
+    util::ReadParameter(node, "y_mech_max", y_mech_max_);
+
 
   } catch (const std::runtime_error &e) {
     std::cerr << "Error reading parameter [" << e.what() << "] at file: ["

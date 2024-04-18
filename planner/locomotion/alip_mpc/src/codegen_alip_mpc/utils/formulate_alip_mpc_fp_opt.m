@@ -65,6 +65,7 @@ p_ufp_min = opti.parameter(n_ufp,1);
 p_k = opti.parameter(2,N_steps_ahead); % [kx; ky]
 p_mu = opti.parameter(2,N_steps_ahead); % friction coefficient [mux,muy]
 p_Q_term = opti.parameter(n_x,n_x);
+yc_mech_limit = opti.parameter(1,1);
 
 %% Desired State
 l = sqrt(g/p_zH); % lip constant
@@ -115,6 +116,7 @@ for n = 1:N_steps_ahead
         % mechanical constraint
         xc_mech_limit = p_ufp_max(1)/2;
         opti.subject_to( -xc_mech_limit <= Yk(1) <= xc_mech_limit );
+        opti.subject_to(-yc_mech_limit <= Yk(2) <= yc_mech_limit);
         
         % cost
         if i == N_intervals
@@ -124,7 +126,8 @@ for n = 1:N_steps_ahead
                 Q = p_Q_term;
             end
             X_error = Yk - X_des{n};
-            cost = cost + X_error.'*Q*X_error;
+            Lx_error = Yk(3) - p_Lx_offset
+            cost = cost + X_error.'*Q*X_error + Lx_error*Lx_error;
         end
     end
 end
@@ -188,7 +191,8 @@ if sol_type == "qrqp"
         p_ufp_min,...
         p_k,...
         p_mu,...
-        p_Q_term};
+        p_Q_term,...
+        yc_mech_limit};
     ufp_com = X_traj(1:2,1) - Ufp_traj(:,1);
     opt_output = {X_traj, Ufp_traj, ufp_com};
     

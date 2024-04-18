@@ -1,6 +1,6 @@
 #servo_dt: 0.00125
 #servo_dt: 0.0025
-servo_dt: 0.002
+servo_dt: 0.00175
 
 
 ip_address: "tcp://127.0.0.1:5557"
@@ -383,27 +383,36 @@ lmpc_walking:
 #mpc freq == 5 --> mu = 0.1
 alip_mpc_walking:
   verbose: false
-  new_solver: true #true is better for mpc freq
-  mpc_freq: 0  #50aag
+  new_solver: false #true is better for mpc freq
+  #mpc_freq: 0  #50aag
   step_horizon: "4"
   intervals: "2"
   Ts: 0.275    #0.25  #Greater Ts makes offset increase also
   stance_leg: 1 # -1: RIGHT SWING TO START; 1: LEFT SWING TO START
   leg_width: 0.1 #0.1
   zH: 0.69   #this will be the reference height target. The height for the mpc will be another
-  mu: 0.3
+  mu: 0.2
   total_mass: 39.15342    
-  ufp_x_max: 0.55  #0.6
-  ufp_y_max: 0.4  #0.4
+  ufp_x_max: 0.5  #0.6
+  ufp_y_max: 0.5  #0.4
   ufp_y_min: 0.1 #0.05
-  Lx_offset: 0 #0
-  Ly_des: 0 #3
-  com_yaw: 10  #degrees
+  #Lx_offset: 0 #0
+  #Ly_des: 0 #3
+  #com_yaw: 10  #degrees
   kx: 0
   ky: 0
+  #old solver:
+  y_mech_max: 0.125
+
+
   #new solver params:
   new_ufp_x_max: 0.5
-  new_ufp_y_max: 0.25
+  new_ufp_y_max: 0.2
+
+  q_term_0: 10
+  q_term_1: 10
+  q_term_2: 10.1
+  q_term_3: 10.1
 
   variable_height: 0
   swing_height: 0.05   #0.07  higher swing_height can work for lower zH

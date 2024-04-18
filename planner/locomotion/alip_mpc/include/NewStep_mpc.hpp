@@ -71,6 +71,7 @@ private:
     double ufp_x_max;  
     double ufp_y_max_;
     double ufp_y_min_;
+    double y_mech_max_;
     int leg_identity_ = -1;             // leg swap parameter
     double new_ufp_x_max_;
     double new_ufp_y_max_;
@@ -94,6 +95,12 @@ private:
     vector<double> ufp_guess_;
 
     vector<double> x_com_init_step_;
+
+    double q_term_0_;
+    double q_term_1_;
+    double q_term_2_;
+    double q_term_3_;
+
 };
 
 #endif

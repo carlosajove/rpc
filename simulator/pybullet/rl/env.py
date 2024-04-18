@@ -315,8 +315,8 @@ class DracoEnv(gym.Env):
             self._rpc_draco_interface.GetCommand(self._rpc_draco_sensor_data,
                                                  self._rpc_draco_command)
             if (np.isnan(self._rpc_draco_command.joint_trq_cmd_).any()):
-                print_command(self._rpc_draco_command)
-                print_sensor_data(self._rpc_draco_sensor_data)
+                #print_command(self._rpc_draco_command)
+                #print_sensor_data(self._rpc_draco_sensor_data)
                 done = True
                 break
             step_flag = self._rpc_draco_command.rl_trigger_            
@@ -480,8 +480,10 @@ class DracoEnv(gym.Env):
         return False
 
     def close(self):
-        self.client.disconnect()
-        self.client = None
+        print("disconnect")
+        #self.client.disconnect()
+        #del self.client
+        #self.client = None
 
     def _DELETE(self):
         try:

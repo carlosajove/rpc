@@ -92,7 +92,7 @@ void DracoStateEstimator::Initialize(DracoSensorData *sensor_data) {
   robot_->UpdateRobotModel(
       Eigen::Vector3d::Zero(), Eigen::Quaterniond::Identity(),
       Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), sensor_data->joint_pos_,
-      sensor_data->joint_vel_, false);
+      sensor_data->joint_vel_, true);
 
   // save data
 #if B_USE_MATLOGGER
@@ -313,7 +313,7 @@ void DracoStateEstimator::UpdateWbcObs(){
     stfoot_pos = robot_->GetLinkIsometry(draco_link::l_foot_contact).translation();
     swfoot_iso = robot_->GetLinkIsometry(draco_link::r_foot_contact);
   }
-
+ 
   Eigen::Vector3d com_pos_stfoot = com_pos - stfoot_pos;
   Eigen::Vector3d com_pos_stfoot_torso_ori = des_torso_iso.linear().transpose() * com_pos_stfoot;
   Eigen::Vector3d com_vel_torso_ori = des_torso_iso.linear().transpose() * com_vel;

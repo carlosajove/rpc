@@ -52,7 +52,7 @@ Q = eye(nx,nx);
 Q(1,1) = 1;
 Q(2,2) = 1;
 Q(3,3) = 1;
-Q(4,4) = 5;
+Q(4,4) = 1;
 disp("Begin Formulation of ALIP-based FP Optimization Problem...");
 for i = 1:length(N_steps_ahead_list)
     nx = 4;

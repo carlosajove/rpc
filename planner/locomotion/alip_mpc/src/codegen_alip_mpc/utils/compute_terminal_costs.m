@@ -1,9 +1,9 @@
-function [Pf] = compute_terminal_costs(p)
+%function [Pf] = compute_terminal_costs(p)
 
-m = p.m; 
-g = p.g;
-z_H = p.z_H;
-Ts = p.Ts;
+m = 40; 
+g = 9.81;
+z_H = 0.695;
+Ts = 0.275;
 
 % continuous state matrix
 A = [...
@@ -22,7 +22,7 @@ Bd = expm(A*Ts)*B;
 Q = diag([1 1 1 1]);
 R = diag([0 0]);
 
-[~,Pf,~] = dlqr(Ad,Bd,Q,R);
+[~,Pf,~] = dlqr(Ad,Bd,Q,R)
 
-end
+%end
 
