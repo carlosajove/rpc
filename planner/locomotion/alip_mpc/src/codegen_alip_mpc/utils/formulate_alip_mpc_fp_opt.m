@@ -85,6 +85,8 @@ for i = 1:N_steps_ahead
     stance_sign = -stance_sign;
 end
 
+%Lx_main = 0.5*p_m*p_zH*p_leg_width*l*tanh(0.5*p_Ts*l);
+
 for i = 1:N_steps_ahead
     X_des{i} = [xc_des; yc_des_traj{i}; Lx_des_traj{i}; p_Ly_des];
 end
@@ -126,8 +128,11 @@ for n = 1:N_steps_ahead
                 Q = p_Q_term;
             end
             X_error = Yk - X_des{n};
-            Lx_error = Yk(3) - p_Lx_offset
-            cost = cost + X_error.'*Q*X_error + Lx_error*Lx_error;
+            %Lx_error_ = Yk(3) - p_Lx_offset;
+            %Lx_error = abs(Lx_error) - Lx_main;
+            %Lx_error_ = max(0,Lx_error);
+
+            cost = cost + X_error.'*Q*X_error; %+ 0.5*Q(3,3)*Lx_error_*Lx_error_;
         end
     end
 end

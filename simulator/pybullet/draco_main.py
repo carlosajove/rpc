@@ -553,7 +553,7 @@ if __name__ == "__main__":
         if Config.MEASURE_COMPUTATION_TIME:
             timer.tic()
 
-
+        """
         rand_num = np.random.randint(0,2400)
         if rand_num == 0: 
             rand_num = np.random.randint(0,2)
@@ -566,7 +566,7 @@ if __name__ == "__main__":
                 print("lat")
             #pb.applyExternalForce(draco_humanoid, 1, rand_force, np.zeros(3), flags = pb.WORLD_FRAME)
             #pb.applyExternalForce(draco_humanoid, , rand_force, np.zeros(3), flags = pb.WORLD_FRAME)
-
+        """
         config = read_config('/home/carlos/Desktop/Austin/SeungHyeonProject/rpc/config/draco/alip_command.ini')
         PARAMS = config['Parameters']
         Ly_des    = PARAMS.getfloat('LY_DES')    
