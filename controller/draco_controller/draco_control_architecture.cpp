@@ -181,7 +181,11 @@ void DracoControlArchitecture::GetCommand(void *command) {
     }
 
     if (alipIter >= 0 ) state_machine_container_[draco_states::AlipLocomotion]->OneStep();
-
+    if (alipIter < 0) {
+        alip_tm_->UpdateDoubleStance();
+        tci_container_->contact_map_["rf_contact"]->SetMaxFz(310);
+        tci_container_->contact_map_["lf_contact"]->SetMaxFz(310);
+    }
     upper_body_tm_->UseNominalUpperBodyJointPos(sp_->nominal_jpos_);
     controller_->GetCommand(command);
     alipIter++;
@@ -230,9 +234,14 @@ void DracoControlArchitecture::GetCommand(void *command) {
                 alip_tm_->initializeOri();
                 alip_tm_->setNewOri(sp_->des_com_yaw_);
                 sp_->des_end_torso_iso_ = alip_tm_->Get_des_end_torso_iso();
-
+                alip_tm_->saveDoubleStanceFoot();
             }
         }   
+  }
+  save_freq_++;
+  if (verbose && save_freq_ == SAVE_FREQ_){
+    tci_container_->saveTxts(sp_->current_time_, sp_->stance_leg_, sp_->state_);
+    save_freq_ = 0;
   }
     //this->Reset();
 }
@@ -251,6 +260,8 @@ void DracoControlArchitecture::_InitializeParameters() {
   alip_tm_->SetTaskWeights(cfg_["alip_mpc_walking"]["task"]);
   alip_mpc_->SetParameters(cfg_["alip_mpc_walking"]);
 
+  util::ReadParameter(cfg_["alip_mpc_walking"], "rf_z_MAX", rf_MAX_);
+  util::ReadParameter(cfg_["alip_mpc_walking"], "save_freq", SAVE_FREQ_);
   //draco_control_arch
   //util::ReadParameter(cfg_["alip_mpc_walking"], "mpc_freq", mpc_freq_);
 }

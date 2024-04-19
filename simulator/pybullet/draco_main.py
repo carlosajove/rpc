@@ -453,8 +453,9 @@ if __name__ == "__main__":
 
     previous_torso_velocity = np.array([0., 0., 0.])
     rate = RateLimiter(frequency=1. / (dt*2))
-
+    i = 0
     while (True):
+        i += 1
         l_normal_volt_noise = np.random.normal(0, l_contact_volt_noise)
         r_normal_volt_noise = np.random.normal(0, r_contact_volt_noise)
         imu_ang_vel_noise = np.random.normal(0, imu_ang_vel_noise_std_dev)
@@ -584,6 +585,11 @@ if __name__ == "__main__":
         rpc_draco_sensor_data.res_rl_action_ = np.array([0, 0, 0])
         rpc_draco_sensor_data.initial_stance_leg_ = 1
         rpc_draco_sensor_data.policy_command_ = np.array([Lx_offset, Ly_des, des_com_yaw])
+
+        if (base_com_pos[2] > 1.2) or (base_com_pos[2] < 0.45):
+            if (i > 800):
+                print("BREAK", base_com_pos[2])
+                break
 
         rpc_draco_interface.GetCommand(rpc_draco_sensor_data,
                                        rpc_draco_command)

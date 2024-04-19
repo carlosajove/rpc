@@ -140,6 +140,7 @@ bool AlipLocomotion::SwitchLeg(){  //ahora asume que tocamos en Tr o antes. Que 
 
       //ctrl_arch_->tci_container_->task_map_["rf_pos"]->SetMaxFz(0.01);
       ctrl_arch_->alip_tm_->SetSwingFootStart(robot_->GetLinkIsometry(draco_link::r_foot_contact).translation());
+      ctrl_arch_->alip_tm_->saveDoubleStanceFoot();
 
 
     }  //else if((stance_leg == -1) && (sp_->b_rf_contact_)){
@@ -158,7 +159,7 @@ bool AlipLocomotion::SwitchLeg(){  //ahora asume que tocamos en Tr o antes. Que 
       new_leg = true;
 
       ctrl_arch_->alip_tm_->SetSwingFootStart(robot_->GetLinkIsometry(draco_link::l_foot_contact).translation());
-
+      ctrl_arch_->alip_tm_->saveDoubleStanceFoot();
     }
   }
   sp_->stance_leg_ = stance_leg;

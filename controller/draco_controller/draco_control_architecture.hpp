@@ -74,6 +74,9 @@ private:
   NewStep_mpc *alip_mpc_;
 
   bool verbose = false;
+  int save_freq_ = 0;
+  int SAVE_FREQ_;
+  double rf_MAX_;
   int alipIter;
   double Tr;
   // LMPCHandler *lmpc_handler_;

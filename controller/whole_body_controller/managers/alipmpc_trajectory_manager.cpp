@@ -324,8 +324,11 @@ void AlipMpcTrajectoryManager::UpdateDesired(const double t){
   if (indata.stance_leg == 1){ //update left
     lfoot_task->UpdateDesired(des_swfoot_pos, des_swfoot_vel, des_swfoot_acc);
     lfoot_ori->UpdateDesired(des_swfoot_ori, des_swfoot_ori_vel, des_swfoot_ori_acc);
-    this->UpdateCurrentPos(rfoot_task);
-    this->UpdateCurrentOri(rfoot_ori);
+
+    rfoot_task->UpdateDesired(stance_rfoot, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
+    rfoot_ori->UpdateDesired(stance_rfoot_quat_coef, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
+    //this->UpdateCurrentPos(rfoot_task);
+    //this->UpdateCurrentOri(rfoot_ori);
 
     //Set hierarchy weights
     com_xy_task->SetWeight(com_xy_task_weight);
@@ -339,8 +342,10 @@ void AlipMpcTrajectoryManager::UpdateDesired(const double t){
     rfoot_task->UpdateDesired(des_swfoot_pos, des_swfoot_vel, des_swfoot_acc);
     rfoot_ori->UpdateDesired(des_swfoot_ori, des_swfoot_ori_vel, des_swfoot_ori_acc);
 
-    this->UpdateCurrentPos(lfoot_task);
-    this->UpdateCurrentOri(lfoot_ori);
+    lfoot_task->UpdateDesired(stance_lfoot, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
+    lfoot_ori->UpdateDesired(stance_lfoot_quat_coef, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
+    //this->UpdateCurrentPos(lfoot_task);
+    //this->UpdateCurrentOri(lfoot_ori);
 
     //set hierarchy weights
     com_xy_task->SetWeight(com_xy_task_weight);
@@ -360,8 +365,51 @@ void AlipMpcTrajectoryManager::UpdateDesired(const double t){
                             
 
 
-  Eigen::VectorXd zero3 = Eigen::VectorXd::Zero(3);
   torso_ori->UpdateDesired(des_torso_ori, des_torso_ori_vel, des_torso_ori_acc);
+}
+
+
+void AlipMpcTrajectoryManager::saveDoubleStanceFoot(){
+    Eigen::Isometry3d rfoot_iso = robot_->GetLinkIsometry(draco_link::r_foot_contact);
+    Eigen::Isometry3d lfoot_iso = robot_->GetLinkIsometry(draco_link::l_foot_contact);
+
+    stance_rfoot = rfoot_iso.translation();
+    stance_lfoot = lfoot_iso.translation();
+    stance_rfoot(2) = 0;
+    stance_lfoot(2) = 0;
+
+    FootStep::MakeHorizontal(rfoot_iso);
+    FootStep::MakeHorizontal(lfoot_iso);
+    stance_rfoot_quat = Eigen::Quaterniond(rfoot_iso.linear());
+    stance_lfoot_quat = Eigen::Quaterniond(lfoot_iso.linear());
+
+    stance_rfoot_quat_coef = stance_rfoot_quat.normalized().coeffs();
+    stance_lfoot_quat_coef = stance_lfoot_quat.normalized().coeffs();
+
+}
+
+void AlipMpcTrajectoryManager::UpdateDoubleStance(){
+    /*
+    Eigen::Vector3d rfoot_pos = robot_->GetLinkIsometry(draco_link::r_foot_contact).translation();
+    Eigen::Vector3d lfoot_pos = robot_->GetLinkIsometry(draco_link::l_foot_contact).translation();
+
+    rfoot_pos(2) = 0;
+    lfoot_pos(2) = 0;
+
+    lfoot_task->UpdateDesired(lfoot_pos, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
+    rfoot_task->UpdateDesired(rfoot_pos, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
+
+
+    //lfoot_ori->UpdateDesired(des_swfoot_ori, des_swfoot_ori_vel, des_swfoot_ori_acc);
+    this->UpdateCurrentOri(lfoot_ori);
+    this->UpdateCurrentOri(rfoot_ori);
+    */
+    lfoot_task->UpdateDesired(stance_lfoot, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
+    rfoot_task->UpdateDesired(stance_rfoot, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
+    lfoot_ori->UpdateDesired(stance_lfoot_quat_coef, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
+    rfoot_ori->UpdateDesired(stance_rfoot_quat_coef, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
+
+
 }
 
 

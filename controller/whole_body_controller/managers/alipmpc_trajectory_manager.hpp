@@ -39,6 +39,8 @@ public:
   void turning_self_collision();
   void GenerateTrajs(const double &tr_, const bool &ori_traj);
 
+  void saveDoubleStanceFoot();
+  void UpdateDoubleStance();
   void UpdateCurrentOri(Task* task);
   void UpdateCurrentPos(Task* task);
 
@@ -138,7 +140,7 @@ private:
   Eigen::Vector3d terrain;   //normalised (-kx, -ky, 1)
 
   //task weights
-  Eigen::Vector3d com_z_task_weight;
+  Eigen::VectorXd com_z_task_weight;
   Eigen::Vector2d com_xy_task_weight;
   Eigen::Vector3d torso_ori_weight;
   Eigen::Vector3d swing_foot_weight;
@@ -165,6 +167,13 @@ private:
   double ufp_x_max_;
   double ufp_y_min_;
   double ufp_y_max_;
+
+  Eigen::Vector3d stance_rfoot;
+  Eigen::Vector3d stance_lfoot;
+  Eigen::Quaterniond stance_rfoot_quat;
+  Eigen::Quaterniond stance_lfoot_quat;
+  Eigen::VectorXd stance_rfoot_quat_coef;
+  Eigen::VectorXd stance_lfoot_quat_coef;
 
 };
 /* TODO: 
