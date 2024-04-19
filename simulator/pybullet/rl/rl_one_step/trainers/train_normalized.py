@@ -48,7 +48,6 @@ if __name__ == "__main__":
 
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
-    norm_env = VecNormalize(vec_env, norm_obs = True, norm_reward = True, clip_obs = 60, gamma = 0.99)
 
     n_steps_ = 256 #512
     batch_size_ = 64
@@ -62,26 +61,33 @@ if __name__ == "__main__":
 
 
 
-    save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}Yaw_{yaw_max}_norm"         
+    save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}Yaw_{yaw_max}_norm_obs" 
+    save_path = os.path.join(model_dir, save_dir)      
     ## train model
     if new_model:
         tensorboard_dir = cwd + "/rl_log/one_step/ppo/optuna/"
         #use MlpPolicy
         #"MultiInputPolicy"
-        model = PPO("MlpPolicy", norm_env, verbose=1, n_steps = n_steps_, batch_size=batch_size_, tensorboard_log=tensorboard_dir, learning_rate=learning_rate_, device = "cpu") #policy_kwargs=dict(net_arch=[64,64, dict(vf=[], pi=[])]), 
+        norm_env = VecNormalize(vec_env, norm_obs = True, norm_reward = False, clip_obs = 60, gamma = 0.99)
+
+        model = PPO("MlpPolicy", norm_env, verbose=1, n_steps = n_steps_, batch_size=batch_size_, tensorboard_log=tensorboard_dir, learning_rate=learning_rate_) #policy_kwargs=dict(net_arch=[64,64, dict(vf=[], pi=[])]), 
         startTime = time.time()
         TIMESTEPS = 10000
         CURR_TIMESTEP = 0
     else:
         startTime = time.time()
         CURR_TIMESTEP = bash_timesteps
+
         save_subdir = f"NSTEPS{n_steps_}_LEARNING_RATE{learning_rate_}_TIME{CURR_TIMESTEP}"
-        model_path = model_dir + '/' + save_dir + '/' + save_subdir
-        env_path = env_dir + '/' + save_dir + '/' + save_subdir
-        print("model_path", model_path)
-        model = PPO.load(model_path, env=env)
-        vec_env = VecNormalize.load(env_path, vec_env)
+        model_path = os.path.join(save_path, save_subdir)
+        env_file = f"TIME{CURR_TIMESTEP}.pkl"
+        save_env_path = os.path.join(save_path, env_file)
+        norm_env = VecNormalize.load(save_env_path, vec_env)
+
+        model = PPO.load(model_path, env=norm_env)
+
         TIMESTEPS =20*n_steps_
+
 
 
 
@@ -93,11 +99,13 @@ if __name__ == "__main__":
             ## save the model
             CURR_TIMESTEP += TIMESTEPS
             save_subdir = f"NSTEPS{n_steps_}_LEARNING_RATE{learning_rate_}_TIME{CURR_TIMESTEP}"
-            save_path = model_dir + '/' + save_dir + '/' + save_subdir
-            save_env_path = env_dir + '/' + save_dir + '/' + save_subdir
+            model_path = save_path + '/' + save_subdir
+            env_file = f"TIME{CURR_TIMESTEP}.pkl"
+            save_env_path = os.path.join(save_path, env_file)
             print(save_path)
-            model.save(save_path)
-            vec_env.save(save_env_path)
+            model.save(model_path)
+            print(save_env_path)
+            norm_env.save(save_env_path)
             with open('timesteps_2.txt', 'w') as f:
                 f.write(str(CURR_TIMESTEP))
                 f.flush()
