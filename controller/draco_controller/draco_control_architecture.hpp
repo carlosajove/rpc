@@ -80,6 +80,6 @@ private:
   int alipIter;
   double Tr;
   // LMPCHandler *lmpc_handler_;
-  
+  bool first_ever = true;
   void _InitializeParameters() override;
 };

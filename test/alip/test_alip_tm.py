@@ -233,7 +233,7 @@ for t in landingTime:
 
 #normal3Dplot(RobotCommand[:,6], RobotCommand[:,7], RobotCommand[:,8], 'Foot Acceleration')
 
-"""
+
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.plot(swingXCommand, swingYCommand, swingZCommand, marker='x', label = 'Command')
@@ -307,21 +307,6 @@ plt.scatter(timeCOM, trRobotSwing[:,6], label = 'vel')
 plt.scatter(timeCOM, swingVzCommand, label =  'vel command')
 plt.title('time vs Vz')
 plt.legend()
-
-"""
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -200,7 +200,8 @@ wbc:
       ## l_wrist_pitch(5), neck_pitch(6), r_shoulder_fe(7), r_shoulder_aa(8), r_shoulder_ie(9),
       ## r_shoulder_ie(10), r_elbow_fe(11), r_wrist_ps(12), r_wrist_pitch(13)
       #sim_weight : [400., 400., 400., 400., 400., 400., 400., 400., 400., 400., 400., 400., 400.]
-      sim_weight : [800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800.]
+      #sim_weight : [800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800., 800.]
+      sim_weight : [500., 500., 500., 500., 500., 500., 500., 500., 500., 500., 500., 500., 500.]
       #sim_weight : [40., 40., 40., 40., 40., 40., 40., 40., 40., 40., 40., 40., 40.]
       sim_kp : [100., 100., 100., 50., 40., 40., 100., 100., 100., 100., 50., 40., 40.]
       #sim_kd : [8., 8., 8., 3., 2., 2., 10., 8., 8., 8., 3., 2., 2.]
@@ -402,14 +403,14 @@ alip_mpc_walking:
   total_mass: 39.15342    
   ufp_x_max: 0.5  #0.6
   ufp_y_max: 0.5  #0.4
-  ufp_y_min: 0.1 #0.05
+  ufp_y_min: 0.09 #0.05
   #Lx_offset: 0 #0
   #Ly_des: 0 #3
   #com_yaw: 10  #degrees
   kx: 0
   ky: 0
   #old solver:
-  y_mech_max: 0.125
+  y_mech_max: 0.15
 
 
   #new solver params:
@@ -430,15 +431,15 @@ alip_mpc_walking:
   task: #not implemente yet
     com_z_pos: [9000]  
     com_xy_pos: [0,0] 
-    torso_ori: [9000, 9000, 9000]
-    stance_foot_weight: [10000, 10000, 10000]
-    stance_foot_ori_weight: [8000, 8000, 8000]
+    torso_ori: [7000, 7000, 7000]
+    stance_foot_weight: [9000, 9000, 9000]
+    stance_foot_ori_weight: [7000, 7000, 7000]
     swing_foot_weight: [8000, 8000, 8000] #8000 
-    swing_foot_ori_weight: [7000, 7000, 7000]
+    swing_foot_ori_weight: [6000, 6000, 6000]
 
   rf_z_MAX: 600
   #610
-  rf_z_max: 0.001
+  rf_z_max: 0
   #0.001
 
 

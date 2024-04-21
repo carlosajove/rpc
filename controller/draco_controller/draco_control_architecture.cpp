@@ -178,13 +178,22 @@ void DracoControlArchitecture::GetCommand(void *command) {
 
     if (alipIter == 0) {
         state_machine_container_[draco_states::AlipLocomotion]->FirstVisit();
+        first_ever = false;
+    }
+    if (first_ever && alipIter == 2){
+        alip_tm_->saveDoubleStanceFoot();
     }
 
     if (alipIter >= 0 ) state_machine_container_[draco_states::AlipLocomotion]->OneStep();
     if (alipIter < 0) {
+        alip_tm_->saveDoubleStanceFoot();
         alip_tm_->UpdateDoubleStance();
         tci_container_->contact_map_["rf_contact"]->SetMaxFz(310);
         tci_container_->contact_map_["lf_contact"]->SetMaxFz(310);
+        tci_container_->task_map_["lf_pos_task"]->SetWeight(8500*Eigen::VectorXd::Ones(3));
+        tci_container_->task_map_["rf_pos_task"]->SetWeight(8500*Eigen::VectorXd::Ones(3));
+        tci_container_->task_map_["rf_ori_task"]->SetWeight(6500*Eigen::VectorXd::Ones(3));
+        tci_container_->task_map_["lf_ori_task"]->SetWeight(6500*Eigen::VectorXd::Ones(3));
     }
     upper_body_tm_->UseNominalUpperBodyJointPos(sp_->nominal_jpos_);
     controller_->GetCommand(command);
@@ -198,15 +207,18 @@ void DracoControlArchitecture::GetCommand(void *command) {
         alip_tm_->saveCurrentCOMstate(sp_->current_time_);
         alip_tm_->saveMpcCOMstate(sp_->current_time_);
         alip_tm_->saveSwingState(sp_->current_time_);
+        alip_tm_->saveCOMstateWorld(sp_->current_time_);
+        alip_tm_->saveCOMstateMPCcoor(sp_->current_time_);
     }
 
     if (state_machine_container_[draco_states::AlipLocomotion]->SwitchLeg()) {
        //alipIter = 0;
-       alipIter = -6;
+       alipIter = -3;
        //exit(0);
        //cfg_ = YAML::LoadFile(THIS_COM "config/draco/pnc.yaml");
        //sp_->outsideCommand(cfg_["alip_mpc_walking"]);
        sp_->rl_trigger_ = true;
+       first_ever = true;
     }
 
   //  std::cout << "ctroarch end Get Command" << std::endl << std::endl;

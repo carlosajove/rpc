@@ -57,7 +57,8 @@ public:
   void saveMpcCOMstate(const double t);
   void saveSwingState(const double t);
   void saveRobotCommand(const double t);
-  
+  void saveCOMstateWorld(const double t);
+  void saveCOMstateMPCcoor(const double t);
   //Getters
   input_data_t GetIndata() {return indata;}
   output_data_t GetOutdata() {return outdata;}
@@ -133,7 +134,8 @@ private:
   std::fstream file7;
   std::fstream file8;
   std::fstream file9;
-
+  std::fstream file10;
+  std::fstream file11;
 
   int saveCounter;
   double refzH;

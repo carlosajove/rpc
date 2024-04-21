@@ -41,7 +41,8 @@ AlipMpcTrajectoryManager::AlipMpcTrajectoryManager(NewStep_mpc *alipMpc,
   file7.open(THIS_COM "/test/alip/robotSwingFootTraj.txt", std::fstream::out);
   file8.open(THIS_COM "/test/alip/RobotCOM.txt", std::fstream::out);
   file9.open(THIS_COM "/test/alip/RobotCommand.txt", std::fstream::out);
-
+  file10.open(THIS_COM "/test/alip/RobotCOMworld.txt", std::fstream::out);
+  file11.open(THIS_COM "/test/alip/RobotCOMmpcOri.txt", std::fstream::out);
   //Swingfootvel_end(2) = -0.5;
 
 }  //need to add ori 
@@ -375,8 +376,8 @@ void AlipMpcTrajectoryManager::saveDoubleStanceFoot(){
 
     stance_rfoot = rfoot_iso.translation();
     stance_lfoot = lfoot_iso.translation();
-    stance_rfoot(2) = 0;
-    stance_lfoot(2) = 0;
+    stance_rfoot(2) = -0.001;
+    stance_lfoot(2) = -0.001;
 
     FootStep::MakeHorizontal(rfoot_iso);
     FootStep::MakeHorizontal(lfoot_iso);
@@ -475,7 +476,7 @@ void AlipMpcTrajectoryManager::saveMpcCOMstate(const double t){
   file1 << indata.mu << " "  << indata.leg_width << " " << indata.zH << " ";
   file1 << mass << " " << indata.Ts <<  " ";
   file1 << fullsol.xlip_sol[0] << " " << fullsol.xlip_sol[1] << " " << fullsol.xlip_sol[2] << " ";
-  file1 << fullsol.xlip_sol[3] << endl;
+  file1 << fullsol.xlip_sol[3] << " " << indata.Tr << endl;
 }
 
 
@@ -502,6 +503,44 @@ void AlipMpcTrajectoryManager::saveCurrentCOMstate(const double t){
   file8 << vel.transpose() << " ";
   file8 << LCOM.transpose() << endl;
 }
+
+void AlipMpcTrajectoryManager::saveCOMstateMPCcoor(const double t){
+  Eigen::Vector3d pos = robot_->GetRobotComPos();
+  Eigen::Vector3d vel = robot_->GetRobotComLinVel();
+  Eigen::Vector3d Lc = robot_->GetHg().head<3>();
+  pos -= stleg_pos;
+  pos = des_end_torso_iso_.linear().transpose()*pos; 
+  vel = des_end_torso_iso_.linear().transpose()*vel;
+  Lc = des_end_torso_iso_.linear().transpose() * Lc;
+  
+  Eigen::Vector3d L_st = pos.cross(mass*vel); 
+  Eigen::Vector3d L = L_st + Lc;
+
+  file11 << pos.transpose() << " " << vel.transpose() << " ";
+  file11 << Lc.transpose() << " " << L.transpose() << " ";
+  file11 << L.transpose() << " " << t << endl;
+
+
+}
+
+void AlipMpcTrajectoryManager::saveCOMstateWorld(const double t){
+   Eigen::Vector3d pos = robot_->GetRobotComPos();
+   Eigen::Vector3d vel = robot_->GetRobotComLinVel();
+   
+   Eigen::Vector3d L_st = pos.cross(mass*vel);
+   Eigen::Vector3d LCOM = robot_->GetHg().head<3>();
+   Eigen::Vector3d L = L_st + LCOM;
+
+   file10 << pos.transpose() << " " << vel.transpose() << " ";
+   file10 << L_st.transpose() << " " << LCOM.transpose() << " ";
+   file10 << L << endl;
+
+
+
+
+}
+
+
 
 void AlipMpcTrajectoryManager::saveSwingState(const double t){
   Eigen::Isometry3d curr_swfoot_iso;
