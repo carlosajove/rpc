@@ -569,13 +569,18 @@ if __name__ == "__main__":
             #pb.applyExternalForce(draco_humanoid, , rand_force, np.zeros(3), flags = pb.WORLD_FRAME)
         """
         config = read_config('/home/carlos/Desktop/Austin/SeungHyeonProject/rpc/config/draco/alip_command.ini')
-        PARAMS = config['Parameters']
-        Ly_des    = PARAMS.getfloat('LY_DES')    
-        des_com_yaw = PARAMS.getfloat('COM_YAW') 
-        des_com_yaw = des_com_yaw* math.pi/180
+        try:
+            PARAMS = config['Parameters']
+            Ly_des    = PARAMS.getfloat('LY_DES')    
+            des_com_yaw = PARAMS.getfloat('COM_YAW') 
+            des_com_yaw = des_com_yaw* math.pi/180
 
-        Lx_offset = PARAMS.getfloat('LX_OFFSET')
-        MPC_freq = int(PARAMS.getfloat('MPC_FREQ'))
+            Lx_offset = PARAMS.getfloat('LX_OFFSET')
+            MPC_freq = int(PARAMS.getfloat('MPC_FREQ'))
+        except KeyError:
+            print("hey")
+            
+
 
         #Lxdes, Lydes, yawdes
         yaw = 0* math.pi/180

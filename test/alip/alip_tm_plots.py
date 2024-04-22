@@ -5,8 +5,8 @@ import numpy as np
 from plot_utils import *
 matplotlib.use('TkAgg')
 
-lbound_time = 4
-ubound_time = 22
+lbound_time = 1
+ubound_time = 32
 
 script_directory = os.path.dirname(os.path.abspath(__file__))
 
@@ -20,7 +20,7 @@ CurrentComstate = readRobotSwTr('RobotCOM.txt')
 RobotCommand = readRobotSwTr('RobotCommand.txt')
 MpcComState = readRobotSwTr('MpcCOMstate.txt')
 
-COMmpcoor = readRobotSwTr('RobotCOMmpcOri')
+COMmpcoor = readRobotSwTr('RobotCOMmpcOri.txt')
 
 
 mpc_coor_x = COMmpcoor[:, 0]
@@ -122,30 +122,45 @@ for t in landingTime:
 
 
 #Tracking desired Lx, Ly
+light_grey = [0.85, 0.85, 0.85]
+facecolors = [
+    light_grey, 'grey', 'brown', 'red', 'orange', 'yellow', 'green', 'blue', 'purple',
+    'crimson', 'white'
+] 
+colors =[facecolors[0], facecolors[-1]]
+_, _, _, _, _, _, st, _ = read_task('task_com_z.txt', "com_z")
+st = st[inter]
+st = st[:-2]
+
+#Ly des
 Ly_m = (mpc_coor_L_y[inter])/(MpcMassCom[inter]*MpczH[inter])
 Lydes_m = MpcLy_des[inter]/(MpcMassCom[inter]*MpczH[inter])
-plt.figure()
-plt.plot(time[inter], Ly_m, label = 'robot')
-plt.plot(time[inter], Lydes_m, label = 'des')
-#plt.plot(MpctimeCOM, MpcLyCOM/(MpcMassCom*MpczH))
-for t in landingTimes_in_range:
-    plt.axvline(x=t, color='black', linestyle='-', linewidth=0.1)
-plt.title('Ly/mzH paper plot')
-plt.legend()
+plt.figure(figsize=(10, 6))
+plt.plot(time[inter], Ly_m, label=r'$L_{y}$')
+plt.plot(time[inter], Lydes_m, label=r'$L_{y}^{des}$')
+plt.xlabel('Time', fontsize = 20)
+plt.ylabel(r'$\frac{L_{y}}{mz_{H}}$', fontsize = 20, rotation='horizontal', labelpad=20)
+plt.legend(fontsize=16)
+for i in range(len(landingTimes_in_range) - 1):
+    plt.axvspan(landingTimes_in_range[i], landingTimes_in_range[i+1], color=colors[i % len(colors)], alpha=0.3)
+plt.xticks(fontsize=14) 
+plt.yticks(fontsize=14) 
 
+#Lx_des
 Lx_m = (mpc_coor_L_x[inter])/(MpcMassCom[inter]*MpczH[inter])
 Lxdes_m1 = Lx_plus[inter]/(MpcMassCom[inter]*MpczH[inter])
 Lxdes_m2 = Lx_minus[inter]/(MpcMassCom[inter]*MpczH[inter])
-plt.figure()
-plt.plot(time[inter], Lx_m, label = 'robot')
-plt.plot(time[inter], Lxdes_m1, label = 'des')
-plt.plot(time[inter], Lxdes_m2, label = 'des')
-#plt.plot(MpctimeCOM, MpcLyCOM/(MpcMassCom*MpczH))
-for t in landingTimes_in_range:
-    plt.axvline(x=t, color='black', linestyle='-', linewidth=0.1)
-plt.title('Lx/mzH paper plot')
-plt.legend()
-
+plt.figure(figsize=(10, 6))
+plt.plot(time[inter], Lx_m, label = r'$L_{x}$')
+plt.plot(time[inter], Lxdes_m1, label = r'$L_{x}^{des,p}$')
+plt.plot(time[inter], Lxdes_m2, label = r'$L_{x}^{des,m}$')
+plt.xlabel('Time', fontsize = 16)
+plt.ylabel(r'$\frac{L_{x}}{mz_{H}}$', fontsize = 20, rotation='horizontal', labelpad=20)
+plt.legend(fontsize=16)
+for i in range(len(landingTimes_in_range) - 1):
+    plt.axvspan(landingTimes_in_range[i], landingTimes_in_range[i+1], color=colors[i % len(colors)], alpha=0.3)
+plt.xticks(fontsize=14) 
+plt.yticks(fontsize=14) 
 
 
 

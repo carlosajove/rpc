@@ -160,7 +160,11 @@ def plot_phase(ax, t, data_phse):
     shading = 0.2
     prev_j = 0
     ll, ul = (ax.get_ylim())
+    i = 0
     for j in (phseChange):
+        print(data_phse[j])
+        i+=1
+        if (i == 30): exit()
         ax.fill_between(t[prev_j:j + 1],
                         ll,
                         ul,
