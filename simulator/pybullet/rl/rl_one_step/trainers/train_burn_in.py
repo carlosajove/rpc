@@ -11,6 +11,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecNormalize
+from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback
 
 cwd = os.getcwd()
 sys.path.append(cwd)
@@ -74,7 +75,12 @@ if __name__ == "__main__":
     else: str2 = 'detCOMMAND'
 
 
+    eval_env = DracoEnvOneStepMpc(Lx, Ly, yaw_max, mpc_freq, sim_dt, randomized_command=randomized_command, reduced_obs_size=reduced_obs_size, render = render)
+    eval_monitor_env = Monitor(eval_env)
+    eval_vec_env = DummyVecEnv([lambda: eval_monitor_env])
+    norm_eval_env = VecNormalize(eval_vec_env,norm_obs = True, norm_reward = False, clip_obs = 60, gamma = 0.99)
 
+    eval_callback = EvalCallback(norm_eval_env, eval_freq=3*n_steps_, deterministic=True, render = False, )
 
     save_dir = str1 + str2 + f"Yaw_{yaw_max}_burn_in" 
     save_path = os.path.join(model_dir, save_dir)      
@@ -119,6 +125,8 @@ if __name__ == "__main__":
         model_par['policy']['value_net.weight'] = a['policy']['value_net.weight']
         model_par['policy']['value_net.bias'] = a['policy']['value_net.bias']
 
+        model_par['policy']['action_net.weight'] = torch.zeros_like(a['policy']['action_net.weight'])
+        model_par['policy']['action_net.bias'] = torch.zeros_like(a['policy']['action_net.bias'])
 
         model.set_parameters(model_par)
         
@@ -149,7 +157,7 @@ if __name__ == "__main__":
 
     while(True):
         try:
-            model.learn(total_timesteps=TIMESTEPS, progress_bar=True, reset_num_timesteps=False, tb_log_name=save_dir)
+            model.learn(total_timesteps=TIMESTEPS, progress_bar=True, reset_num_timesteps=False, tb_log_name=save_dir, callback=eval_callback)
             endTime = time.time()
             print("Model train time: "+str(datetime.timedelta(seconds=endTime-startTime)))
             ## save the model
