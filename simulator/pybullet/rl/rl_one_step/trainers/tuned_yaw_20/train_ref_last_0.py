@@ -4,6 +4,7 @@ import numpy as np
 import datetime
 import time
 from math import pi
+import torch
 
 import gymnasium as gym
 
@@ -54,7 +55,7 @@ if __name__ == "__main__":
     if randomized_command: str2 = 'randCOMMAND'
     else: str2 = 'detCOMMAND'
 
-
+    
 
 
     save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}_Yaw_{yaw_max}_last_0"         
@@ -63,7 +64,12 @@ if __name__ == "__main__":
         tensorboard_dir = cwd + "/rl_log/one_step/ppo/optuna/"
         #use MlpPolicy
         #"MultiInputPolicy"
-        model = PPO("MlpPolicy", env, verbose=1, n_steps = n_steps_, batch_size=batch_size_, tensorboard_log=tensorboard_dir, learning_rate=learning_rate_, device = "cpu") #policy_kwargs=dict(net_arch=[64,64, dict(vf=[], pi=[])]), 
+        model = PPO("MlpPolicy", env, verbose=1, n_steps = n_steps_, batch_size=batch_size_, tensorboard_log=tensorboard_dir, learning_rate=learning_rate_, device = "cpu") #policy_kwargs=dict(net_arch=[64,64, dict(vf=[], pi=[])]),
+        a = model.get_parameters()
+        a['policy']['action_net.weight'] = torch.zeros_like(a['policy']['action_net.weight'])
+        a['policy']['action_net.bias'] = torch.zeros_like(a['policy']['action_net.bias'])
+        model.set_parameters(a)
+        
         startTime = time.time()
         TIMESTEPS = 10000
         CURR_TIMESTEP = 0

@@ -16,7 +16,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecNorm
 cwd = os.getcwd()
 sys.path.append(cwd)
 sys.path.append(cwd + "/build/lib")
-from simulator.pybullet.rl.rl_one_step.envs.new_reward import DracoEnvOneStepMpc
+from simulator.pybullet.rl.rl_one_step.envs.new_reward_copy import DracoEnvOneStepMpc
 
 from config.draco.pybullet_simulation import Config
 

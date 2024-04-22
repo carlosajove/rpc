@@ -14,7 +14,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecNorm
 cwd = os.getcwd()
 sys.path.append(cwd)
 sys.path.append(cwd + "/build/lib")
-from simulator.pybullet.rl.rl_one_step.envs.new_reward import DracoEnvOneStepMpc
+from simulator.pybullet.rl.rl_one_step.envs.new_reward_copy import DracoEnvOneStepMpc
 
 from config.draco.pybullet_simulation import Config
 
@@ -24,7 +24,7 @@ import argparse
 
 import argparse
 
-new_model = True
+new_model = False
 
 if __name__ == "__main__":
     if not new_model:
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     Lx = 0.
     Ly = 0.
     randomized_command = False
-    reduced_obs_size = False
+    reduced_obs_size = True
     mpc_freq = 0
     sim_dt = 0.00175
 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
 
 
-    save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}_Lx_{Lx}_Ly_{Ly}_Yaw_{yaw_max}_reference_2"         
+    save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}_Lx_{Lx}_Ly_{Ly}_Yaw_{yaw_max}_new_reward_2_reference"         
     ## train model
     if new_model:
         tensorboard_dir = cwd + "/rl_log/one_step/ppo/optuna/"
