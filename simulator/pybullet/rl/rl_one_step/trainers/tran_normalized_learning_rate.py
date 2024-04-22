@@ -9,6 +9,7 @@ import gymnasium as gym
 
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecNormalize
 
 cwd = os.getcwd()
@@ -19,12 +20,13 @@ from simulator.pybullet.rl.rl_one_step.envs.new_reward import DracoEnvOneStepMpc
 from config.draco.pybullet_simulation import Config
 
 model_dir = cwd + "/rl_model/one_step/PPO"
+env_dir = cwd + "/rl_env/one_step/PPO"
 #import tracemalloc
 import argparse
 
 import argparse
 
-new_model = True
+new_model = False
 
 if __name__ == "__main__":
     if not new_model:
@@ -43,11 +45,13 @@ if __name__ == "__main__":
 
     render = False
     env = DracoEnvOneStepMpc(Lx, Ly, yaw_max, mpc_freq, sim_dt, randomized_command=randomized_command, reduced_obs_size=reduced_obs_size, render = render)
-    #env = VecNormalize(not_norm_env, norm_reward=False, clip_obs=50)
+
+    monitor_env = Monitor(env)
+    vec_env = DummyVecEnv([lambda: monitor_env])
 
     n_steps_ = 256 #512
     batch_size_ = 64
-    learning_rate_ = 0.0003
+    learning_rate_ = 0.00001 #OLD LEARNING RATE 0.0003
 
     if reduced_obs_size: str1 = 'redOBS'
     else: str1 = 'fullOBS'
@@ -57,24 +61,36 @@ if __name__ == "__main__":
 
 
 
-    save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}_Lx_{Lx}_Ly_{Ly}_Yaw_{yaw_max}_reference_2"         
+    save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}Yaw_{yaw_max}_norm_obs_l_rate" 
+    save_path = os.path.join(model_dir, save_dir)      
     ## train model
     if new_model:
         tensorboard_dir = cwd + "/rl_log/one_step/ppo/optuna/"
         #use MlpPolicy
         #"MultiInputPolicy"
-        model = PPO("MlpPolicy", env, verbose=1, n_steps = n_steps_, batch_size=batch_size_, tensorboard_log=tensorboard_dir, learning_rate=learning_rate_, device = "cpu") #policy_kwargs=dict(net_arch=[64,64, dict(vf=[], pi=[])]), 
+        norm_env = VecNormalize(vec_env, norm_obs = True, norm_reward = False, clip_obs = 60, gamma = 0.99)
+
+        model = PPO("MlpPolicy", norm_env, verbose=1, n_steps = n_steps_, batch_size=batch_size_, tensorboard_log=tensorboard_dir, learning_rate=learning_rate_) #policy_kwargs=dict(net_arch=[64,64, dict(vf=[], pi=[])]), 
         startTime = time.time()
         TIMESTEPS = 10000
         CURR_TIMESTEP = 0
     else:
         startTime = time.time()
         CURR_TIMESTEP = bash_timesteps
-        save_subdir = f"NSTEPS{n_steps_}_LEARNING_RATE{learning_rate_}_TIME{CURR_TIMESTEP}"
-        model_path = model_dir + '/' + save_dir + '/' + save_subdir
-        print("model_path", model_path)
-        model = PPO.load(model_path, env=env)
-        TIMESTEPS =20*n_steps_
+
+        load_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}Yaw_{yaw_max}_norm_obs" 
+        load_path = os.path.join(model_dir, load_dir)
+        load_subdir = f"NSTEPS{n_steps_}_LEARNING_RATE{0.0003}_TIME{CURR_TIMESTEP}"
+        model_path = os.path.join(load_path, load_subdir)
+        env_file = f"TIME{CURR_TIMESTEP}.pkl"
+        load_env_path = os.path.join(load_path, env_file)
+        norm_env = VecNormalize.load(load_env_path, vec_env)
+
+        custom_objects = {'learning_rate': learning_rate_}
+        model = PPO.load(model_path, env=norm_env, custom_objects=custom_objects)
+
+        TIMESTEPS =10000
+
 
 
 
@@ -86,9 +102,13 @@ if __name__ == "__main__":
             ## save the model
             CURR_TIMESTEP += TIMESTEPS
             save_subdir = f"NSTEPS{n_steps_}_LEARNING_RATE{learning_rate_}_TIME{CURR_TIMESTEP}"
-            save_path = model_dir + '/' + save_dir + '/' + save_subdir
+            model_path = save_path + '/' + save_subdir
+            env_file = f"TIME{CURR_TIMESTEP}.pkl"
+            save_env_path = os.path.join(save_path, env_file)
             print(save_path)
-            model.save(save_path)
+            model.save(model_path)
+            print(save_env_path)
+            norm_env.save(save_env_path)
             with open('timesteps_2.txt', 'w') as f:
                 f.write(str(CURR_TIMESTEP))
                 f.flush()

@@ -349,13 +349,17 @@ class DracoEnv(gym.Env):
         self._iter += 1
 
         reward = self._compute_reward(self._rpc_draco_command.wbc_obs_, wbc_action, done)
+
+        success = 0
+        if truncate: success = 1
         info = {
-            "reward_components": self.reward_info
+            "reward_components": self.reward_info,
+            "is_success": success
         }
         #print("t6", timer6.tocvalue())
 
         #self.dataf
-        return policy_obs, reward, done, truncate, info # need terminated AND truncated
+        return policy_obs, reward, done, truncate, info 
 
     def _normalise_action(self, action):
         raise NotImplementedError

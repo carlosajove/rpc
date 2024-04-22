@@ -4,7 +4,7 @@ import numpy as np
 import datetime
 import time
 from math import pi
-
+import torch
 import gymnasium as gym
 
 from stable_baselines3 import PPO
@@ -15,7 +15,10 @@ from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecNorm
 cwd = os.getcwd()
 sys.path.append(cwd)
 sys.path.append(cwd + "/build/lib")
-from simulator.pybullet.rl.rl_one_step.envs.new_reward import DracoEnvOneStepMpc
+from simulator.pybullet.rl.rl_one_step.envs.burn_in import DracoEnvOneStepMpc as Burn_in_Env
+from simulator.pybullet.rl.rl_one_step.envs.new_reward import DracoEnvOneStepMpc 
+
+
 
 from config.draco.pybullet_simulation import Config
 
@@ -27,6 +30,7 @@ import argparse
 import argparse
 
 new_model = True
+burn_in = False
 
 if __name__ == "__main__":
     if not new_model:
@@ -44,10 +48,21 @@ if __name__ == "__main__":
     sim_dt = 0.00175
 
     render = False
-    env = DracoEnvOneStepMpc(Lx, Ly, yaw_max, mpc_freq, sim_dt, randomized_command=randomized_command, reduced_obs_size=reduced_obs_size, render = render)
 
-    monitor_env = Monitor(env)
-    vec_env = DummyVecEnv([lambda: monitor_env])
+
+    if (burn_in):
+        env = Burn_in_Env(Lx, Ly, yaw_max, mpc_freq, sim_dt, randomized_command=randomized_command, reduced_obs_size=reduced_obs_size, render = render)
+
+        monitor_env = Monitor(env)
+        vec_env = DummyVecEnv([lambda: monitor_env])
+    else: 
+        env = DracoEnvOneStepMpc(Lx, Ly, yaw_max, mpc_freq, sim_dt, randomized_command=randomized_command, reduced_obs_size=reduced_obs_size, render = render)
+
+        monitor_env = Monitor(env)
+        vec_env = DummyVecEnv([lambda: monitor_env])
+
+
+
 
     n_steps_ = 256 #512
     batch_size_ = 64
@@ -61,20 +76,62 @@ if __name__ == "__main__":
 
 
 
-    save_dir = str1 + str2 + f"mpc_freq{mpc_freq}_SIMdt{sim_dt}Yaw_{yaw_max}_norm_obs" 
+    save_dir = str1 + str2 + f"Yaw_{yaw_max}_burn_in" 
     save_path = os.path.join(model_dir, save_dir)      
     ## train model
-    if new_model:
+
+    if burn_in:
         tensorboard_dir = cwd + "/rl_log/one_step/ppo/optuna/"
-        #use MlpPolicy
-        #"MultiInputPolicy"
+
+        norm_env = VecNormalize(vec_env, norm_obs = True, norm_reward = False, clip_obs = 60, gamma = 0.99)
+        save_path += 'st'
+        model = PPO("MlpPolicy", norm_env, verbose=1, n_steps = n_steps_, batch_size=batch_size_, tensorboard_log=tensorboard_dir, learning_rate=learning_rate_, device = 'cpu') #policy_kwargs=dict(net_arch=[64,64, dict(vf=[], pi=[])]), 
+        startTime = time.time()
+
+
+        TIMESTEPS = 3*n_steps_
+        CURR_TIMESTEP = 0
+
+        save_subdir = f"NSTEPS{n_steps_}_LEARNING_RATE{learning_rate_}_TIME{CURR_TIMESTEP}"
+        model_path = save_path + '/' + save_subdir
+        model.save(model_path)
+    elif new_model:
+        tensorboard_dir = cwd + "/rl_log/one_step/ppo/optuna/"
+
+
         norm_env = VecNormalize(vec_env, norm_obs = True, norm_reward = False, clip_obs = 60, gamma = 0.99)
 
-        model = PPO("MlpPolicy", norm_env, verbose=1, n_steps = n_steps_, batch_size=batch_size_, tensorboard_log=tensorboard_dir, learning_rate=learning_rate_) #policy_kwargs=dict(net_arch=[64,64, dict(vf=[], pi=[])]), 
+        model = PPO("MlpPolicy", norm_env, verbose=1, n_steps = n_steps_, batch_size=batch_size_, tensorboard_log=tensorboard_dir, learning_rate=learning_rate_, device = 'cpu') #policy_kwargs=dict(net_arch=[64,64, dict(vf=[], pi=[])]), 
+        model_par = model.get_parameters()
+
+        save_subdir = f"NSTEPS{n_steps_}_LEARNING_RATE{learning_rate_}_TIME{3840}"
+
+        burn_in_path = save_path + '/' + save_subdir
+        burn_in_model = PPO.load(burn_in_path, env=norm_env)
+
+        a = burn_in_model.get_parameters()
+
+
+        model_par['policy']['mlp_extractor.value_net.0.weight'] = a['policy']['mlp_extractor.value_net.0.weight']
+        model_par['policy']['mlp_extractor.value_net.0.bias'] = a['policy']['mlp_extractor.value_net.0.bias']
+        model_par['policy']['mlp_extractor.value_net.2.weight'] = a['policy']['mlp_extractor.value_net.2.weight']
+        model_par['policy']['mlp_extractor.value_net.2.bias'] = a['policy']['mlp_extractor.value_net.2.bias']
+        model_par['policy']['value_net.weight'] = a['policy']['value_net.weight']
+        model_par['policy']['value_net.bias'] = a['policy']['value_net.bias']
+
+
+        model.set_parameters(model_par)
+        
         startTime = time.time()
+
+
         TIMESTEPS = 10000
         CURR_TIMESTEP = 0
-    else:
+
+        save_subdir = f"NSTEPS{n_steps_}_LEARNING_RATE{learning_rate_}_TIME{CURR_TIMESTEP}"
+        model_path = save_path + '/' + save_subdir
+        model.save(model_path)
+    else: 
         startTime = time.time()
         CURR_TIMESTEP = bash_timesteps
 
@@ -86,8 +143,7 @@ if __name__ == "__main__":
 
         model = PPO.load(model_path, env=norm_env)
 
-        TIMESTEPS =20*n_steps_
-
+        TIMESTEPS =10000
 
 
 
