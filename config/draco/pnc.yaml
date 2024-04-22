@@ -389,7 +389,7 @@ lmpc_walking:
 #mpc freq == 0 --> mu = 0.4
 #mpc freq == 5 --> mu = 0.1
 alip_mpc_walking:
-  verbose: true
+  verbose: false
   save_freq: 3
   new_solver: false #true is better for mpc freq
   #mpc_freq: 0  #50aag

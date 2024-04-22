@@ -365,18 +365,7 @@ class DracoEnv(gym.Env):
         raise NotImplementedError
 
     def set_action_command_in_sensor_data(self):
-        #maybe set also time in newer version
-        if self._randomized_command:
-            #prob dist
-            limit = np.array([np.abs(self._Lx_offset_des), np.abs(self._Ly_des), np.abs(self._yaw_des)])
-            dir_command = np.random.uniform(low = -limit, high = limit)
-        else:
-            dir_command = np.array((self._Lx_offset_des, self._Ly_des, self._yaw_des))
-
-        initial_stance_leg = np.random.choice(np.array([-1, 1]))
-
-        self._rpc_draco_sensor_data.initial_stance_leg_ = initial_stance_leg
-        self._rpc_draco_sensor_data.policy_command_ = dir_command
+        raise NotImplementedError
 
     def _set_motor_command(self, command, client) -> None:
         rpc_trq_command = command.joint_trq_cmd_
