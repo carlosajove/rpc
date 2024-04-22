@@ -10,20 +10,19 @@ sys.path.append(cwd + "/build/lib")
 from util.python_utils import pybullet_util_rl
 from config.draco.pybullet_simulation import *
 
-from simulator.pybullet.rl.env import *
+from simulator.pybullet.rl.env_2 import *
 
 
-class DracoEnvOneStepMpcRange(DracoEnv):
-    def __init__(self, Lx_offset_des, Ly_des, yaw_des, mpc_freq, sim_dt, randomized_command: bool = False, reduced_obs_size: bool = False, render: bool = False) -> None:
-        super().__init__(Lx_offset_des, Ly_des, yaw_des, mpc_freq, sim_dt, randomized_command, reduced_obs_size, render)
+class DracoEnvOneStepMpcRange(DracoEnv_v2):
+    def __init__(self, mpc_freq, sim_dt, burn_in: bool = False, reduce_obs_size: bool = True, render: bool = False) -> None:
+        super().__init__(mpc_freq, sim_dt, render)
 
+        self._burn_in = burn_in
         if mpc_freq != 0:
             print("FREQ != 0. PLEASE SET FREQ == 0")
             raise Warning
 
-        assert randomized_command == False
-
-        self._set_max_steps_iter(30)
+        self._set_max_steps_iter(50)
     
     def _set_observation_space(self):
         if self._reduced_obs_size:
@@ -64,6 +63,8 @@ class DracoEnvOneStepMpcRange(DracoEnv):
 
     def _normalise_action(self, action):
         _wbc_action = 0.1*action
+        if self._burn_in:
+            _wbc_action = 0*_wbc_action
         return _wbc_action
 
 
