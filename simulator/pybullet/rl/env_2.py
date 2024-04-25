@@ -113,14 +113,16 @@ def dict_to_numpy(obs_dict):
    
 class DracoEnv_v2(gym.Env):
     metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 50}
-    def __init__(self, mpc_freq, sim_dt, render: bool = False) -> None:
+    def __init__(self, mpc_freq, sim_dt, eval = None, reduced_obs_size: bool = False, render: bool = False) -> None:
         self._render = render
-        yaw_des = yaw_des*math.pi/180
-        self._yaw_des = yaw_des
+        #yaw_des = yaw_des*math.pi/180
+        #self._yaw_des = yaw_des
+        self._reduced_obs_size = reduced_obs_size
         self._mpc_freq = mpc_freq
         self._sim_dt = sim_dt
         assert Config.CONTROLLER_DT == sim_dt
 
+        self._eval = eval
 
         if self._render:
             self.client = bc.BulletClient(connection_mode=p.GUI)
@@ -276,17 +278,28 @@ class DracoEnv_v2(gym.Env):
         self.previous_torso_velocity = np.array([0., 0., 0.])
         if (self.render): self.rate = RateLimiter(frequency=1./(self.dt))
 
+        if (self._eval is None):
+            self.set_action_command_in_sensor_data()
+        else:
+            dir_command = np.array((self._eval[0], self._eval[1], self._eval[2]))
+            self._Lx = dir_command[0]
+            self._Ly = dir_command[1]
+            self._yaw = dir_command[2]
+            initial_stance_leg = np.random.choice(np.array([-1, 1]))
+            self._rpc_draco_sensor_data.initial_stance_leg_ = initial_stance_leg
+            self._rpc_draco_sensor_data.policy_command_ = dir_command
 
-        self.set_action_command_in_sensor_data()
 
         self._iter = 0
         pol_obs, reward, done, truncate, info_ = self.step(np.zeros(3))
         #ACTION COMMAND WILL CHANGE ONCE PER EPISODE NOT DURING STEPS
 
-
-        info = {
-            "interface" : self._rpc_draco_interface,
-            }
+        if self._render:
+            info = {
+                "interface" : self._rpc_draco_interface,
+                }
+        else:
+            info = {}
         return pol_obs, info
    
     def step(self, action):
@@ -406,6 +419,15 @@ class DracoEnv_v2(gym.Env):
     def _set_max_steps_iter(self, max):
         self._max_iter = max
 
+    def _set_command_policy_sim(self, Lx, Ly, yaw, ini_st_leg):
+        self._Lx = Lx
+        self._Ly = Ly
+        self._yaw = yaw
+        dir_command = np.array((Lx, Ly, yaw))
+        initial_stance_leg = ini_st_leg
+
+        self._rpc_draco_sensor_data.initial_stance_leg_ = initial_stance_leg
+        self._rpc_draco_sensor_data.policy_command_ = dir_command
 
 
     def _debug_sensor_data(self):

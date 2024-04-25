@@ -6,7 +6,7 @@ from plot_utils import *
 matplotlib.use('TkAgg')
 
 lbound_time = 1
-ubound_time = 32
+ubound_time = 100
 
 script_directory = os.path.dirname(os.path.abspath(__file__))
 
@@ -52,7 +52,10 @@ swingVzCommand = RobotCommand[:, 5]
 swingAxCommand = RobotCommand[:, 6]
 swingAyCommand = RobotCommand[:, 7]
 swingAzCommand = RobotCommand[:, 8]
-
+swingTimeCommand = RobotCommand[:,9]
+end_foot_commandx = RobotCommand[:, 10]
+end_foot_commandy = RobotCommand[:, 11]
+end_foot_commandz = RobotCommand[:, 12]
 
 MpcxCOM = MpcComState[:,0]
 MpcyCOM = MpcComState[:,1]
@@ -163,6 +166,12 @@ plt.xticks(fontsize=14)
 plt.yticks(fontsize=14) 
 
 
+
+
+
+#End foot command
+plt.figure()
+plt.scatter(end_foot_commandx[inter], end_foot_commandy[inter], marker = 'x')
 
 
 

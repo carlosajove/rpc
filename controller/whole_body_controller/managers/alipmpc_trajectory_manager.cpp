@@ -464,7 +464,8 @@ double AlipMpcTrajectoryManager::ComputeZpos(const double &x, const double &y, c
 
 void AlipMpcTrajectoryManager::saveRobotCommand(const double t){
   file9 << des_swfoot_pos.transpose() << " " << des_swfoot_vel.transpose() << " " << des_swfoot_acc.transpose();
-  file9 << " " << t << endl;
+  file9 << " " << t << " ";
+  file9 << Swingfoot_end.transpose() << " " << indata.stance_leg << endl;
 }
 
 

@@ -18,7 +18,7 @@ from config.draco.pybullet_simulation import *
 from util.python_utils import pybullet_util
 from util.python_utils import util
 from util.python_utils import liegroup
-
+from util.python_utils.util import read_config
 import copy
 
 import signal
@@ -26,7 +26,6 @@ import shutil
 import cv2
 
 from loop_rate_limiters import RateLimiter
-import configparser
 
 
 import draco_interface_py
@@ -42,10 +41,6 @@ imu_ang_vel_noise_std_dev = 0.      # based on real IMU: 0.0052
 
 
 # Function to read configuration from file
-def read_config(filename):
-    config = configparser.ConfigParser()
-    config.read(filename)
-    return config
 
 def print_command(rpc_command):
 
@@ -349,7 +344,7 @@ if __name__ == "__main__":
 
     ## connect pybullet sim server
     pb.connect(pb.GUI)
-
+    #pb.connect(pb.DIRECT)
     pb.resetDebugVisualizerCamera(cameraDistance=1,
                                   cameraYaw=90,   #120
                                   cameraPitch=-15,  #-30
@@ -596,10 +591,13 @@ if __name__ == "__main__":
                 print("BREAK", base_com_pos[2])
                 break
 
+        a1 = TicToc()
+        a1.tic()
         rpc_draco_interface.GetCommand(rpc_draco_sensor_data,
                                        rpc_draco_command)
-
-
+        print("WBC time", a1.tocvalue())
+        with open('WBCtime.txt', 'a') as file:
+            file.write(str(a1.tocvalue()) + '\n')
         
         if Config.MEASURE_COMPUTATION_TIME:
             comp_time = timer.tocvalue()
@@ -641,7 +639,13 @@ if __name__ == "__main__":
             cv2.imwrite(filename, frame)
             jpg_count += 1
 
+        a2 = TicToc()
+        a2.tic()
         pb.stepSimulation()  #step simulation
+        print("pybullet step simulation", a2.tocvalue())
+        with open('stepSimtime.txt', 'a') as file:
+            file.write(str(a2.tocvalue()) + '\n')
+
         rate.sleep()  # while loop rate limiter
 
         count += 1
