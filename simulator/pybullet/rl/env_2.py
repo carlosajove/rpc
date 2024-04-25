@@ -113,10 +113,9 @@ def dict_to_numpy(obs_dict):
    
 class DracoEnv_v2(gym.Env):
     metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 50}
-    def __init__(self, mpc_freq, sim_dt, render: bool = False) -> None:
+    def __init__(self, mpc_freq, sim_dt, reduced_obs_size: bool = True,render: bool = False) -> None:
         self._render = render
-        yaw_des = yaw_des*math.pi/180
-        self._yaw_des = yaw_des
+        self._reduced_obs_size = reduced_obs_size
         self._mpc_freq = mpc_freq
         self._sim_dt = sim_dt
         assert Config.CONTROLLER_DT == sim_dt

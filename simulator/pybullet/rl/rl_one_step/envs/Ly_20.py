@@ -13,7 +13,7 @@ from config.draco.pybullet_simulation import *
 from simulator.pybullet.rl.env_2 import *
 
 
-class DracoEnvOneStepMpcRange(DracoEnv_v2):
+class DracoEnvOneStepMpcLy_20(DracoEnv_v2):
     def __init__(self, mpc_freq, sim_dt, burn_in: bool = False, reduced_obs_size: bool = True, render: bool = False) -> None:
         super().__init__(mpc_freq, sim_dt, reduced_obs_size, render)
 
@@ -28,14 +28,14 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
     def _set_observation_space(self):
         if self._reduced_obs_size:
             self.observation_space = gym.spaces.Box(  #observation space added Tr and previous full_action x and y
-                low = np.array([-100]*17),
-                high = np.array([100]*17),
+                low = np.array([-100]*16),
+                high = np.array([100]*16),
                 dtype = np.float64
             )
         else:
             self.observation_space = gym.spaces.Box(  #observation space
-                low = np.array([-100]*71),
-                high = np.array([100]*71),
+                low = np.array([-100]*70),
+                high = np.array([100]*70),
                 dtype = np.float64
             )
 
@@ -59,7 +59,7 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
             joint_obs = np.concatenate((joint_pos, joint_vel))
             policy_obs = np.concatenate((joint_obs, COM))
 
-        policy_obs = np.concatenate((policy_obs, [self._Ly]), axis = 0)
+        #policy_obs = np.concatenate((policy_obs, [self._Ly]), axis = 0)
         return policy_obs
 
     def _normalise_action(self, action):
@@ -86,9 +86,7 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
 
     def set_action_command_in_sensor_data(self):
         #maybe set also time in newer version
-        Ly_list = [-25, -20, -15, -10, -5, 0, 5, 10, 15, 25]
-        self._Ly = random.choice(Ly_list)
-        dir_command = np.array((0, self._Ly, 0))
+        dir_command = np.array((0, 20, 0))
 
         initial_stance_leg = np.random.choice(np.array([-1, 1]))
 
@@ -222,7 +220,7 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
 if __name__ == "__main__":
     import math
     yaw = 20
-    env = DracoEnvOneStepMpcRange(0., 0., 0, 0, Config.CONTROLLER_DT, randomized_command=False, reduced_obs_size=False, render = True)
+    env = DracoEnvOneStepMpcLy_20(0., 0., 0, 0, Config.CONTROLLER_DT, randomized_command=False, reduced_obs_size=False, render = True)
     #from stable_baselines3.common.env_checker import check_env
     #check_env(env)
 

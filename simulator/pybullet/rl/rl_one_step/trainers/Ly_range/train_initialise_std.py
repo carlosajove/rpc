@@ -4,7 +4,7 @@ import numpy as np
 import datetime
 import time
 from math import pi
-
+import torch
 import gymnasium as gym
 
 from stable_baselines3 import PPO
@@ -27,7 +27,7 @@ import argparse
 
 import argparse
 
-new_model = True
+new_model = False
 
 if __name__ == "__main__":
     if not new_model:
@@ -36,7 +36,7 @@ if __name__ == "__main__":
         args = parser.parse_args()
         bash_timesteps = int(args.timesteps)
 
-    n_steps_ = 256 #512
+    n_steps_ = 512 #512
     batch_size_ = 64
     learning_rate_ = 0.0003
     mpc_freq = 0
@@ -61,11 +61,13 @@ if __name__ == "__main__":
     else:
         str1 = 'fullObs'
     
-    save_dir = str1 + f"Ly_range_new_reward" 
-    load_dir = str1 + f"Ly_range_new_reward"
+    save_dir = str1 + f"Ly_range_std_2" 
+    load_dir = str1 + f"Ly_range_std_2"
     load_path = os.path.join(model_dir, load_dir) 
     save_path = os.path.join(model_dir, save_dir)      
     ## train model
+
+    policy_kwargs = {'log_std_init' : -0.5} #previous -0.3
     if new_model:
         tensorboard_dir = cwd + "/rl_log/one_step/ppo/Ly_range/"
 
@@ -76,8 +78,21 @@ if __name__ == "__main__":
                     batch_size=batch_size_, 
                     tensorboard_log=tensorboard_dir, 
                     learning_rate=learning_rate_,
-                    device='cpu') #policy_kwargs=dict(net_arch=[64,64, dict(vf=[], pi=[])]),
+                    policy_kwargs=policy_kwargs,
+                    device = 'cpu') 
          
+
+
+        a = model.get_parameters()
+
+
+        a['policy']['action_net.weight'] = torch.zeros_like(a['policy']['action_net.weight'])
+        a['policy']['action_net.bias'] =  torch.zeros_like(a['policy']['action_net.bias'])
+
+        model.set_parameters(a)
+        b = model.get_parameters()
+        print(b['policy']['action_net.bias'])
+        print(b['policy']['action_net.weight'])
         startTime = time.time()
         TIMESTEPS = 10000
         CURR_TIMESTEP = 0
@@ -91,7 +106,7 @@ if __name__ == "__main__":
         save_env_path = os.path.join(load_path, env_file)
         norm_env = VecNormalize.load(save_env_path, vec_env)
 
-        #learning_rate_ = 0.00003 #OLD LEARNING RATE 0.0003
+        learning_rate_ = 0.00003 #OLD LEARNING RATE 0.0003
         custom_objects = {'learning_rate': learning_rate_}
         model = PPO.load(model_path, env=norm_env, custom_objects=custom_objects)
 
