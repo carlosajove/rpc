@@ -202,7 +202,6 @@ void DracoControlArchitecture::GetCommand(void *command) {
         alipIter = 0;
         sp_->rl_trigger_ = true;
     }
-
     if (verbose == true){
         alip_tm_->saveRobotCommand(sp_->current_time_);
         alip_tm_->saveCurrentCOMstate(sp_->current_time_);

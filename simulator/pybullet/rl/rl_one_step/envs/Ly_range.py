@@ -17,12 +17,13 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
     def __init__(self, mpc_freq, sim_dt, eval:bool = False, burn_in: bool = False, reduced_obs_size: bool = True, render: bool = False) -> None:
         super().__init__(mpc_freq, sim_dt, eval = eval, reduced_obs_size=reduced_obs_size, render=render)
 
+        self._reduced_obs_size = reduced_obs_size
         self._burn_in = burn_in
         if mpc_freq != 0:
             print("FREQ != 0. PLEASE SET FREQ == 0")
             raise Warning
 
-        self._set_max_steps_iter(50)
+        self._set_max_steps_iter(35)
     
     def _set_observation_space(self):
         if self._reduced_obs_size:
@@ -85,7 +86,7 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
 
     def set_action_command_in_sensor_data(self):
         #maybe set also time in newer version
-        Ly_list = [-30, -25, -20, -15, -10, -5, 0, 5, 10, 15, 25, 30]
+        Ly_list = [-25, -20, -15, -10, -5, 0, 5, 10, 15, 25]
         self._Ly = random.choice(Ly_list)
         dir_command = np.array((0, self._Ly, 0))
 
@@ -102,12 +103,12 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
         #reward terms
         self._w_roll_pitch = -0.5
         self._w_com_height = -1
-        self._w_penalise_excessive_Lx = -0.5 
-        self._w_desired_Lx = -3.
-        self._w_desired_Ly = -5.
+        self._w_penalise_excessive_Lx = -4 
+        self._w_desired_Lx = -4
+        self._w_desired_Ly = -10.
         self._w_desired_yaw = -1.
         self._w_excessive_fp = -0.5
-        self._w_excessive_angle = -0.5
+        self._w_excessive_angle = -2
         self._w_termination = -10.
         self._w_alive_bonus = 5.
 

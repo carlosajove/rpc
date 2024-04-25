@@ -20,8 +20,8 @@ from simulator.pybullet.rl.rl_one_step.envs.Ly_range import DracoEnvOneStepMpcRa
 
 from config.draco.pybullet_simulation import Config
 
-model_dir = cwd + "/rl_model/Ly_range/PPO/Ly_range"
-env_dir = cwd + "/rl_env/Ly_range/PPO/Ly_range"
+model_dir = cwd + "/rl_model/Ly_range/PPO"
+env_dir = cwd + "/rl_env/Ly_range/PPO"
 #import tracemalloc
 import argparse
 

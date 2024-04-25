@@ -115,8 +115,6 @@ class DracoEnv_v2(gym.Env):
     metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 50}
     def __init__(self, mpc_freq, sim_dt, eval = None, reduced_obs_size: bool = False, render: bool = False) -> None:
         self._render = render
-        #yaw_des = yaw_des*math.pi/180
-        #self._yaw_des = yaw_des
         self._reduced_obs_size = reduced_obs_size
         self._mpc_freq = mpc_freq
         self._sim_dt = sim_dt

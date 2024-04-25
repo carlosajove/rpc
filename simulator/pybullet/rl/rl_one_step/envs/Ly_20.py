@@ -28,8 +28,8 @@ class DracoEnvOneStepMpcLy_20(DracoEnv_v2):
     def _set_observation_space(self):
         if self._reduced_obs_size:
             self.observation_space = gym.spaces.Box(  #observation space added Tr and previous full_action x and y
-                low = np.array([-100]*17),
-                high = np.array([100]*17),
+                low = np.array([-100]*16),
+                high = np.array([100]*16),
                 dtype = np.float64
             )
         else:

@@ -563,7 +563,7 @@ if __name__ == "__main__":
             #pb.applyExternalForce(draco_humanoid, 1, rand_force, np.zeros(3), flags = pb.WORLD_FRAME)
             #pb.applyExternalForce(draco_humanoid, , rand_force, np.zeros(3), flags = pb.WORLD_FRAME)
         """
-        config = read_config('/home/carlos/Desktop/Austin/SeungHyeonProject/rpc/config/draco/alip_command.ini')
+        config = read_config('/home/carlosaj/Desktop/rpc/config/draco/alip_command.ini')
         try:
             PARAMS = config['Parameters']
             Ly_des    = PARAMS.getfloat('LY_DES')    
