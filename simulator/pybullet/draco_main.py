@@ -449,6 +449,14 @@ if __name__ == "__main__":
     previous_torso_velocity = np.array([0., 0., 0.])
     rate = RateLimiter(frequency=1. / (dt*2))
     i = 0
+
+    #push_info: 
+    #next push iteration time
+    #actual push remaining duration
+    #x dir push N
+    #y dir push N
+    push_trigger = 1000
+    push_ = [-1, -1, -1]
     while (True):
         i += 1
         l_normal_volt_noise = np.random.normal(0, l_contact_volt_noise)
@@ -549,21 +557,55 @@ if __name__ == "__main__":
         if Config.MEASURE_COMPUTATION_TIME:
             timer.tic()
 
+        
+        ############
+        # MPC freq:
+        ############
+        # push done on the robots base
+        # LONG push 1s --> 572 iterations
+        # x dir : N per iteration
+        # y dir : N per iteration
+        # SHORT 0.01s --> 6 iterations
+        # x dir : N per iteration
+        # y dir : N per iteration
+
+        ############
+        # One step:
+        ############
+        # push done on the robots base
+        # LONG push 1s --> 572 iterations
+        # x dir : N per iteration
+        # y dir : N per iteration
+        # SHORT 0.01s --> 6 iterations
+        # x dir : N per iteration
+        # y dir : N per iteration
+
+        freq_push_dict = {'long_push_x': [572, 10, 0], 'short_push_x': [6, 60, 0],
+                          'long_push_y': [572, 0, 10], 'short_push_y': [6, 0, 100]}
+        
+        one_push_dict = {'long_push_x': [572, 50, 0], 'short_push_x': [6, 150, 0],
+                         'long_push_y': [572, 0, 50], 'short_pysh_y': [6, 0, 150]}
+
         """
-        rand_num = np.random.randint(0,2400)
-        if rand_num == 0: 
-            rand_num = np.random.randint(0,2)
-            rand_force = np.zeros(3)
-            if rand_num == 0: 
-                rand_force[0] = 500
-                print("long")
-            elif rand_num == 1: 
-                rand_force[1] = 1000
-                print("lat")
-            #pb.applyExternalForce(draco_humanoid, 1, rand_force, np.zeros(3), flags = pb.WORLD_FRAME)
-            #pb.applyExternalForce(draco_humanoid, , rand_force, np.zeros(3), flags = pb.WORLD_FRAME)
+        #print("dfa")
+        push_trigger -= 1
+        if push_trigger == 0:
+            push_ = freq_push_dict['long_push_x']
+
+        if push_[0] > 0: 
+            push_[0] -= 1
+            force = np.array((push_[1], push_[2],0))
+            print(force)  
+            pb.applyExternalForce(draco_humanoid, 1, force, np.zeros(3), flags = pb.WORLD_FRAME)
+            print("push")
+            if push_[0] == 0: push_trigger = 3000
+
         """
-        config = read_config('/home/carlosaj/Desktop/rpc/config/draco/alip_command.ini')
+
+
+
+
+        config = read_config(cwd+'/config/draco/alip_command.ini')
         try:
             PARAMS = config['Parameters']
             Ly_des    = PARAMS.getfloat('LY_DES')    
@@ -575,7 +617,9 @@ if __name__ == "__main__":
         except KeyError:
             print("hey")
             
-
+        #print(Lx_offset)
+        #print(Ly_des)
+        #print(MPC_freq)
 
         #Lxdes, Lydes, yawdes
         yaw = 0* math.pi/180
@@ -590,14 +634,18 @@ if __name__ == "__main__":
             if (i > 800):
                 print("BREAK", base_com_pos[2])
                 break
-
+        
+        """
         a1 = TicToc()
         a1.tic()
+        """
         rpc_draco_interface.GetCommand(rpc_draco_sensor_data,
                                        rpc_draco_command)
+        """
         print("WBC time", a1.tocvalue())
         with open('WBCtime.txt', 'a') as file:
             file.write(str(a1.tocvalue()) + '\n')
+        """
         
         if Config.MEASURE_COMPUTATION_TIME:
             comp_time = timer.tocvalue()
@@ -638,14 +686,16 @@ if __name__ == "__main__":
             filename = video_dir + '/step%06d.jpg' % jpg_count
             cv2.imwrite(filename, frame)
             jpg_count += 1
-
+        """
         a2 = TicToc()
         a2.tic()
+        """
         pb.stepSimulation()  #step simulation
+        """
         print("pybullet step simulation", a2.tocvalue())
         with open('stepSimtime.txt', 'a') as file:
             file.write(str(a2.tocvalue()) + '\n')
-
+        """
         rate.sleep()  # while loop rate limiter
 
         count += 1

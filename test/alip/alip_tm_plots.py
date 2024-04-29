@@ -5,8 +5,8 @@ import numpy as np
 from plot_utils import *
 matplotlib.use('TkAgg')
 
-lbound_time = 1
-ubound_time = 100
+lbound_time = 0
+ubound_time = 80
 
 script_directory = os.path.dirname(os.path.abspath(__file__))
 
@@ -71,13 +71,12 @@ MpcLegWidth = MpcComState[:,10]
 MpczH = MpcComState[:,11]
 MpcMassCom = MpcComState[:,12]
 MpcTs = MpcComState[:,13]
+
 with open('LandTime.txt', 'r') as file:
     landingTime = [float(line.strip()) for line in file]
 
 
-
 inter = sliceTime(time, lbound_time, ubound_time)
-
 landingTimes_in_range = [t for t in landingTime if lbound_time <= t <= ubound_time]
 
 ############################
@@ -105,7 +104,9 @@ plt.plot(alip_time, mpc_coor_L_y)
 plt.plot(MpctimeCOM, MpcLyCOM)
 plt.title('robot Ly  ')
 for t in landingTime:
+
     plt.axvline(x=t, color='black', linestyle='-', linewidth=0.5)
+
 
 plt.figure()
 plt.plot(alip_time, mpc_coor_L_x)
@@ -114,14 +115,12 @@ plt.title('robot Lx ')
 for t in landingTime:
     plt.axvline(x=t, color='black', linestyle='-', linewidth=0.5)
 
-
 plt.figure()
 plt.plot(alip_time, mpc_coor_L_z)
 plt.plot(MpctimeCOM, MpcLzCOM)
 plt.title('robot Lz ')
 for t in landingTime:
     plt.axvline(x=t, color='black', linestyle='-', linewidth=0.5)
-
 
 
 #Tracking desired Lx, Ly

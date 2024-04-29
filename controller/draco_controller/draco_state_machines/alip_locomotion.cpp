@@ -166,7 +166,7 @@ bool AlipLocomotion::SwitchLeg(){  //ahora asume que tocamos en Tr o antes. Que 
   sp_->Ts_ = Ts;
   sp_->Tr_ = Tr;
   
-  if (switch_leg){ 
+  if ((verbose) && (switch_leg)){ 
     file1 << sp_->current_time_ << endl; 
   }
   sp_->stance_leg_ = stance_leg;

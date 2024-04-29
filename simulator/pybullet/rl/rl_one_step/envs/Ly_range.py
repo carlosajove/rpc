@@ -14,7 +14,7 @@ from simulator.pybullet.rl.env_2 import *
 
 
 class DracoEnvOneStepMpcRange(DracoEnv_v2):
-    def __init__(self, mpc_freq, sim_dt, eval:bool = False, burn_in: bool = False, reduced_obs_size: bool = True, render: bool = False) -> None:
+    def __init__(self, mpc_freq, sim_dt, eval = None, burn_in: bool = False, reduced_obs_size: bool = True, render: bool = False) -> None:
         super().__init__(mpc_freq, sim_dt, eval = eval, reduced_obs_size=reduced_obs_size, render=render)
 
         self._reduced_obs_size = reduced_obs_size
