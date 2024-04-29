@@ -24,7 +24,6 @@ AlipLocomotion::AlipLocomotion(StateId state_id, PinocchioRobotSystem *robot,
     new_leg = false;
 
     file1.open(THIS_COM "/test/alip/LandTime.txt", std::fstream::out);
-
 }
 
 
@@ -166,7 +165,7 @@ bool AlipLocomotion::SwitchLeg(){  //ahora asume que tocamos en Tr o antes. Que 
   sp_->Ts_ = Ts;
   sp_->Tr_ = Tr;
   
-  if (verbose) && (switch_leg){ 
+  if ((verbose) && (switch_leg)){ 
     file1 << sp_->current_time_ << endl; 
   }
   sp_->stance_leg_ = stance_leg;

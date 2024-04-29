@@ -5,8 +5,8 @@ import numpy as np
 from plot_utils import *
 matplotlib.use('TkAgg')
 
-lbound_time = 1
-ubound_time = 32
+lbound_time = 3
+ubound_time = 200
 
 script_directory = os.path.dirname(os.path.abspath(__file__))
 

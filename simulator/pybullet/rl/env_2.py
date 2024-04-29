@@ -113,13 +113,18 @@ def dict_to_numpy(obs_dict):
    
 class DracoEnv_v2(gym.Env):
     metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 50}
-    def __init__(self, mpc_freq, sim_dt, reduced_obs_size: bool = True,render: bool = False) -> None:
+    def __init__(self, mpc_freq, sim_dt, eval = None, reduced_obs_size: bool = True,render: bool = False, disturbance: bool = False) -> None:
         self._render = render
         self._reduced_obs_size = reduced_obs_size
         self._mpc_freq = mpc_freq
         self._sim_dt = sim_dt
         assert Config.CONTROLLER_DT == sim_dt
 
+        if (eval is None) and (disturbance):
+            print("DISTURBANCE MUST NOT BE USED WHILE TRAINING")
+            raise Warning
+        self._disturbance = disturbance
+        self._eval = eval
 
         if self._render:
             self.client = bc.BulletClient(connection_mode=p.GUI)
@@ -275,8 +280,16 @@ class DracoEnv_v2(gym.Env):
         self.previous_torso_velocity = np.array([0., 0., 0.])
         if (self.render): self.rate = RateLimiter(frequency=1./(self.dt))
 
-
-        self.set_action_command_in_sensor_data()
+        if (self._eval is None):
+            self.set_action_command_in_sensor_data()
+        else:
+            dir_command = np.array((self._eval[0], self._eval[1], self._eval[2]))
+            self._Lx = dir_command[0]
+            self._Ly = dir_command[1]
+            self._yaw = dir_command[2]
+            initial_stance_leg = np.random.choice(np.array([-1, 1]))
+            self._rpc_draco_sensor_data.initial_stance_leg_ = initial_stance_leg
+            self._rpc_draco_sensor_data.policy_command_ = dir_command
 
         self._iter = 0
         pol_obs, reward, done, truncate, info_ = self.step(np.zeros(3))
@@ -320,15 +333,12 @@ class DracoEnv_v2(gym.Env):
             self.previous_torso_velocity = pybullet_util_rl.get_link_vel(
                             self.robot, self.link_id_dict['torso_imu'], self.client)[3:6]
 
-            """TODO: PUSH ROBOT
-            rand_num = np.random.randint(0,800)
-            if rand_num == 0: 
-                rand_num = np.random.randint(0,2)
-                rand_force = np.zeros(3)
-                if rand_num == 0: rand_force[0] = 5000
-                elif rand_num == 1: rand_force[1] = 5000
-                self.client.applyExternalForce(self.robot, -1, rand_force, np.zeros(3), flags = self.client.WORLD_FRAME)
-            """
+            
+
+            if self._disturbance:
+                self.apply_disturbance()
+
+
             self.client.stepSimulation()
             if self._render: self.rate.sleep()
             done = self._compute_termination(self._rpc_draco_command.wbc_obs_)
@@ -353,6 +363,10 @@ class DracoEnv_v2(gym.Env):
 
         #self.dataf
         return policy_obs, reward, done, truncate, info 
+
+
+    def apply_disturbance(self):
+        raise NotImplementedError
 
     def _normalise_action(self, action):
         raise NotImplementedError
@@ -405,7 +419,15 @@ class DracoEnv_v2(gym.Env):
     def _set_max_steps_iter(self, max):
         self._max_iter = max
 
+    def _set_command_policy_sim(self, Lx, Ly, yaw, ini_st_leg):
+        self._Lx = Lx
+        self._Ly = Ly
+        self._yaw = yaw
+        dir_command = np.array((Lx, Ly, yaw))
+        initial_stance_leg = ini_st_leg
 
+        self._rpc_draco_sensor_data.initial_stance_leg_ = initial_stance_leg
+        self._rpc_draco_sensor_data.policy_command_ = dir_command
 
     def _debug_sensor_data(self):
         ###############################################################################

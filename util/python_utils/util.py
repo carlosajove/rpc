@@ -5,7 +5,13 @@ import numpy as np
 import json
 import multiprocessing as mp
 from tqdm import tqdm
+import configparser
 
+
+def read_config(filename):
+    config = configparser.ConfigParser()
+    config.read(filename)
+    return config
 
 def pretty_print(ob):
     print(json.dumps(ob, indent=4))
