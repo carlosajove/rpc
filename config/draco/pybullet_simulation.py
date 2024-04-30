@@ -11,7 +11,7 @@ class Config(object):
 
     PRINT_ROBOT_INFO = False
 
-    MEASURE_COMPUTATION_TIME = True
+    MEASURE_COMPUTATION_TIME = False
 
     VIDEO_RECORD = False
     RECORD_FREQ = 50

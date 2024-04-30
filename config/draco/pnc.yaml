@@ -389,15 +389,15 @@ lmpc_walking:
 #mpc freq == 0 --> mu = 0.4
 #mpc freq == 5 --> mu = 0.1
 alip_mpc_walking:
-  verbose: true
-  save_freq: 3
+  verbose: false
+  save_freq: 1
   new_solver: false #true is better for mpc freq
   #mpc_freq: 0  #50aag
   step_horizon: "4"
   intervals: "2"
   Ts: 0.275    #0.25  #Greater Ts makes offset increase also
-  stance_leg: 1 # -1: RIGHT SWING TO START; 1: LEFT SWING TO START
-  leg_width: 0.05 #0.1
+  stance_leg: -1 # -1: RIGHT SWING TO START; 1: LEFT SWING TO START
+  leg_width: 0.05 #0.1 0.05
   zH: 0.69   #this will be the reference height target. The height for the mpc will be another
   mu: 0.2
   total_mass: 39.15342    

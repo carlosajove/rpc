@@ -12,11 +12,11 @@ from config.draco.pybullet_simulation import *
 from simulator.pybullet.rl.env_2 import *
 
 
-class DracoEnvMpcFreq_turn_30(DracoEnv_v2):
+class DracoEnvMpcFreq_turn_25(DracoEnv_v2):
     def __init__(self, mpc_freq, sim_dt, eval = None, burn_in: bool = False, reduced_obs_size: bool = False, render: bool = False, disturbance: bool = False) -> None:
         super().__init__(mpc_freq=mpc_freq, sim_dt=sim_dt, reduced_obs_size=reduced_obs_size, render=render, eval = eval, disturbance = disturbance)
         
-        self._reduced_obs_size = reduced_obs_size
+        #self._reduced_obs_size = reduced_obs_size
         self._burn_in = burn_in
         if mpc_freq == 0:
             print("FREQ SET TO 0. PLEASE INCREASE FREQ")
@@ -24,9 +24,7 @@ class DracoEnvMpcFreq_turn_30(DracoEnv_v2):
         
         self._set_max_steps_iter(32*35)
 
-
-        #Parameters not to be used in this context
-        self._freq_push_dict = {'long_push_x': [572, 10, 0], 'short_push_x': [6, 60, 0],
+        self._freq_push_dict = {'long_push_x': [572, 10, 0], 'short_push_x': [6, 80, 0],
                                 'long_push_y': [572, 0, 10], 'short_push_y': [6, 0, 100]}
         self._push_trigger = 2000
         self._push_ = [-1, -1, -1]
@@ -73,13 +71,12 @@ class DracoEnvMpcFreq_turn_30(DracoEnv_v2):
                 self.link_id_dict, self.client)
             joint_obs = np.concatenate((joint_pos, joint_vel))
             policy_obs = np.concatenate((joint_obs, COM))
-
         return policy_obs
 
     def _normalise_action(self, action):
         _wbc_action = np.zeros(3)
-        _wbc_action[0:2] = 0.2*action[0:2]
-        _wbc_action[2] = 0.3*action[2]
+        _wbc_action = 0.15*action
+
         if self._burn_in:
             _wbc_action = 0*_wbc_action
         return _wbc_action
@@ -91,20 +88,18 @@ class DracoEnvMpcFreq_turn_30(DracoEnv_v2):
                 if _wbc_obs[6] > 1:
                     return True
                 if _wbc_obs[6] < 0.45:
-
                     return True
                 if np.abs(_wbc_obs[7]) > (np.abs(self._Lx_main+_wbc_obs[1])+100):
 
                     return True
                 if np.abs(_wbc_obs[8] - _wbc_obs[2]) > 50:
+
                     return True
         return False
     
     def set_action_command_in_sensor_data(self):
         #maybe set also time in newer version
-        yaw = 30
-        yaw /= 180
-        yaw *= math.pi
+        yaw = 25/180 * math.pi
         dir_command = np.array((0, 0, yaw))
 
         initial_stance_leg = np.random.choice(np.array([-1, 1]))
@@ -117,16 +112,16 @@ class DracoEnvMpcFreq_turn_30(DracoEnv_v2):
         #reward terms
         self._w_roll_pitch = -0.5
         self._w_com_height = -1
-        self._w_penalise_excessive_Lx = -2 
-        self._w_desired_Lx = -1
-        self._w_desired_Ly = -3.
-        self._w_desired_yaw = -5.
-        self._w_excessive_fp = -0.5
-        self._w_excessive_angle = -2
-        self._w_termination = 0.
-        self._w_alive_bonus = 6.
-        self._w_intra_pol = 0.01
-        self._w_intra_Lx = 0.005
+        self._w_penalise_excessive_Lx = 0.6
+        self._w_desired_Lx = 0.4
+        self._w_desired_Ly = 1
+        self._w_desired_yaw = 2.
+        self._w_excessive_fp = -1
+        self._w_excessive_angle = -3
+        self._w_termination = 0
+        self._w_alive_bonus = 1
+        self._w_intra_pol = 0.04
+        self._w_intra_Lx = 0.01
         self._w_intra_Ly = 0.005
 
 
@@ -178,8 +173,8 @@ class DracoEnvMpcFreq_turn_30(DracoEnv_v2):
         error = L - self._new_wbc_obs[7]  #+ self._old_wbc_obs[1:3] - self._new_wbc_obs[9:11]  #desired Lx,y - observedLx,y at the end of the step
         error /= (self._mass*self._zH)
         
-        error = np.square(error)
-        #error = np.exp(-error)
+        error = np.square(error/0.1)
+        error = np.exp(-error)
 
         error *= self._w_desired_Lx
         return error
@@ -188,10 +183,11 @@ class DracoEnvMpcFreq_turn_30(DracoEnv_v2):
         error = np.abs(self._new_wbc_obs[7] - self._old_wbc_obs[1]) - self._Lx_main
         error /= (self._mass*self._zH)
 
-        if error > 0:
-            error *= self._w_penalise_excessive_Lx
-            return error
-        return 0
+        if error < 0:
+            return self._w_penalise_excessive_Lx
+        error = np.square(error)
+        error = np.exp(-error/0.01)
+        return error
         
     
     def reward_tracking_com_Ly(self):
@@ -199,7 +195,7 @@ class DracoEnvMpcFreq_turn_30(DracoEnv_v2):
         error /= (self._mass*self._zH)
 
         error = np.square(error)
-        #error = np.exp(-error)
+        error = np.exp(-error/0.01)
 
         error *= self._w_desired_Ly
         return error
@@ -208,7 +204,8 @@ class DracoEnvMpcFreq_turn_30(DracoEnv_v2):
         error = self._new_wbc_obs[15] - self._old_wbc_obs[15] - self._old_wbc_obs[3]
         #error = np.square(error)
         #eror = np.exp(-error)
-        error = np.abs(error)
+        error = np.square(error)
+        error = np.exp(-error/0.01)
         error *= self._w_desired_yaw
 
         return error
@@ -230,17 +227,17 @@ class DracoEnvMpcFreq_turn_30(DracoEnv_v2):
         return error
    
     def penalise_excessive_fp(self):
-        #error = np.sum(np.square(self._rl_action[0:2]))
+        error = np.sum(np.square(self._rl_action[0:2]))
         #error = np.exp(-error)
-        error = scipy.linalg.norm(self._rl_action[0:2])
+        #error = scipy.linalg.norm(self._rl_action[0:2])
 
         error *= self._w_excessive_fp
         return error
    
     def penalise_excessive_yaw(self):
-        #rror = np.square(self._rl_action[2])
+        error = np.square(self._rl_action[2])
         #error = np.exp(-error)
-        error = np.abs(self._rl_action[2])
+        #error = np.abs(self._rl_action[2])
         error *= self._w_excessive_angle
        
         return error
@@ -249,7 +246,7 @@ class DracoEnvMpcFreq_turn_30(DracoEnv_v2):
         error = self._new_wbc_obs[17:20] - self._old_wbc_obs[17:20]
         error /= self._sim_dt*self._mpc_freq
         error = np.sum(np.square(error))
-        error = np.exp(-error)
+        error = np.exp(-error/0.01)
         return self._w_intra_pol * error
     
     def r_intra_excessive_Lx(self):
@@ -259,13 +256,14 @@ class DracoEnvMpcFreq_turn_30(DracoEnv_v2):
         if error < 0:
             return self._w_intra_Lx
         
-        error = np.exp(-error)
+        error = np.exp(-error/0.01)
         return self._w_intra_Lx * error
     
     def r_intra_excessive_Ly(self):
         error = self._old_wbc_obs[2] - self._new_wbc_obs[8]
         error /= (self._mass*self._zH)
-        error *= error
+        error = np.square(error)
+        error = np.exp(-error/0.04)
         return self._w_intra_Ly * error
 
 
@@ -274,14 +272,31 @@ class DracoEnvMpcFreq_turn_30(DracoEnv_v2):
         self._push_trigger -= 1
         #print(self._push_trigger)
         if self._push_trigger == 0:
-            self._push_ = copy.deepcopy(self._freq_push_dict['short_push_x'])
-            print("heywo", self._push_)
+            choice = np.random.randint(0,4)
+            if choice == 0:
+                print("short_push x ")
+                self._push_ = copy.deepcopy(self._freq_push_dict['short_push_x'])
+            elif choice == 1:
+                print("short_push y")
+
+                self._push_ = copy.deepcopy(self._freq_push_dict['short_push_y'])
+            elif choice == 2:
+                print("long_push x ")
+
+                self._push_ = copy.deepcopy(self._freq_push_dict['long_push_x'])
+            else :
+                print("long_push y")
+
+                self._push_ = copy.deepcopy(self._freq_push_dict['long_push_y'])
+
+            self._push_dir = np.random.choice([-1, 1])
         if self._push_[0] > 0: 
             self._push_[0] -= 1
             force = np.array((self._push_[1], self._push_[2],0))
-            print(force)  
+            force *= self._push_dir
+            #print(force)  
             self.client.applyExternalForce(self.robot, 1, force, np.zeros(3), flags = self.client.WORLD_FRAME)
-            print("push")
+            #print("push")
             if self._push_[0] == 0: self._push_trigger = 3000
 
 
@@ -289,7 +304,7 @@ class DracoEnvMpcFreq_turn_30(DracoEnv_v2):
 
 
 if __name__ == "__main__":
-    env = DracoEnvMpcFreq_turn_30( 5, Config.CONTROLLER_DT, reduced_obs_size=True, render = True)
+    env = DracoEnvMpcFreq_turn_25( 5, Config.CONTROLLER_DT, reduced_obs_size=True, render = True)
     from stable_baselines3.common.env_checker import check_env
     check_env(env)
 
@@ -299,7 +314,7 @@ if __name__ == "__main__":
     flag = False
 
     while True:
-        action = 0.2*np.random.randn(3)
+        action = 0*np.random.randn(3)
         obs, reward, done, trunc, info = env.step(action)
         print(info['reward_components'])
         if done or trunc:

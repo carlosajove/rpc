@@ -518,7 +518,7 @@ void AlipMpcTrajectoryManager::saveCOMstateMPCcoor(const double t){
   Eigen::Vector3d L = L_st + Lc;
 
   file11 << pos.transpose() << " " << vel.transpose() << " ";
-  file11 << Lc.transpose() << " " << L.transpose() << " ";
+  file11 << L_st.transpose() << " " << Lc.transpose() << " ";
   file11 << L.transpose() << " " << t << endl;
 
 

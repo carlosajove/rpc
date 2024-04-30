@@ -120,8 +120,8 @@ class DracoEnv_v2(gym.Env):
         self._sim_dt = sim_dt
         assert Config.CONTROLLER_DT == sim_dt
         if (eval is None) and (disturbance):
-            print("DISTURBANCE MUST NOT BE USED WHILE TRAINING")
-            raise Warning
+            print("DISTURBANCE MUST NOT BE USED WHILE TRAINING UNLESS DIST ENV")
+            #raise Warning
         self._disturbance = disturbance
         self._eval = eval
 

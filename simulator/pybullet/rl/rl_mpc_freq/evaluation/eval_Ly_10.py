@@ -27,7 +27,7 @@ from stable_baselines3.common.monitor import Monitor
 from util.python_utils.util import read_config
 
 
-from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_Ly_10 import DracoEnvMpcFreq_Ly_10
+from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_Ly_10_new_reward import DracoEnvMpcFreq_Ly_10_new_reward
 
 if __name__ == "__main__":
     #from stable_baselines3.common.env_checker import check_env
@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
     #load_path = os.path.join('/home/carlos/Desktop/Austin/RL results/Ly_range/PPO', 'redObsLy_range_std_2')
     load_path = os.path.join(cwd, 'rl_model/freq_env/Ly_10/PPO/redObsLy_10_new_reward')
-    CURR_TIMESTEP = 3400000
+    CURR_TIMESTEP = 4400000
     model_name = f'_TIME{CURR_TIMESTEP}.zip'
     norm_name = f'TIME{CURR_TIMESTEP}.pkl'
     norm_path = os.path.join(load_path, norm_name)
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     mpc_freq = 5
     sim_dt = Config.CONTROLLER_DT
 
-    env = DracoEnvMpcFreq_Ly_10(mpc_freq, sim_dt, eval = [0, 10, 0], reduced_obs_size=reduced_obs_size, render = True)
+    env = DracoEnvMpcFreq_Ly_10_new_reward(mpc_freq, sim_dt, eval = [0, 10, 0], reduced_obs_size=reduced_obs_size, render = True)
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
     norm_env = VecNormalize.load(norm_path, vec_env)

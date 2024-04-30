@@ -12,7 +12,7 @@ from config.draco.pybullet_simulation import *
 from simulator.pybullet.rl.env_2 import *
 
 
-class DracoEnvMpcFreq_Ly_10_new_reward(DracoEnv_v2):
+class DracoEnvMpcFreq_Ly_10_dist(DracoEnv_v2):
     def __init__(self, mpc_freq, sim_dt, eval = None, burn_in: bool = False, reduced_obs_size: bool = False, render: bool = False, disturbance: bool = False) -> None:
         super().__init__(mpc_freq=mpc_freq, sim_dt=sim_dt, reduced_obs_size=reduced_obs_size, render=render, eval = eval, disturbance = disturbance)
         
@@ -22,11 +22,11 @@ class DracoEnvMpcFreq_Ly_10_new_reward(DracoEnv_v2):
             print("FREQ SET TO 0. PLEASE INCREASE FREQ")
             raise Warning
         
-        self._set_max_steps_iter(32*35)
+        self._set_max_steps_iter(32*150)
 
         self._freq_push_dict = {'long_push_x': [572, 10, 0], 'short_push_x': [6, 80, 0],
                                 'long_push_y': [572, 0, 10], 'short_push_y': [6, 0, 100]}
-        self._push_trigger = 2000
+        self._push_trigger = 1000
         self._push_ = [-1, -1, -1]
         #raise Warning
 
@@ -83,18 +83,14 @@ class DracoEnvMpcFreq_Ly_10_new_reward(DracoEnv_v2):
         if np.abs(_wbc_obs[23] - 12) < 0.5:  #12 is the alip state
             if _wbc_obs is not None:
                 #condition = np.any((_wbc_obs[6] < 0.5) | (_wbc_obs[6] > 0.8))  #0.69
-                if _wbc_obs[6] > 1:
-                    print("high com")
+                if _wbc_obs[6] > 1.1:
                     return True
-                if _wbc_obs[6] < 0.45:
-                    print("low com")
+                if _wbc_obs[6] < 0.35:
                     return True
-                if np.abs(_wbc_obs[7]) > (np.abs(self._Lx_main+_wbc_obs[1])+100):
-                    print("high Lx")
+                if np.abs(_wbc_obs[7]) > (np.abs(self._Lx_main+_wbc_obs[1])+150):
 
                     return True
-                if np.abs(_wbc_obs[8] - _wbc_obs[2]) > 50:
-                    print("high Ly")
+                if np.abs(_wbc_obs[8] - _wbc_obs[2]) > 100:
 
                     return True
         return False
@@ -273,24 +269,24 @@ class DracoEnvMpcFreq_Ly_10_new_reward(DracoEnv_v2):
         self._push_trigger -= 1
         #print(self._push_trigger)
         if self._push_trigger == 0:
-            choice = np.random.randint(0,4)
-            if choice == 0:
-                print("short_push x ")
-                self._push_ = copy.deepcopy(self._freq_push_dict['short_push_x'])
-            elif choice == 1:
-                print("short_push y")
+            timing = np.random.randint(200)
+            if timing == 0:
+                choice = np.random.randint(0,4)
+                if choice == 0:
+                    self._push_ = copy.deepcopy(self._freq_push_dict['short_push_x'])
+                elif choice == 1:
 
-                self._push_ = copy.deepcopy(self._freq_push_dict['short_push_y'])
-            elif choice == 2:
-                print("long_push x ")
+                    self._push_ = copy.deepcopy(self._freq_push_dict['short_push_y'])
+                elif choice == 2:
 
-                self._push_ = copy.deepcopy(self._freq_push_dict['long_push_x'])
-            else :
-                print("long_push y")
+                    self._push_ = copy.deepcopy(self._freq_push_dict['long_push_x'])
+                else :
 
-                self._push_ = copy.deepcopy(self._freq_push_dict['long_push_y'])
+                    self._push_ = copy.deepcopy(self._freq_push_dict['long_push_y'])
 
-            self._push_dir = np.random.choice([-1, 1])
+                self._push_dir = np.random.choice([-1, 1])
+            else:
+                self._push_trigger = 1 
         if self._push_[0] > 0: 
             self._push_[0] -= 1
             force = np.array((self._push_[1], self._push_[2],0))
@@ -298,7 +294,7 @@ class DracoEnvMpcFreq_Ly_10_new_reward(DracoEnv_v2):
             #print(force)  
             self.client.applyExternalForce(self.robot, 1, force, np.zeros(3), flags = self.client.WORLD_FRAME)
             #print("push")
-            if self._push_[0] == 0: self._push_trigger = 3000
+            if self._push_[0] == 0: self._push_trigger = 2000
 
 
 
