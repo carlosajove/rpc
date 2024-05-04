@@ -577,7 +577,7 @@ void AlipMpcTrajectoryManager::saveTrajectories(const double start_time, const d
 */
   saveCounter++;
   if (!file2.is_open() || !file3.is_open() || !file4.is_open() || !file5.is_open() || !file6.is_open()) {
-      std::cerr << "Error: Unable to open one or more files for writing." << std::endl;
+      //std::cerr << "Error: Unable to open one or more files for writing." << std::endl;
       return;
   }
   file2 <<"start------"<< saveCounter << "------------------------" << std::endl;

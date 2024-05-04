@@ -455,7 +455,7 @@ if __name__ == "__main__":
     #actual push remaining duration
     #x dir push N
     #y dir push N
-    push_trigger = 1000
+    push_trigger = 2000
     push_ = [-1, -1, -1]
     while (True):
         i += 1
@@ -580,27 +580,29 @@ if __name__ == "__main__":
         # x dir : N per iteration
         # y dir : N per iteration
 
-        freq_push_dict = {'long_push_x': [572, 10, 0], 'short_push_x': [6, 60, 0],
-                          'long_push_y': [572, 0, 10], 'short_push_y': [6, 0, 100]}
+        freq_push_dict = {'long_push_x': [572, 10, 0], 'short_push_x': [10, 250, 0],
+                          'long_push_y': [572, 0, 10], 'short_push_y': [10, 0, 250]}
+        
         
         one_push_dict = {'long_push_x': [572, 50, 0], 'short_push_x': [6, 150, 0],
-                         'long_push_y': [572, 0, 50], 'short_pysh_y': [6, 0, 150]}
+                         'long_push_y': [572, 0, 50], 'short_push_y': [6, 0, 150]}
 
         """
         #print("dfa")
         push_trigger -= 1
         if push_trigger == 0:
             push_ = freq_push_dict['long_push_x']
+            print("new push")
 
         if push_[0] > 0: 
             push_[0] -= 1
             force = np.array((push_[1], push_[2],0))
-            print(force)  
-            pb.applyExternalForce(draco_humanoid, 1, force, np.zeros(3), flags = pb.WORLD_FRAME)
-            print("push")
+            push_list = [-1, 0, 38]
+            for i in push_list:
+                pb.applyExternalForce(draco_humanoid,-1 , force, np.zeros(3), flags = pb.LINK_FRAME)
             if push_[0] == 0: push_trigger = 3000
-
         """
+        
 
 
 

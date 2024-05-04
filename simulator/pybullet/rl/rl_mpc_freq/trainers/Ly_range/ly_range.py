@@ -16,7 +16,8 @@ from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback,
 cwd = os.getcwd()
 sys.path.append(cwd)
 sys.path.append(cwd + "/build/lib")
-from simulator.pybullet.rl.rl_mpc_freq.envs.disturbance_env_Ly_10 import DracoEnvMpcFreq_Ly_10_dist
+from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_Ly_Range_new_reward import DracoEnvMpcFreq_Ly_range_new_reward
+
 from config.draco.pybullet_simulation import Config
 
 model_dir = cwd + "/rl_model/freq_env/Ly_10/PPO"
@@ -24,7 +25,7 @@ env_dir = cwd + "/rl_env/freq_env/Ly_10/PPO"
 #import tracemalloc
 import argparse
 import torch
-new_model = False
+new_model = True
 
 if __name__ == "__main__":
     if not new_model:
@@ -33,7 +34,7 @@ if __name__ == "__main__":
         args = parser.parse_args()
         bash_timesteps = int(args.timesteps)
 
-    n_steps_ = 8192 #256
+    n_steps_ = 16384 #256
     batch_size_ = 1024
     learning_rate_ = 0.0003
     mpc_freq = 5
@@ -41,13 +42,13 @@ if __name__ == "__main__":
     reduced_obs_size = True
 
     render = False
-    env = DracoEnvMpcFreq_Ly_10_dist(mpc_freq, sim_dt, reduced_obs_size=reduced_obs_size, render = False, disturbance=True)
+    env = DracoEnvMpcFreq_Ly_range_new_reward(mpc_freq, sim_dt, reduced_obs_size=reduced_obs_size, render = False)
 
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
 
     #MODEL EVALUATION
-    eval_env = DracoEnvMpcFreq_Ly_10_dist(mpc_freq, sim_dt,reduced_obs_size=reduced_obs_size, render = render, disturbance=True)
+    eval_env = DracoEnvMpcFreq_Ly_range_new_reward(mpc_freq, sim_dt,reduced_obs_size=reduced_obs_size, render = render)
     eval_monitor_env = Monitor(eval_env)
     eval_vec_env = DummyVecEnv([lambda: eval_monitor_env])
     norm_eval_env = VecNormalize(eval_vec_env,norm_obs = True, norm_reward = False, clip_obs = 60, gamma = 0.99)
@@ -57,9 +58,9 @@ if __name__ == "__main__":
         str1 = 'redObs'
     else:
         str1 = 'fullObs'
-
-    save_dir = str1 + f"Ly_10_disturbance_full" 
-    load_dir = str1 + f"Ly_10_disturbance_full"
+    
+    save_dir = str1 + f"Ly_range_new_reward" 
+    load_dir = str1 + f"Ly_range_new_reward"
     load_path = os.path.join(model_dir, load_dir) 
     save_path = os.path.join(model_dir, save_dir)      
     ## train model

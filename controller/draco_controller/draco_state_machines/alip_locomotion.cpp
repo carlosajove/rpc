@@ -69,8 +69,8 @@ void AlipLocomotion::FirstVisit(){  //represents when MPC computation
   new_leg = false;
 
   if (verbose){
-    ctrl_arch_->alip_tm_->saveTrajectories(0, Ts/20, Ts);
-    util::PrettyConstructor(3, "Trajectories saved");
+    //ctrl_arch_->alip_tm_->saveTrajectories(0, Ts/20, Ts);
+    //util::PrettyConstructor(3, "Trajectories saved");
   }
   if (stance_leg == 1) {
     sp_->b_lf_contact_ = false;
@@ -87,11 +87,12 @@ void AlipLocomotion::FirstVisit(){  //represents when MPC computation
 
   }
 
-
+  /*
   if (verbose){
     ctrl_arch_->alip_tm_->saveTrajectories(0, Ts/20, Ts);
     util::PrettyConstructor(3, "Trajectories saved");
   }
+  */
 
 
 }
@@ -123,10 +124,10 @@ bool AlipLocomotion::SwitchLeg(){  //ahora asume que tocamos en Tr o antes. Que 
   if (sp_->current_time_ - state_machine_start_time_ > 0.5*Ts){
     //if ((stance_leg == 1) && (sp_->b_lf_contact_)){  //right stance, left swing
     if((stance_leg == 1) && (robot_->GetLinkIsometry(draco_link::l_foot_contact).translation()(2) < 0.00005)){
-      if (verbose){
-        util::PrettyConstructor(2, "Switch Leg AlipLocomotion true ");
-        std::cout << "Right stance to left" << " | Tr:" << Tr << "  | state machine time:" << state_machine_time_  <<std::endl;
-      }
+      //if (verbose){
+        //util::PrettyConstructor(2, "Switch Leg AlipLocomotion true ");
+        //std::cout << "Right stance to left" << " | Tr:" << Tr << "  | state machine time:" << state_machine_time_  <<std::endl;
+      //}
       stance_leg *= -1;
       //ctrl_arch_->alip_tm_->RToLstance();
       //update the force managers
@@ -145,10 +146,10 @@ bool AlipLocomotion::SwitchLeg(){  //ahora asume que tocamos en Tr o antes. Que 
 
     }  //else if((stance_leg == -1) && (sp_->b_rf_contact_)){
     else if((stance_leg == -1) && (robot_->GetLinkIsometry(draco_link::r_foot_contact).translation()(2) < 0.00005)){
-      if (verbose){
-        util::PrettyConstructor(2, "Switch Leg AlipLocomotion true ");
-        std::cout << "Left stance to right" << " | Tr:" << Tr << "  | state machine time:" << state_machine_time_ <<std::endl;
-      }
+      //if (verbose){
+        //util::PrettyConstructor(2, "Switch Leg AlipLocomotion true ");
+        //std::cout << "Left stance to right" << " | Tr:" << Tr << "  | state machine time:" << state_machine_time_ <<std::endl;
+      //}
       stance_leg *=-1;
 
       switch_leg = true;

@@ -289,6 +289,9 @@ class DracoEnv_v2(gym.Env):
         self._iter = 0
         pol_obs, reward, done, truncate, info_ = self.step(np.zeros(3))
         #ACTION COMMAND WILL CHANGE ONCE PER EPISODE NOT DURING STEPS
+        #self._push_trigger = 1000
+        
+        self._push_trigger = self._set_push_trigger()
 
         if self._render:
             info = {
@@ -309,6 +312,13 @@ class DracoEnv_v2(gym.Env):
                 done = True
                 print("hehe")
                 break
+            
+            if (self._render):
+                basePos, baseOrn = self.client.getBasePositionAndOrientation(self.robot) 
+                self.client.resetDebugVisualizerCamera( cameraDistance=2,
+                                                        cameraYaw=120,
+                                                        cameraPitch=-30,
+                                                        cameraTargetPosition=basePos+np.array([1, 0.5, -basePos[2]+1]))
 
             wbc_action = self._normalise_action(action)
             self._rl_action = wbc_action
@@ -357,6 +367,9 @@ class DracoEnv_v2(gym.Env):
 
         #self.dataf
         return policy_obs, reward, done, truncate, info 
+
+    def _set_push_trigger(self):
+        raise NotImplementedError
 
     def apply_disturbance(self):
         raise NotImplementedError

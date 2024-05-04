@@ -27,15 +27,15 @@ from stable_baselines3.common.monitor import Monitor
 from util.python_utils.util import read_config
 
 
-from simulator.pybullet.rl.rl_mpc_freq.envs.freq_en_Ly_10_r_7 import DracoEnvMpcFreq_Ly_10_v7
+from simulator.pybullet.rl.rl_mpc_freq.envs.disturbance_env_Ly_10 import DracoEnvMpcFreq_Ly_10_dist
 
 if __name__ == "__main__":
     #from stable_baselines3.common.env_checker import check_env
     #check_env(env)
 
     #load_path = os.path.join('/home/carlos/Desktop/Austin/RL results/Ly_range/PPO', 'redObsLy_range_std_2')
-    load_path = os.path.join(cwd, 'rl_model/freq_env/Ly_10/PPO/redObsLy_10_r7')
-    CURR_TIMESTEP = 6000000
+    load_path = os.path.join(cwd, 'rl_model/freq_env/Ly_10/PPO/redObsLy_10_disturbance')
+    CURR_TIMESTEP = 9400000
     model_name = f'_TIME{CURR_TIMESTEP}.zip'
     norm_name = f'TIME{CURR_TIMESTEP}.pkl'
     norm_path = os.path.join(load_path, norm_name)
@@ -45,7 +45,12 @@ if __name__ == "__main__":
     mpc_freq = 5
     sim_dt = Config.CONTROLLER_DT
 
-    env = DracoEnvMpcFreq_Ly_10_v7(mpc_freq, sim_dt, eval = [0, 10, 0], reduced_obs_size=reduced_obs_size, render = True)
+    env = DracoEnvMpcFreq_Ly_10_dist(mpc_freq, 
+                                sim_dt, 
+                                eval = [0, 10, 0], 
+                                reduced_obs_size=reduced_obs_size, 
+                                render = True,
+                                disturbance = True)
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
     norm_env = VecNormalize.load(norm_path, vec_env)
@@ -77,22 +82,21 @@ if __name__ == "__main__":
             print("hey")
 
         ini_st_leg = np.random.choice([1, -1])  
-        #env._set_command_policy_sim(0, 10, 0, ini_st_leg)
+        # env._set_command_policy_sim(0, 10, 0, ini_st_leg)
         env._set_command_policy_sim(Lx_offset, Ly_des, 0, ini_st_leg)
 
-        print("action: ",         env._normalise_action(action))
+        #print("action: ",         env._normalise_action(action))
         if des_com_yaw != 0:
             action *=0
         obs, reward, done, trunc, info = env.step(action)
+        #print(obs)
         obs = norm_env.normalize_obs(obs)
-        print("reward", reward)
-        print("reward info", info["reward_components"])
+        #print("reward", reward)
+        #print("reward info", info["reward_components"])
         if done:
             print(done)
             obs,info = env.reset()
-            print(obs)
             obs = norm_env.normalize_obs(obs)
-            print(obs)
         """
         if counter > 20*32:
             counter = 0

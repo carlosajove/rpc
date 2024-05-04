@@ -34,8 +34,8 @@ if __name__ == "__main__":
     #check_env(env)
 
     #load_path = os.path.join('/home/carlos/Desktop/Austin/RL results/Ly_range/PPO', 'redObsLy_range_std_2')
-    load_path = os.path.join(cwd, 'rl_model/freq_env/Ly_10/PPO/redObsLy_10_new_reward')
-    CURR_TIMESTEP = 4400000
+    load_path = os.path.join(cwd, 'rl_model/freq_env/Ly_10/PPO/redObsLy_10_disturbance_full')
+    CURR_TIMESTEP = 10000000
     model_name = f'_TIME{CURR_TIMESTEP}.zip'
     norm_name = f'TIME{CURR_TIMESTEP}.pkl'
     norm_path = os.path.join(load_path, norm_name)

@@ -16,7 +16,8 @@ from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback,
 cwd = os.getcwd()
 sys.path.append(cwd)
 sys.path.append(cwd + "/build/lib")
-from simulator.pybullet.rl.rl_mpc_freq.envs.disturbance_env_Ly_10 import DracoEnvMpcFreq_Ly_10_dist
+from simulator.pybullet.rl.rl_mpc_freq.envs.freq_en_Ly_10_r_7 import DracoEnvMpcFreq_Ly_10_v7
+
 from config.draco.pybullet_simulation import Config
 
 model_dir = cwd + "/rl_model/freq_env/Ly_10/PPO"
@@ -41,13 +42,13 @@ if __name__ == "__main__":
     reduced_obs_size = True
 
     render = False
-    env = DracoEnvMpcFreq_Ly_10_dist(mpc_freq, sim_dt, reduced_obs_size=reduced_obs_size, render = False, disturbance=True)
+    env = DracoEnvMpcFreq_Ly_10_v7(mpc_freq, sim_dt, reduced_obs_size=reduced_obs_size, render = render)
 
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
 
     #MODEL EVALUATION
-    eval_env = DracoEnvMpcFreq_Ly_10_dist(mpc_freq, sim_dt,reduced_obs_size=reduced_obs_size, render = render, disturbance=True)
+    eval_env = DracoEnvMpcFreq_Ly_10_v7(mpc_freq, sim_dt,reduced_obs_size=reduced_obs_size, render = render)
     eval_monitor_env = Monitor(eval_env)
     eval_vec_env = DummyVecEnv([lambda: eval_monitor_env])
     norm_eval_env = VecNormalize(eval_vec_env,norm_obs = True, norm_reward = False, clip_obs = 60, gamma = 0.99)
@@ -57,13 +58,12 @@ if __name__ == "__main__":
         str1 = 'redObs'
     else:
         str1 = 'fullObs'
-
-    save_dir = str1 + f"Ly_10_disturbance_full" 
-    load_dir = str1 + f"Ly_10_disturbance_full"
+    
+    save_dir = str1 + f"Ly_10_r7" 
+    load_dir = str1 + f"Ly_10_r7"
     load_path = os.path.join(model_dir, load_dir) 
     save_path = os.path.join(model_dir, save_dir)      
     ## train model
-    #policy_kwargs = { 'full_std': False}
     if new_model:
         tensorboard_dir = cwd + "/rl_log/freq_env/Ly_10/"
 
@@ -74,8 +74,6 @@ if __name__ == "__main__":
                     batch_size=batch_size_, 
                     tensorboard_log=tensorboard_dir, 
                     learning_rate=learning_rate_,
-                    #use_sde=True,
-                    #policy_kwargs=policy_kwargs,
                     device='cpu') #policy_kwargs=dict(net_arch=[64,64, dict(vf=[], pi=[])]),
         
         a = model.get_parameters()

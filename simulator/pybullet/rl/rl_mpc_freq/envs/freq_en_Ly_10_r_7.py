@@ -12,7 +12,7 @@ from config.draco.pybullet_simulation import *
 from simulator.pybullet.rl.env_2 import *
 
 
-class DracoEnvMpcFreq_Ly_10_dist(DracoEnv_v2):
+class DracoEnvMpcFreq_Ly_10_v7(DracoEnv_v2):
     def __init__(self, mpc_freq, sim_dt, eval = None, burn_in: bool = False, reduced_obs_size: bool = False, render: bool = False, disturbance: bool = False) -> None:
         super().__init__(mpc_freq=mpc_freq, sim_dt=sim_dt, reduced_obs_size=reduced_obs_size, render=render, eval = eval, disturbance = disturbance)
         
@@ -20,50 +20,28 @@ class DracoEnvMpcFreq_Ly_10_dist(DracoEnv_v2):
         self._burn_in = burn_in
         if mpc_freq == 0:
             print("FREQ SET TO 0. PLEASE INCREASE FREQ")
-            raise Warning
+            #raise Warning
         
-        self._set_max_steps_iter(32*150)
+        self._set_max_steps_iter(32*35)
 
-        """
         self._freq_push_dict = {'long_push_x': [572, 10, 0], 'short_push_x': [6, 80, 0],
                                 'long_push_y': [572, 0, 10], 'short_push_y': [6, 0, 100]}
-        """
-        """        
-        #Trained with this
-        self._freq_push_dict = {'long_push_x': [572, 20, 0], 'short_push_x': [10, 350, 0],
-                                'long_push_y': [572, 0, 25], 'short_push_y': [10, 0, 350]}
-        """
-        """
-        self._freq_push_dict = {'long_push_x': [572, 30, 0], 'short_push_x': [10, 500, 0],
-                                'long_push_y': [572, 0, 20], 'short_push_y': [10, 0, 400]}
-        """   
-        self._freq_push_dict = {'long_push_x': [572, 20, 0], 'short_push_x': [10, 350, 0],
-                                'long_push_y': [572, 0, 20], 'short_push_y': [10, 0, 350],
-                                'mid_push_x': [57, 80, 0], 'mid_push_y': [57, 0, 80]}
-        
-
-        
-        self._push_trigger = 1000
+        self._push_trigger = 2000
         self._push_ = [-1, -1, -1]
-
-
         #raise Warning
-        if eval is not None:
-            with open('test/alip/disturbance.txt', 'w'):
-                pass
-
+        self._Lxdes = 0
 
     def _set_observation_space(self):
         if self._reduced_obs_size:
             self.observation_space = gym.spaces.Box(  #observation space added Tr and previous full_action x and y
-                low = np.array([-100]*20),
-                high = np.array([100]*20),
+                low = np.array([-100]*21),
+                high = np.array([100]*21),
                 dtype = np.float64
             )
         else:
             self.observation_space = gym.spaces.Box(  #observation space
-                low = np.array([-100]*74),
-                high = np.array([100]*74),
+                low = np.array([-100]*75),
+                high = np.array([100]*75),
                 dtype = np.float64
             )
 
@@ -83,7 +61,8 @@ class DracoEnvMpcFreq_Ly_10_dist(DracoEnv_v2):
                                         wbc_obs[4:10], 
                                         wbc_obs[13:19], 
                                         wbc_obs[24:27],
-                                        wbc_obs[19:23]))
+                                        wbc_obs[19:23],
+                                        [self._Lxdes]))
         COM[16] -= self._sim_dt 
         if(self._reduced_obs_size):
             policy_obs = COM
@@ -106,21 +85,19 @@ class DracoEnvMpcFreq_Ly_10_dist(DracoEnv_v2):
         if np.abs(_wbc_obs[23] - 12) < 0.5:  #12 is the alip state
             if _wbc_obs is not None:
                 #condition = np.any((_wbc_obs[6] < 0.5) | (_wbc_obs[6] > 0.8))  #0.69
-                if _wbc_obs[6] > 1.1:
-                    if (self._eval is not None):
-                        print("high height")
+                if _wbc_obs[6] > 1:
+                    #print("high com")
                     return True
-                if _wbc_obs[6] < 0.25:
-                    if (self._eval is not None):
-                        print("low height")
+                if _wbc_obs[6] < 0.45:
+                    #print("low com")
                     return True
-                if np.abs(_wbc_obs[7]) > (np.abs(self._Lx_main+_wbc_obs[1])+150):
-                    if (self._eval is not None):
-                        print("high Lx")
+                if np.abs(_wbc_obs[7]) > (np.abs(self._Lx_main+_wbc_obs[1])+100):
+                    #print("high Lx")
+
                     return True
-                if np.abs(_wbc_obs[8] - _wbc_obs[2]) > 100:
-                    if (self._eval is not None):
-                        print("high Ly")                    
+                if np.abs(_wbc_obs[8] - _wbc_obs[2]) > 50:
+                    #print("high Ly")
+
                     return True
         return False
     
@@ -138,9 +115,11 @@ class DracoEnvMpcFreq_Ly_10_dist(DracoEnv_v2):
         #reward terms
         self._w_roll_pitch = -1
         self._w_com_height = -1
-        self._w_penalise_excessive_Lx = 0.6
-        self._w_desired_Lx = 0.4
-        self._w_desired_Ly = 2
+        #self._w_penalise_excessive_Lx = 0.6
+        #self._w_desired_Lx = 0.4
+        self._low_variance = 0.4
+        self._w_simLx = 1
+        self._w_desired_Ly = 1.5
         self._w_desired_yaw = 1.
         self._w_excessive_fp = -1
         self._w_excessive_angle = -3
@@ -164,10 +143,10 @@ class DracoEnvMpcFreq_Ly_10_dist(DracoEnv_v2):
         self._rl_action = np.copy(action)
 
         if (self._old_wbc_obs[0] != self._new_wbc_obs[0]):
-            self._new_step_bool = True
             reward = self._w_alive_bonus
-            reward += self.reward_tracking_com_Lx()
-            reward += self.penalise_outside_Lx_bounds()
+            #reward += self.reward_tracking_com_Lx()
+            #reward += self.penalise_outside_Lx_bounds()
+            reward += self.sim_Lx()
             reward += self.reward_tracking_com_Ly()
             reward += self.reward_tracking_yaw()
             reward += self.reward_com_height()
@@ -175,11 +154,12 @@ class DracoEnvMpcFreq_Ly_10_dist(DracoEnv_v2):
             reward += self.penalise_excessive_fp()
             reward += self.penalise_excessive_yaw()
             #if done: reward -= self._w_termination
-            self.reward_info = np.array([reward, self._w_alive_bonus,  self.reward_tracking_com_Lx(),
-                                        self.penalise_outside_Lx_bounds(), self.reward_tracking_com_Ly(),
+            self.reward_info = np.array([reward, self._w_alive_bonus,  #self.reward_tracking_com_Lx(), self.penalise_outside_Lx_bounds()
+                                         self.sim_Lx(), self.reward_tracking_com_Ly(),
                                         self.reward_tracking_yaw(), self.reward_com_height(),
                                         self.reward_roll_pitch(), self.penalise_excessive_fp(),
                                         self.penalise_excessive_yaw()])
+            self._Lxdes = np.copy(self._new_wbc_obs[7])
         else:
             reward = self.r_intra_different_policy()
             reward += self.r_intra_excessive_Lx()
@@ -188,6 +168,16 @@ class DracoEnvMpcFreq_Ly_10_dist(DracoEnv_v2):
                                          self.r_intra_excessive_Lx(), 
                                          self.r_intra_excessive_Ly()])
         return reward.item()    
+
+    def sim_Lx(self):
+        error = self._new_wbc_obs[7] + self._Lxdes - 2*self._old_wbc_obs[1]
+        error /= (self._mass*self._zH)
+        
+        error = np.square(error/0.01)
+        error = np.exp(-error)
+
+        return error*self._w_simLx
+
 
     def reward_tracking_com_Lx(self):
         if (self._new_wbc_obs[0] == 1):
@@ -296,103 +286,42 @@ class DracoEnvMpcFreq_Ly_10_dist(DracoEnv_v2):
 
     def apply_disturbance(self):
         #print("dfa")
-        self.apply_disturbance_2()
-        """
-        print(cwd+'/test/alip/disturbance.txt')
         self._push_trigger -= 1
         #print(self._push_trigger)
         if self._push_trigger == 0:
-            timing = np.random.randint(500)
-            if timing == 0:
-                choice = np.random.randint(0,4)
-                if choice == 0:
-                    self._push_ = copy.deepcopy(self._freq_push_dict['short_push_x'])
-                elif choice == 1:
+            choice = np.random.randint(0,4)
+            if choice == 0:
+                print("short_push x ")
+                self._push_ = copy.deepcopy(self._freq_push_dict['short_push_x'])
+            elif choice == 1:
+                print("short_push y")
 
-                    self._push_ = copy.deepcopy(self._freq_push_dict['short_push_y'])
-                elif choice == 2:
-                    self._push_ = copy.deepcopy(self._freq_push_dict['long_push_x'])
-                else :
-                    self._push_ = copy.deepcopy(self._freq_push_dict['long_push_y'])
+                self._push_ = copy.deepcopy(self._freq_push_dict['short_push_y'])
+            elif choice == 2:
+                print("long_push x ")
 
-                self._push_dir = np.random.choice([-1, 1])
-                if (self._eval is not None):
-                    print("choice: ", choice, ", dir: ", self._push_dir) 
-            else:
-                self._push_trigger = 1 
+                self._push_ = copy.deepcopy(self._freq_push_dict['long_push_x'])
+            else :
+                print("long_push y")
+
+                self._push_ = copy.deepcopy(self._freq_push_dict['long_push_y'])
+
+            self._push_dir = np.random.choice([-1, 1])
         if self._push_[0] > 0: 
             self._push_[0] -= 1
             force = np.array((self._push_[1], self._push_[2],0))
             force *= self._push_dir
             #print(force)  
-            self.client.applyExternalForce(self.robot, -1, force, np.zeros(3), flags = self.client.LINK_FRAME)
+            self.client.applyExternalForce(self.robot, 1, force, np.zeros(3), flags = self.client.WORLD_FRAME)
             #print("push")
-            if self._push_[0] == 0: self._push_trigger = 2500
-
-        if self._eval is not None:
-            if self._push_[0] >= 0:
-                force = np.array((self._push_[1], self._push_[2],0))
-                with open('test/alip/disturbance.txt', 'a') as file:
-                    file.write(f"{force}\n")
-            else:
-                with open('test/alip/disturbance.txt', 'a') as file:
-                    file.write("-1\n")
-    """
-
-    def apply_disturbance_2(self):
-        #print("dfa")
-        #print(cwd+'/test/alip/disturbance.txt')
-        self._push_trigger -= 1
-        #print(self._push_trigger)
-        if self._push_trigger == 0:
-            timing = np.random.randint(500)
-            if timing == 0:
-                choice = np.random.randint(0,6)
-                choice = 5
-                if choice == 0:
-                    self._push_ = copy.deepcopy(self._freq_push_dict['short_push_x'])
-                elif choice == 1:
-
-                    self._push_ = copy.deepcopy(self._freq_push_dict['short_push_y'])
-                elif choice == 2:
-                    self._push_ = copy.deepcopy(self._freq_push_dict['long_push_x'])
-                elif choice == 3:
-                    self._push_ = copy.deepcopy(self._freq_push_dict['long_push_y'])
-                elif choice == 4:
-                    self._push_ = copy.deepcopy(self._freq_push_dict['mid_push_x'])
-                else:
-                    self._push_ = copy.deepcopy(self._freq_push_dict['mid_push_y'])
-
-                self._push_dir = np.random.choice([-1, 1])
-                if (self._eval is not None):
-                    print("choice: ", choice, ", dir: ", self._push_dir) 
-            else:
-                self._push_trigger = 1 
-        if self._push_[0] > 0: 
-            self._push_[0] -= 1
-            force = np.array((self._push_[1], self._push_[2],0))
-            force *= self._push_dir
-            #print(force)  
-            self.client.applyExternalForce(self.robot, -1, force, np.zeros(3), flags = self.client.LINK_FRAME)
-            #print("push")
-            if self._push_[0] == 0: self._push_trigger = 2500
-
-        if self._eval is not None:
-            if self._push_[0] >= 0:
-                if self._push_[0] == 0: self._push_[0] -= 1
-                force = np.array((self._push_[1], self._push_[2],0))
-                with open('test/alip/disturbance.txt', 'a') as file:
-                    file.write(f"{force}\n")
-            else:
-                with open('test/alip/disturbance.txt', 'a') as file:
-                    file.write("-1\n")
+            if self._push_[0] == 0: self._push_trigger = 3000
 
 
-            
+
 
 
 if __name__ == "__main__":
-    env = DracoEnvMpcFreq_Ly_10_dist( 5, Config.CONTROLLER_DT, reduced_obs_size=True, render = True)
+    env = DracoEnvMpcFreq_Ly_10_v7( 5, Config.CONTROLLER_DT, reduced_obs_size=True, render = True)
     from stable_baselines3.common.env_checker import check_env
     check_env(env)
 
