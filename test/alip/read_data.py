@@ -2,7 +2,7 @@ from plot_utils import *
 import os
 
 
-lbound_time = 7#5
+lbound_time = 3#5
 ubound_time = 100#8
 
 script_directory = os.path.dirname(os.path.abspath(__file__))

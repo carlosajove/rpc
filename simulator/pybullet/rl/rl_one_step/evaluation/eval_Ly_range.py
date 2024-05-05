@@ -30,9 +30,12 @@ from util.python_utils.util import read_config
 if __name__ == "__main__":
     #from stable_baselines3.common.env_checker import check_env
     #check_env(env)
-
-    load_path = os.path.join('/home/carlos/Desktop/Austin/RL results/Ly_range/PPO', 'redObsLy_range_reward_3')
-    CURR_TIMESTEP = 610000
+    path1 = '/home/carlos/Desktop/Austin/ONE_STEP_RESULTS'
+    path2 = 'rl_model/Ly_range/PPO'
+    file_name = 'redObsLy_range_new_r_second'
+    file_name = 'redObsLy_range_new_reward_Lx_mod'
+    load_path = os.path.join(path1, path2, file_name)
+    CURR_TIMESTEP = 900000
     model_name = f'_TIME{CURR_TIMESTEP}.zip'
     norm_name = f'TIME{CURR_TIMESTEP}.pkl'
     norm_path = os.path.join(load_path, norm_name)
@@ -42,7 +45,11 @@ if __name__ == "__main__":
     mpc_freq = 0
     sim_dt = Config.CONTROLLER_DT
 
-    env = DracoEnvOneStepMpcRange(mpc_freq, sim_dt, eval=[0, 0,0], reduced_obs_size=reduced_obs_size,  render = True)
+    env = DracoEnvOneStepMpcRange(mpc_freq, sim_dt, 
+                                  eval=[0, 0,0], 
+                                  reduced_obs_size=reduced_obs_size,  
+                                  render = True,
+                                  video = 'one_step_MPC_range.mp4')
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
     norm_env = VecNormalize.load(norm_path, vec_env)
@@ -59,7 +66,7 @@ if __name__ == "__main__":
     while True:
         #action = torch.ones(AlipParams.N_BATCH,3)
         action, _ = model.predict(obs, deterministic=True)
-        #action = 0*action
+        action = 0*action
         config = read_config('/home/carlos/Desktop/Austin/SeungHyeonProject/rpc/config/draco/alip_command.ini')
         try:
             PARAMS = config['Parameters']

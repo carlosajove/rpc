@@ -397,7 +397,7 @@ alip_mpc_walking:
   intervals: "2"
   Ts: 0.275    #0.25  #Greater Ts makes offset increase also
   stance_leg: -1 # -1: RIGHT SWING TO START; 1: LEFT SWING TO START
-  leg_width: 0.05 #0.1 0.05
+  leg_width: 0.1 #0.1 0.05
   zH: 0.69   #this will be the reference height target. The height for the mpc will be another
   mu: 0.2
   total_mass: 39.15342    

@@ -25,7 +25,7 @@ env_dir = cwd + "/rl_env/freq_env/Ly_10/PPO"
 #import tracemalloc
 import argparse
 import torch
-new_model = True
+new_model = False
 
 if __name__ == "__main__":
     if not new_model:
