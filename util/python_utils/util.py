@@ -12,6 +12,11 @@ def read_config(filename):
     config.read(filename)
     return config
 
+def read_config(filename):
+    config = configparser.ConfigParser()
+    config.read(filename)
+    return config
+
 def pretty_print(ob):
     print(json.dumps(ob, indent=4))
 
