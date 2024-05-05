@@ -73,9 +73,12 @@ public:
   Eigen::Vector3d full_policy_;
   Eigen::Vector3d swfoot_roll_pitch_yaw_;  //at the time of the computation
   Eigen::Vector3d torso_com_ang_vel_;
+  Eigen::Vector3d torso_rpy_des_frame;
+  Eigen::Vector3d swfoot_rpy_des_frame; 
+
 
   Eigen::VectorXd get_wbc_obs(){
-    Eigen::VectorXd obs(27);
+    Eigen::VectorXd obs(33);
 
     obs <<  stance_leg_,
             Lx_offset_des_,           //2
@@ -103,7 +106,14 @@ public:
             state_,                   //24
             torso_com_ang_vel_(0),
             torso_com_ang_vel_(1),
-            torso_com_ang_vel_(2);    //27    
+            torso_com_ang_vel_(2),    //27   
+            torso_rpy_des_frame(0), 
+            torso_rpy_des_frame(1), 
+            torso_rpy_des_frame(2),   //30
+            swfoot_rpy_des_frame(0), 
+            swfoot_rpy_des_frame(1), 
+            swfoot_rpy_des_frame(2);  //33
+
     return obs;
 
   }

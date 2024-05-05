@@ -116,7 +116,7 @@ class DracoEnvMpcFreq_Ly_10_dist(DracoEnv_v2):
                     self._push_trigger = COPY(self._push_trigger_ini)
                     
                     done = True
-                if _wbc_obs[6] < 0.25:
+                if _wbc_obs[6] < 0.15:
                     if (self._eval is not None):
                         print("low height")
                     self._push_trigger = COPY(self._push_trigger_ini)
@@ -125,17 +125,17 @@ class DracoEnvMpcFreq_Ly_10_dist(DracoEnv_v2):
                     if (self._eval is not None):
                         print("high Lx")
                     self._push_trigger =  COPY(self._push_trigger_ini)
-                    done = True    
+                    #done = True    
 
                 if np.abs(_wbc_obs[8] - _wbc_obs[2]) > 100:
                     if (self._eval is not None):
                         print("high Ly")    
                     self._push_trigger =  COPY(self._push_trigger_ini) 
-                    done = True  
+                    #done = True  
             if (done):
                 #CHANGE
-                self._freq_push_dict['mid_push_y'][2] -= 2*10
-
+                self._freq_push_dict['short_push_x'][1] -= 2*50
+                #self._freq_push_dict['short_push_y'][2] -= 2*50
                 return True          
         return False
     
@@ -179,7 +179,7 @@ class DracoEnvMpcFreq_Ly_10_dist(DracoEnv_v2):
         self._rl_action = np.copy(action)
 
         if (self._old_wbc_obs[0] != self._new_wbc_obs[0]):
-            self._new_step_bool = True
+            if (self._push_trigger <= 0): self._new_step_bool = True
             reward = self._w_alive_bonus
             reward += self.reward_tracking_com_Lx()
             reward += self.penalise_outside_Lx_bounds()
@@ -361,19 +361,22 @@ class DracoEnvMpcFreq_Ly_10_dist(DracoEnv_v2):
         self._push_trigger -= 1
         if (self._push_trigger <= 0) and (self._new_step_bool):
             self._new_step_bool = False
+            self._push_trigger = 1000000
             self._counter = 0
 
         if self._counter >= 0: self._counter += 1
         
         if (self._counter == self._sim_iter_to_mid_swing):
-            self._push_ = copy.deepcopy(self._freq_push_dict['mid_push_y'])
-            self.counter = -1
-
+            #CHANGE
+            print("hey")
+            self._push_ = copy.deepcopy(self._freq_push_dict['short_push_x'])
+            self._counter = -1
+            #CHANGE
             self._push_dir = 1
 
 
         if self._push_[0] > 0: 
-            print("push")
+            print("push", self._push_[0])
             self._push_[0] -= 1
             force = np.array((self._push_[1], self._push_[2],0))
             force *= self._push_dir
@@ -388,9 +391,11 @@ class DracoEnvMpcFreq_Ly_10_dist(DracoEnv_v2):
                 print(self._push_)
 
                 #CHANGE
-                self._freq_push_dict['mid_push_y'][2] += 10
+                self._freq_push_dict['short_push_x'][1] += 50
+                #self._freq_push_dict['short_push_y'][2] += 50
                 print("push_end")
             force = np.array((self._push_[1], self._push_[2],0))
+            force *= self._push_dir
             with open('test/alip/disturbance.txt', 'a') as file:
                 file.write(f"{force}\n")
         else:

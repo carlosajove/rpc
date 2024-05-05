@@ -113,8 +113,9 @@ def dict_to_numpy(obs_dict):
    
 class DracoEnv_v2(gym.Env):
     metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 50}
-    def __init__(self, mpc_freq, sim_dt, eval = None, reduced_obs_size: bool = False, render: bool = False, disturbance: bool = False) -> None:
+    def __init__(self, mpc_freq, sim_dt, eval = None, reduced_obs_size: bool = False, render: bool = False, disturbance: bool = False, video = None) -> None:
         self._render = render
+        self._video = video
         self._reduced_obs_size = reduced_obs_size
         self._mpc_freq = mpc_freq
         self._sim_dt = sim_dt
@@ -131,6 +132,7 @@ class DracoEnv_v2(gym.Env):
         else:
             self.client = bc.BulletClient(connection_mode=p.DIRECT)
        
+
         #Action definition
         self.action_space = gym.spaces.Box( 
             low = np.array([-1, -1, -1]),
@@ -166,6 +168,12 @@ class DracoEnv_v2(gym.Env):
 
         ground = self.client.loadURDF(cwd + "/robot_model/ground/plane.urdf",
                     useFixedBase=1)
+
+        if self._video is not None:
+            self.client.startStateLogging(self.client.STATE_LOGGING_VIDEO_MP4,
+                                                 self._video,
+                                                 [self.robot])
+            
 
         if (self.render): self.client.configureDebugVisualizer(self.client.COV_ENABLE_RENDERING, 1)
 
@@ -369,7 +377,7 @@ class DracoEnv_v2(gym.Env):
         return policy_obs, reward, done, truncate, info 
 
     def _set_push_trigger(self):
-        raise NotImplementedError
+        pass
 
     def apply_disturbance(self):
         raise NotImplementedError

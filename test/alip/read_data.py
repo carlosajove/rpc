@@ -2,8 +2,8 @@ from plot_utils import *
 import os
 
 
-lbound_time = 5#5
-ubound_time = 8#8
+lbound_time = 7#5
+ubound_time = 100#8
 
 script_directory = os.path.dirname(os.path.abspath(__file__))
 

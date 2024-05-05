@@ -51,7 +51,9 @@ plt.title('robot Lz ')
 for t in landingTime:
     plt.axvline(x=t, color='black', linestyle='-', linewidth=0.5)
 
+#########################
 #Tracking desired Lx, Ly
+#########################
 _, _, _, _, _, _, st, _ = read_task('task_com_z.txt', "com_z")
 st = st[inter]
 st = st[:-2]

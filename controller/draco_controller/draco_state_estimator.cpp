@@ -330,6 +330,14 @@ void DracoStateEstimator::UpdateWbcObs(){
   sp_->torso_roll_pitch_yaw_ = util::QuatToEulerZYX(Eigen::Quaterniond(torso_iso.linear()));
   sp_->swfoot_roll_pitch_yaw_ = util::QuatToEulerZYX(Eigen::Quaterniond(swfoot_iso.linear()));
   sp_->torso_com_ang_vel_ = torso_com_ang_vel;
+  
+  Eigen::Isometry3d torso_iso_des_frame = torso_iso;
+  Eigen::Isometry3d swfoot_iso_des_frame = swfoot_iso;
+  torso_iso_des_frame.linear() = des_torso_iso.linear().transpose()*torso_iso_des_frame.linear();
+  swfoot_iso_des_frame.linear() = des_torso_iso.linear().transpose()*swfoot_iso_des_frame.linear();
+  
+  sp_->torso_rpy_des_frame = util::QuatToEulerZYX(Eigen::Quaterniond(torso_iso_des_frame.linear()));
+  sp_->swfoot_rpy_des_frame = util::QuatToEulerZYX(Eigen::Quaterniond(swfoot_iso_des_frame.linear()));
 }
 
 void DracoStateEstimator::Reset(){

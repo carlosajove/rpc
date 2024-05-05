@@ -61,7 +61,7 @@ public:
       : joint_pos_cmd_(Eigen::VectorXd::Zero(draco::n_adof)),
         joint_vel_cmd_(Eigen::VectorXd::Zero(draco::n_adof)),
         joint_trq_cmd_(Eigen::VectorXd::Zero(draco::n_adof)),
-        wbc_obs_(Eigen::VectorXd::Zero(27)),
+        wbc_obs_(Eigen::VectorXd::Zero(33)),
         rl_trigger_(false){};
   virtual ~DracoCommand() = default;
 

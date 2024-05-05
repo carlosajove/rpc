@@ -69,7 +69,7 @@ if __name__ == "__main__":
         counter+=1
         #action = torch.ones(AlipParams.N_BATCH,3)
         action, _ = model.predict(obs, deterministic=True)
-        action = 0*action
+        #action = 0*action
         config = read_config('/home/carlos/Desktop/Austin/SeungHyeonProject/rpc/config/draco/alip_command.ini')
         try:
             PARAMS = config['Parameters']
