@@ -21,18 +21,20 @@ import shutil
 import cv2
 
 from config.draco.pybullet_simulation import Config
-from simulator.pybullet.rl.rl_one_step.envs.dist_env_Ly_10 import DracoEnvOneStepMpc_Ly_10_dist
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecNormalize
 from stable_baselines3.common.monitor import Monitor
 
 from util.python_utils.util import read_config
 
+
+from simulator.pybullet.rl.rl_one_step.envs.turn_20 import DracoEnvOneStepMpcYaw_20
+
 if __name__ == "__main__":
     #from stable_baselines3.common.env_checker import check_env
     #check_env(env)
 
-    load_path = os.path.join(cwd + '/rl_model/Ly_range/PPO', 'redObsLy_10_dist')
-    CURR_TIMESTEP = 310000
+    load_path = os.path.join(cwd + '/rl_model/Ly_range/PPO', 'redObsLy_turn_20_third')
+    CURR_TIMESTEP = 230000
     model_name = f'_TIME{CURR_TIMESTEP}.zip'
     norm_name = f'TIME{CURR_TIMESTEP}.pkl'
     norm_path = os.path.join(load_path, norm_name)
@@ -42,7 +44,7 @@ if __name__ == "__main__":
     mpc_freq = 0
     sim_dt = Config.CONTROLLER_DT
 
-    env = DracoEnvOneStepMpc_Ly_10_dist(mpc_freq, sim_dt, eval = [0,0,0], reduced_obs_size=reduced_obs_size,  render = True, disturbance=True)
+    env = DracoEnvOneStepMpcYaw_20(mpc_freq, sim_dt, eval = [0,0,20], reduced_obs_size=reduced_obs_size,  render = True)
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
     norm_env = VecNormalize.load(norm_path, vec_env)
@@ -59,6 +61,7 @@ if __name__ == "__main__":
     counter = 0
     while True:
         counter +=1
+        #action = torch.ones(AlipParams.N_BATCH,3)
         action, _ = model.predict(obs, deterministic=True)
         #action = 0*action
         
@@ -76,18 +79,17 @@ if __name__ == "__main__":
         ini_st_leg = np.random.choice([1, -1])  
         env._set_command_policy_sim(Lx_offset, Ly_des, des_com_yaw, ini_st_leg)
 
-        #print("action: ", action)
+        print("action: ", action)
         obs, reward, done, trunc, info = env.step(action)
         obs = norm_env.normalize_obs(obs)
-        #print("reward", reward)
-        #print("reward info", info["reward_components"])
+        print("reward", reward)
+        print("reward info", info["reward_components"])
         if done:
             print(done)
             obs,info = env.reset()
             obs = norm_env.normalize_obs(obs)
-        """
-        if counter > 10:
+        
+        if counter > 15:
             counter = 0
             obs,info = env.reset()
             obs = norm_env.normalize_obs(obs)
-        """

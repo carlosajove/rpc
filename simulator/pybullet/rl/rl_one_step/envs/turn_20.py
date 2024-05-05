@@ -13,9 +13,9 @@ from config.draco.pybullet_simulation import *
 from simulator.pybullet.rl.env_2 import *
 
 
-class DracoEnvOneStepMpcRange(DracoEnv_v2):
-    def __init__(self, mpc_freq, sim_dt, eval = None, burn_in: bool = False, reduced_obs_size: bool = True, render: bool = False) -> None:
-        super().__init__(mpc_freq, sim_dt, eval=eval, reduced_obs_size=reduced_obs_size,render= render)
+class DracoEnvOneStepMpcYaw_20(DracoEnv_v2):
+    def __init__(self, mpc_freq, sim_dt, eval = None, burn_in: bool = False, reduced_obs_size: bool = True, render: bool = False, disturbance: bool = False) -> None:
+        super().__init__(mpc_freq, sim_dt, eval=eval, reduced_obs_size=reduced_obs_size,render= render, disturbance=disturbance)
 
         self._reduced_obs_size = reduced_obs_size
         self._burn_in = burn_in
@@ -24,18 +24,24 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
             raise Warning
 
         self._set_max_steps_iter(35)
+                
+        self._freq_push_dict = {'long_push_x': [572, 10, 0], 'short_push_x': [6, 60, 0],
+                                'long_push_y': [572, 0, 10], 'short_push_y': [6, 0, 100]}
+        self._push_trigger = 2000
+        self._push_ = [-1, -1, -1]
+        #raise Warning
     
     def _set_observation_space(self):
         if self._reduced_obs_size:
             self.observation_space = gym.spaces.Box(  #observation space added Tr and previous full_action x and y
-                low = np.array([-100]*17),
-                high = np.array([100]*17),
+                low = np.array([-100]*16),
+                high = np.array([100]*16),
                 dtype = np.float64
             )
         else:
             self.observation_space = gym.spaces.Box(  #observation space
-                low = np.array([-100]*71),
-                high = np.array([100]*71),
+                low = np.array([-100]*70),
+                high = np.array([100]*70),
                 dtype = np.float64
             )
 
@@ -59,11 +65,11 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
             joint_obs = np.concatenate((joint_pos, joint_vel))
             policy_obs = np.concatenate((joint_obs, COM))
 
-        policy_obs = np.concatenate((policy_obs, [self._Ly]), axis = 0)
+        #policy_obs = np.concatenate((policy_obs), axis = 0)
         return policy_obs
 
     def _normalise_action(self, action):
-        _wbc_action = 0.1*action
+        _wbc_action = 0.05*action
         if self._burn_in:
             _wbc_action = 0*_wbc_action
         return _wbc_action
@@ -86,10 +92,8 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
 
     def set_action_command_in_sensor_data(self):
         #maybe set also time in newer version
-        Ly_list = [-25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25]
-        #Ly_list = [10, 15, 20, 25]
-        self._Ly = random.choice(Ly_list)
-        dir_command = np.array((0, self._Ly, 0))
+        yaw = 20*math.pi/180
+        dir_command = np.array((0, 0, yaw))
 
         initial_stance_leg = np.random.choice(np.array([-1, 1]))
 
@@ -106,12 +110,14 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
         self._w_com_height = -1
         self._w_penalise_excessive_Lx = 0.5
         self._w_desired_Lx = 0.5
+        #self._w_simLx = 0.5
+        self._w_Lx_offset = 0.6
         self._w_desired_Ly = 1
-        self._w_desired_yaw = 0.1
+        self._w_desired_yaw = 2
         self._w_excessive_fp = -0.5
-        self._w_excessive_angle = -2
+        self._w_excessive_angle = -0.5
         self._w_termination = 0
-        self._w_alive_bonus = 0.3
+        self._w_alive_bonus = 2
 
 
     def _compute_reward(self, wbc_obs, action, done):
@@ -128,6 +134,8 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
         reward = self._w_alive_bonus
         reward += self.reward_tracking_com_Lx()
         reward += self.penalise_outside_Lx_bounds()
+        #reward += self.tracking_Lx_offset()
+        #reward += self.sim_Lx()
         reward += self.reward_tracking_com_Ly()
         reward += self.reward_tracking_yaw()
         reward += self.reward_com_height()
@@ -135,12 +143,20 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
         reward += self.penalise_excessive_fp()
         reward += self.penalise_excessive_yaw()
         #if done: reward -= self._w_termination
-        self.reward_info = np.array([reward, self._w_alive_bonus,  self.reward_tracking_com_Lx(),
-                                    self.penalise_outside_Lx_bounds(), self.reward_tracking_com_Ly(),
+        self.reward_info = np.array([reward, self._w_alive_bonus, self.reward_tracking_com_Ly(),
                                     999999, self.reward_tracking_yaw(), self.reward_com_height(),
                                     self.reward_roll_pitch(), self.penalise_excessive_fp(),
                                     self.penalise_excessive_yaw()])
         return reward.item()
+
+    def sim_Lx(self):
+        error = self._new_wbc_obs[7] + self._old_wbc_obs[7] - 2*self._old_wbc_obs[1]
+        error /= (self._mass*self._zH)
+        #print( self._new_wbc_obs[7], "old:", self._old_wbc_obs[7])
+        error = np.square(error/0.01)
+        error = np.exp(-error)
+
+        return error*self._w_simLx
 
     def reward_tracking_com_Lx(self):
         if (self._new_wbc_obs[0] == 1):
@@ -153,12 +169,13 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
         error = L - self._new_wbc_obs[7]  #+ self._old_wbc_obs[1:3] - self._new_wbc_obs[9:11]  #desired Lx,y - observedLx,y at the end of the step
         error /= (self._mass*self._zH)
         
-        error = np.square(error/0.1)
+        error = np.square(error/0.02)
         error = np.exp(-error)
 
         error *= self._w_desired_Lx
         return error
 
+    
     def penalise_outside_Lx_bounds(self):
         error = np.abs(self._new_wbc_obs[7] - self._old_wbc_obs[1]) - self._Lx_main
         error /= (self._mass*self._zH)
@@ -168,7 +185,7 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
         error = np.square(error)
         error = np.exp(-error/0.05)
         return error
-        
+       
     
     def reward_tracking_com_Ly(self):
         error = self._old_wbc_obs[2] - self._new_wbc_obs[8]
@@ -220,10 +237,35 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
        
         return error
 
+    def tracking_Lx_offset(self):
+        error = self._new_wbc_obs[7] - self._old_wbc_obs[1]
+        error /= (self._mass*self._zH)
+        error = np.square(error)
+        error = np.exp(-error/0.1)
+        return self._w_Lx_offset*error
+
+    def apply_disturbance(self):
+        #print("dfa")
+        self._push_trigger -= 1
+        #print(self._push_trigger)
+        if self._push_trigger == 0:
+            self._push_ = copy.deepcopy(self._freq_push_dict['short_push_x'])
+            print("heywo", self._push_)
+        if self._push_[0] > 0: 
+            self._push_[0] -= 1
+            force = np.array((self._push_[1], self._push_[2],0))
+            print(force)  
+            self.client.applyExternalForce(self.robot, 1, force, np.zeros(3), flags = self.client.WORLD_FRAME)
+            print("push")
+            if self._push_[0] == 0: self._push_trigger = 3000
+
+
+
+
 if __name__ == "__main__":
     import math
     yaw = 20
-    env = DracoEnvOneStepMpcRange( 0, Config.CONTROLLER_DT, reduced_obs_size=False, render = True)
+    env = DracoEnvOneStepMpcYaw_20( 0, Config.CONTROLLER_DT, reduced_obs_size=False, render = True)
     #from stable_baselines3.common.env_checker import check_env
     #check_env(env)
 

@@ -16,7 +16,7 @@ from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback,
 cwd = os.getcwd()
 sys.path.append(cwd)
 sys.path.append(cwd + "/build/lib")
-from simulator.pybullet.rl.rl_one_step.envs.Ly_range_new_r3 import DracoEnvOneStepMpcRange_v3
+from simulator.pybullet.rl.rl_one_step.envs.dist_env_Ly_10 import DracoEnvOneStepMpc_Ly_10_dist
 
 from config.draco.pybullet_simulation import Config
 
@@ -27,7 +27,7 @@ import argparse
 
 import argparse
 
-new_model = False
+new_model = True
 
 if __name__ == "__main__":
     if not new_model:
@@ -44,13 +44,13 @@ if __name__ == "__main__":
     reduced_obs_size = True
 
     render = False
-    env = DracoEnvOneStepMpcRange_v3(mpc_freq, sim_dt, reduced_obs_size=reduced_obs_size, render = render)
+    env = DracoEnvOneStepMpc_Ly_10_dist(mpc_freq, sim_dt, reduced_obs_size=reduced_obs_size, render = render, disturbance=True)
 
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
 
     #MODEL EVALUATION
-    eval_env = DracoEnvOneStepMpcRange_v3(mpc_freq, sim_dt,reduced_obs_size=reduced_obs_size, render = render)
+    eval_env = DracoEnvOneStepMpc_Ly_10_dist(mpc_freq, sim_dt,reduced_obs_size=reduced_obs_size, render = render, disturbance=True)
     eval_monitor_env = Monitor(eval_env)
     eval_vec_env = DummyVecEnv([lambda: eval_monitor_env])
     norm_eval_env = VecNormalize(eval_vec_env,norm_obs = True, norm_reward = False, clip_obs = 60, gamma = 0.99)
@@ -61,15 +61,15 @@ if __name__ == "__main__":
     else:
         str1 = 'fullObs'
     
-    save_dir = str1 + f"Ly_range_reward_3" 
-    load_dir = str1 + f"Ly_range_reward_3"
+    save_dir = str1 + f"Ly_10_dist" 
+    load_dir = str1 + f"Ly_10_dist"
     load_path = os.path.join(model_dir, load_dir) 
     save_path = os.path.join(model_dir, save_dir)      
     ## train model
 
     #policy_kwargs = {'log_std_init' : -0.5} #previous -0.3
     if new_model:
-        tensorboard_dir = cwd + "/rl_log/one_step/ppo/Ly_range/"
+        tensorboard_dir = cwd + "/rl_log/one_step/ppo/disturbance/"
 
         norm_env = VecNormalize(vec_env, norm_obs = True, norm_reward = False, clip_obs = 60, gamma = 0.99)
 
@@ -107,8 +107,7 @@ if __name__ == "__main__":
         norm_env = VecNormalize.load(save_env_path, vec_env)
 
         learning_rate_ = 0.00003 #OLD LEARNING RATE 0.0003
-        custom_objects = {'learning_rate': learning_rate_}
-        model = PPO.load(model_path, env=norm_env, custom_objects=custom_objects)
+        model = PPO.load(model_path, env=norm_env)
 
         TIMESTEPS =10000
 

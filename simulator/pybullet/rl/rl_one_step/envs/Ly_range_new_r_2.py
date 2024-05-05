@@ -231,7 +231,8 @@ class DracoEnvOneStepMpcRange_v2(DracoEnv_v2):
         error = self._new_wbc_obs[7] - self._old_wbc_obs[1]
         error /= (self._mass*self._zH)
         error = np.square(error)
-        error = np.exp(-error/0.03)
+        #error = np.exp(-error/0.03)
+        error = np.exp(-error/0.1)
         return self._w_Lx_offset*error
 
     def apply_disturbance(self):

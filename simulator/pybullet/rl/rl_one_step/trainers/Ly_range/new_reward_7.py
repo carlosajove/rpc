@@ -16,7 +16,7 @@ from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback,
 cwd = os.getcwd()
 sys.path.append(cwd)
 sys.path.append(cwd + "/build/lib")
-from simulator.pybullet.rl.rl_one_step.envs.Ly_range_new_r3 import DracoEnvOneStepMpcRange_v3
+from simulator.pybullet.rl.rl_one_step.envs.Ly_range_new_r7 import DracoEnvOneStepMpcRange_v7
 
 from config.draco.pybullet_simulation import Config
 
@@ -44,13 +44,13 @@ if __name__ == "__main__":
     reduced_obs_size = True
 
     render = False
-    env = DracoEnvOneStepMpcRange_v3(mpc_freq, sim_dt, reduced_obs_size=reduced_obs_size, render = render)
+    env = DracoEnvOneStepMpcRange_v7(mpc_freq, sim_dt, reduced_obs_size=reduced_obs_size, render = render)
 
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
 
     #MODEL EVALUATION
-    eval_env = DracoEnvOneStepMpcRange_v3(mpc_freq, sim_dt,reduced_obs_size=reduced_obs_size, render = render)
+    eval_env = DracoEnvOneStepMpcRange_v7(mpc_freq, sim_dt,reduced_obs_size=reduced_obs_size, render = render)
     eval_monitor_env = Monitor(eval_env)
     eval_vec_env = DummyVecEnv([lambda: eval_monitor_env])
     norm_eval_env = VecNormalize(eval_vec_env,norm_obs = True, norm_reward = False, clip_obs = 60, gamma = 0.99)
@@ -61,8 +61,8 @@ if __name__ == "__main__":
     else:
         str1 = 'fullObs'
     
-    save_dir = str1 + f"Ly_range_reward_3" 
-    load_dir = str1 + f"Ly_range_reward_3"
+    save_dir = str1 + f"Ly_range_reward_7" 
+    load_dir = str1 + f"Ly_range_reward_7"
     load_path = os.path.join(model_dir, load_dir) 
     save_path = os.path.join(model_dir, save_dir)      
     ## train model

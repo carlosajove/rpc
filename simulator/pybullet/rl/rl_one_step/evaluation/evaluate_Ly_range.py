@@ -21,18 +21,20 @@ import shutil
 import cv2
 
 from config.draco.pybullet_simulation import Config
-from simulator.pybullet.rl.rl_one_step.envs.Ly_range_new_r import DracoEnvOneStepMpcRange
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecNormalize
 from stable_baselines3.common.monitor import Monitor
 
 from util.python_utils.util import read_config
 
+
+from simulator.pybullet.rl.rl_one_step.envs.Ly_range_new_reward_r8 import DracoEnvOneStepMpcRange_v8
+
 if __name__ == "__main__":
     #from stable_baselines3.common.env_checker import check_env
     #check_env(env)
 
-    load_path = os.path.join(cwd + '/rl_model/Ly_range/PPO', 'redObsLy_range_new_r_second_end')
-    CURR_TIMESTEP = 620000
+    load_path = os.path.join(cwd + '/rl_model/Ly_range/PPO', 'redObsLy_range_reward_7')
+    CURR_TIMESTEP = 500000
     model_name = f'_TIME{CURR_TIMESTEP}.zip'
     norm_name = f'TIME{CURR_TIMESTEP}.pkl'
     norm_path = os.path.join(load_path, norm_name)
@@ -42,7 +44,7 @@ if __name__ == "__main__":
     mpc_freq = 0
     sim_dt = Config.CONTROLLER_DT
 
-    env = DracoEnvOneStepMpcRange(mpc_freq, sim_dt, eval = [0,0,0], reduced_obs_size=reduced_obs_size,  render = True)
+    env = DracoEnvOneStepMpcRange_v8(mpc_freq, sim_dt, eval = [0,0,0], reduced_obs_size=reduced_obs_size,  render = True)
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
     norm_env = VecNormalize.load(norm_path, vec_env)
@@ -61,14 +63,14 @@ if __name__ == "__main__":
         counter +=1
         #action = torch.ones(AlipParams.N_BATCH,3)
         action, _ = model.predict(obs, deterministic=True)
-        action = 0*action
+        #action = 0*action
         
         config = read_config('/home/carlosaj/Desktop/rpc/config/draco/alip_command.ini')
         try:
             PARAMS = config['Parameters']
             Ly_des    = PARAMS.getfloat('LY_DES')    
             des_com_yaw = PARAMS.getfloat('COM_YAW') 
-            des_com_yaw = des_com_yaw* math.pi/180
+            des_com_yaw = des_com_yaw*math.pi/180
 
             Lx_offset = PARAMS.getfloat('LX_OFFSET')
         except KeyError:
@@ -87,7 +89,7 @@ if __name__ == "__main__":
             obs,info = env.reset()
             obs = norm_env.normalize_obs(obs)
         """
-        if counter > 10:
+        if counter > 15:
             counter = 0
             obs,info = env.reset()
             obs = norm_env.normalize_obs(obs)
