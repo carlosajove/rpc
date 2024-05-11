@@ -52,3 +52,9 @@ ppo_rl_log/*
 RL videos/*
 rl_model/*
 rl_log/*
+
+*.mp4
+test/alip/DISTURBANCE
+test/alip/Disturbance_tracking/Feedback
+test/alip/Disturbance_tracking/One_Step
+*.png

@@ -14,8 +14,9 @@ from simulator.pybullet.rl.env_2 import *
 
 
 class DracoEnvOneStepMpcYaw_20(DracoEnv_v2):
-    def __init__(self, mpc_freq, sim_dt, eval = None, burn_in: bool = False, reduced_obs_size: bool = True, render: bool = False, disturbance: bool = False) -> None:
-        super().__init__(mpc_freq, sim_dt, eval=eval, reduced_obs_size=reduced_obs_size,render= render, disturbance=disturbance)
+    def __init__(self, mpc_freq, sim_dt, eval = None, burn_in: bool = False, reduced_obs_size: bool = True, 
+                 render: bool = False, disturbance: bool = False, video = None) -> None:
+        super().__init__(mpc_freq, sim_dt, eval=eval, reduced_obs_size=reduced_obs_size,render= render, disturbance=disturbance, video = video)
 
         self._reduced_obs_size = reduced_obs_size
         self._burn_in = burn_in
@@ -80,13 +81,17 @@ class DracoEnvOneStepMpcYaw_20(DracoEnv_v2):
             if _wbc_obs is not None:
                 #condition = np.any((_wbc_obs[6] < 0.5) | (_wbc_obs[6] > 0.8))  #0.69
                 if _wbc_obs[6] > 1:
+                    print("high")
                     return True
                 if _wbc_obs[6] < 0.45:
+                    print("low")
                     return True
                 if np.abs(_wbc_obs[7]) > (np.abs(self._Lx_main+_wbc_obs[1])+100):
-                    return True
+                    print("Lx")
+                    #return True
                 if np.abs(_wbc_obs[8] - _wbc_obs[2]) > 50:
-                    return True
+                    print("Ly")
+                    #return True
         return False
     
 

@@ -13,8 +13,8 @@ from simulator.pybullet.rl.env_2 import *
 
 
 class DracoEnvMpcFreq_turn_20_v3(DracoEnv_v2):
-    def __init__(self, mpc_freq, sim_dt, eval = None, burn_in: bool = False, reduced_obs_size: bool = False, render: bool = False, disturbance: bool = False) -> None:
-        super().__init__(mpc_freq=mpc_freq, sim_dt=sim_dt, reduced_obs_size=reduced_obs_size, render=render, eval = eval, disturbance = disturbance)
+    def __init__(self, mpc_freq, sim_dt, eval = None, burn_in: bool = False, reduced_obs_size: bool = False, render: bool = False, disturbance: bool = False, video = None) -> None:
+        super().__init__(mpc_freq=mpc_freq, sim_dt=sim_dt, reduced_obs_size=reduced_obs_size, render=render, eval = eval, disturbance = disturbance, video = video)
         
         #self._reduced_obs_size = reduced_obs_size
         self._burn_in = burn_in
@@ -84,16 +84,18 @@ class DracoEnvMpcFreq_turn_20_v3(DracoEnv_v2):
         if np.abs(_wbc_obs[23] - 12) < 0.5:  #12 is the alip state
             if _wbc_obs is not None:
                 #condition = np.any((_wbc_obs[6] < 0.5) | (_wbc_obs[6] > 0.8))  #0.69
-                if _wbc_obs[6] > 1.2:
+                if _wbc_obs[6] > 1.3:
+                    print('high')
                     return True
-                if _wbc_obs[6] < 0.35:
+                if _wbc_obs[6] < 0.15:
+                    print('low')
                     return True
                 if np.abs(_wbc_obs[7]) > (np.abs(self._Lx_main+_wbc_obs[1])+100):
-
-                    return True
+                    print('Lx')
+                    #return True
                 if np.abs(_wbc_obs[8] - _wbc_obs[2]) > 100:
-
-                    return True
+                    print('Ly')
+                    #return True
         return False
     
     def set_action_command_in_sensor_data(self):

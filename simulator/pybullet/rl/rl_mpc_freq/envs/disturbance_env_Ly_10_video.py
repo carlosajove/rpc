@@ -41,15 +41,19 @@ class DracoEnvMpcFreq_Ly_10_dist_video(DracoEnv_v2):
                                 'long_push_y': [572, 0, 20], 'short_push_y': [10, 0, 350],
                                 'mid_push_x': [57, 80, 0], 'mid_push_y': [57, 0, 80]}
         
-        self._freq_push_selection = {'short_push_x': [10, 800, 0], 'mid_push_y': [57, 0, 120], 'long_push_x': [572, -30, 0],
-                                     'short_push_y': [10, 0, -350], 'mid_push_x': [57, 160, 0]}
+        self._freq_push_selection = {'short_push_x': [10, 1000, 0], 
+                                     'mid_push_y': [57, 0, -160], 
+                                     'mid_push_x': [57, -175, 0], 
+                                     'long_push_y': [572, 0, 30],
+                                     'long_push_x': [57, 40, 0], 
+                                     'short_push_y': [10, 0, -700]}
 
         #
 
 
         self._push_counter = 0
 
-        self._push_trigger_ini = 3000
+        self._push_trigger_ini = 2500
         self._push_trigger =  COPY(self._push_trigger_ini)
 
         self._push_stack = []
@@ -123,13 +127,13 @@ class DracoEnvMpcFreq_Ly_10_dist_video(DracoEnv_v2):
             done = False
             if _wbc_obs is not None:
                 #condition = np.any((_wbc_obs[6] < 0.5) | (_wbc_obs[6] > 0.8))  #0.69
-                if _wbc_obs[6] > 1.1:
+                if _wbc_obs[6] > 1.3:
                     if (self._eval is not None):
                         print("high height")
                     self._push_trigger = COPY(self._push_trigger_ini)
                     
                     done = True
-                if _wbc_obs[6] < 0.15:
+                if _wbc_obs[6] < 0.1:
                     if (self._eval is not None):
                         print("low height")
                     self._push_trigger = COPY(self._push_trigger_ini)

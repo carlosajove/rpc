@@ -32,9 +32,11 @@ from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_turn_20_v3 import DracoEnvM
 if __name__ == "__main__":
     #from stable_baselines3.common.env_checker import check_env
     #check_env(env)
+    load_path = os.path.join(cwd, 'rl_model/freq_env/Ly_10/PPO/redObsyaw_20_v3_n_steps_32768_batch_2048')
+    load_path = '/home/carlos/Desktop/Austin/FREQ_RESULTS/freq_env/rl_model/PPO/redObsyaw_20_v3_n_steps_32768_batch_2048'
 
-    load_path = os.path.join(cwd, 'rl_model/freq_env/Ly_10/PPO/redObsyaw_20_hehe')
-    CURR_TIMESTEP = 2600000
+   
+    CURR_TIMESTEP = 19000000
     model_name = f'_TIME{CURR_TIMESTEP}.zip'
     norm_name = f'TIME{CURR_TIMESTEP}.pkl'
     norm_path = os.path.join(load_path, norm_name)
@@ -44,7 +46,8 @@ if __name__ == "__main__":
     sim_dt = Config.CONTROLLER_DT
 
     yaw = math.pi*20/180
-    env = DracoEnvMpcFreq_turn_20_v3(mpc_freq, sim_dt, eval = [0,0,yaw] ,reduced_obs_size=reduced_obs_size, render = True)
+    env = DracoEnvMpcFreq_turn_20_v3(mpc_freq, sim_dt, eval = [0,0,yaw] ,reduced_obs_size=reduced_obs_size, render = True,
+                                     video = 'mpc_freq_RL_yaw_20_v2.mp4')
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
     norm_env = VecNormalize.load(norm_path, vec_env)
@@ -75,14 +78,15 @@ if __name__ == "__main__":
         #print("reward", reward)
         #print("reward info", info["reward_components"])
         if done:
-            print(done)
+            #print(done)
             obs,info = env.reset()
-            print(obs)
+            #print(obs)
             obs = norm_env.normalize_obs(obs)
-            print(obs)
+            #print(obs)
             
-
+        """
         if counter > 20*32:
             counter = 0
             obs,info = env.reset()
             obs = norm_env.normalize_obs(obs)
+        """
