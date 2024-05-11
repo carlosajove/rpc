@@ -4,7 +4,7 @@ import numpy as np
 import datetime
 import time
 from math import pi
-
+import torch
 import gymnasium as gym
 
 from stable_baselines3 import PPO
@@ -16,15 +16,17 @@ from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback,
 cwd = os.getcwd()
 sys.path.append(cwd)
 sys.path.append(cwd + "/build/lib")
-from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_turn_20_v4 import DracoEnvMpcFreq_turn_20_v4
+from simulator.pybullet.rl.rl_one_step.envs.Ly_range_new_r7 import DracoEnvOneStepMpcRange_v7
 
 from config.draco.pybullet_simulation import Config
 
-model_dir = cwd + "/rl_model/freq_env/Ly_10/PPO"
-env_dir = cwd + "/rl_env/freq_env/Ly_10/PPO"
+model_dir = cwd + "/rl_model/Ly_range/PPO"
+env_dir = cwd + "/rl_env/Ly_range/PPO"
 #import tracemalloc
 import argparse
-import torch
+
+import argparse
+
 new_model = False
 
 if __name__ == "__main__":
@@ -34,39 +36,40 @@ if __name__ == "__main__":
         args = parser.parse_args()
         bash_timesteps = int(args.timesteps)
 
-    n_steps_ = 32768 #8192 #256
-    batch_size_ = 4096
+    n_steps_ = 512 #512
+    batch_size_ = 64
     learning_rate_ = 0.0003
-    mpc_freq = 5
+    mpc_freq = 0
     sim_dt = 0.00175
     reduced_obs_size = True
 
     render = False
-    env = DracoEnvMpcFreq_turn_20_v4(mpc_freq, sim_dt, reduced_obs_size=reduced_obs_size, render = False)
+    env = DracoEnvOneStepMpcRange_v7(mpc_freq, sim_dt, reduced_obs_size=reduced_obs_size, render = render)
 
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
 
     #MODEL EVALUATION
-    eval_env = DracoEnvMpcFreq_turn_20_v4(mpc_freq, sim_dt,reduced_obs_size=reduced_obs_size, render = render)
+    eval_env = DracoEnvOneStepMpcRange_v7(mpc_freq, sim_dt,reduced_obs_size=reduced_obs_size, render = render)
     eval_monitor_env = Monitor(eval_env)
     eval_vec_env = DummyVecEnv([lambda: eval_monitor_env])
     norm_eval_env = VecNormalize(eval_vec_env,norm_obs = True, norm_reward = False, clip_obs = 60, gamma = 0.99)
-    eval_callback = EvalCallback(norm_eval_env, eval_freq=50000, deterministic=True, render = False)
+    eval_callback = EvalCallback(norm_eval_env, eval_freq=5000, deterministic=True, render = False, )
 
     if reduced_obs_size:
         str1 = 'redObs'
     else:
         str1 = 'fullObs'
     
-    save_dir = str1 + f"yaw_20_v4_nsteps_{n_steps_}_batch_{batch_size_}" 
-    load_dir = str1 + f"yaw_20_v4_nsteps_{n_steps_}_batch_{batch_size_}"
+    save_dir = str1 + f"Ly_range_reward_7" 
+    load_dir = str1 + f"Ly_range_reward_7"
     load_path = os.path.join(model_dir, load_dir) 
     save_path = os.path.join(model_dir, save_dir)      
     ## train model
-    #policy_kwargs = { 'full_std': False}
+
+    #policy_kwargs = {'log_std_init' : -0.5} #previous -0.3
     if new_model:
-        tensorboard_dir = cwd + "/rl_log/freq_env/yaw_20_hehe/"
+        tensorboard_dir = cwd + "/rl_log/one_step/ppo/Ly_range/"
 
         norm_env = VecNormalize(vec_env, norm_obs = True, norm_reward = False, clip_obs = 60, gamma = 0.99)
 
@@ -75,10 +78,11 @@ if __name__ == "__main__":
                     batch_size=batch_size_, 
                     tensorboard_log=tensorboard_dir, 
                     learning_rate=learning_rate_,
-                    #use_sde=True,
                     #policy_kwargs=policy_kwargs,
-                    device='cpu') #policy_kwargs=dict(net_arch=[64,64, dict(vf=[], pi=[])]),
-        
+                    device = 'cpu') 
+         
+
+
         a = model.get_parameters()
 
 
@@ -89,9 +93,8 @@ if __name__ == "__main__":
         b = model.get_parameters()
         print(b['policy']['action_net.bias'])
         print(b['policy']['action_net.weight'])
-         
         startTime = time.time()
-        TIMESTEPS = 200000
+        TIMESTEPS = 10000
         CURR_TIMESTEP = 0
     else:
         startTime = time.time()
@@ -103,11 +106,11 @@ if __name__ == "__main__":
         save_env_path = os.path.join(load_path, env_file)
         norm_env = VecNormalize.load(save_env_path, vec_env)
 
-        #learning_rate_ = 0.00003 #OLD LEARNING RATE 0.0003
-        #custom_objects = {'learning_rate': learning_rate_}
-        #model = PPO.load(model_path, env=norm_env, custom_objects=custom_objects)
-        model = PPO.load(model_path, env=norm_env)   
-        TIMESTEPS =200000
+        learning_rate_ = 0.00003 #OLD LEARNING RATE 0.0003
+        custom_objects = {'learning_rate': learning_rate_}
+        model = PPO.load(model_path, env=norm_env, custom_objects=custom_objects)
+
+        TIMESTEPS =10000
 
 
     while(True):

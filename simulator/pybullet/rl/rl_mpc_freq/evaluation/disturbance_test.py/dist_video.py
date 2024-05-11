@@ -51,7 +51,7 @@ if __name__ == "__main__":
                                 reduced_obs_size=reduced_obs_size, 
                                 render = True,
                                 disturbance = True,
-                                video = 'mpc_freq_dist.mp4')#'disturbance_video_RL_tracking.mp4')
+                                video = 'freq_MPC_high_dist_video_v2.mp4')#'disturbance_video_RL_tracking.mp4')
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
     norm_env = VecNormalize.load(norm_path, vec_env)
@@ -71,16 +71,12 @@ if __name__ == "__main__":
         #action = torch.ones(AlipParams.N_BATCH,3)
         action, _ = model.predict(obs, deterministic=True)
         action = 0*action
-        config = read_config('/home/carlos/Desktop/Austin/SeungHyeonProject/rpc/config/draco/alip_command.ini')
-        try:
-            PARAMS = config['Parameters']
-            Ly_des    = PARAMS.getfloat('LY_DES')    
-            des_com_yaw = PARAMS.getfloat('COM_YAW') 
-            des_com_yaw = des_com_yaw* math.pi/180
+        Ly_des    = 10
+        des_com_yaw = 0
+        des_com_yaw = des_com_yaw* math.pi/180
 
-            Lx_offset = PARAMS.getfloat('LX_OFFSET')
-        except KeyError:
-            print("hey")
+        Lx_offset =0 
+
 
         ini_st_leg = np.random.choice([1, -1])  
         # env._set_command_policy_sim(0, 10, 0, ini_st_leg)

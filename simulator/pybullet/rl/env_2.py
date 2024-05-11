@@ -279,7 +279,7 @@ class DracoEnv_v2(gym.Env):
 
 
         self.previous_torso_velocity = np.array([0., 0., 0.])
-        if (self.render): self.rate = RateLimiter(frequency=1./(self.dt))
+        #if (self.render): self.rate = RateLimiter(frequency=1./(self.dt))
 
         if (self._eval is None):
             self.set_action_command_in_sensor_data()
@@ -292,7 +292,6 @@ class DracoEnv_v2(gym.Env):
             initial_stance_leg = np.random.choice(np.array([-1, 1]))
             self._rpc_draco_sensor_data.initial_stance_leg_ = initial_stance_leg
             self._rpc_draco_sensor_data.policy_command_ = dir_command
-
 
         self._iter = 0
         pol_obs, reward, done, truncate, info_ = self.step(np.zeros(3))
@@ -352,7 +351,7 @@ class DracoEnv_v2(gym.Env):
                 self.apply_disturbance()
 
             self.client.stepSimulation()
-            if self._render: self.rate.sleep()
+            #if self._render: self.rate.sleep()
             done = self._compute_termination(self._rpc_draco_command.wbc_obs_)
             if done: break
 

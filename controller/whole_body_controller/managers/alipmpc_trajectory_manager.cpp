@@ -517,9 +517,14 @@ void AlipMpcTrajectoryManager::saveCOMstateMPCcoor(const double t){
   Eigen::Vector3d L_st = pos.cross(mass*vel); 
   Eigen::Vector3d L = L_st + Lc;
 
+  Eigen::Isometry3d torso_iso = robot_->GetLinkIsometry(draco_link::torso_com_link);
+  Eigen::Vector3d torso_rpy = util::RPYFromSO3(torso_iso.linear());
+
   file11 << pos.transpose() << " " << vel.transpose() << " ";
   file11 << L_st.transpose() << " " << Lc.transpose() << " ";
-  file11 << L.transpose() << " " << t << endl;
+  file11 << L.transpose() << " " << t << " ";
+  file11 << torso_rpy.transpose() << std::endl;
+
 
 
 }

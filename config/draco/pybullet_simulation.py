@@ -95,7 +95,7 @@ class DracoJointIdx(object):
 
 class AlipParams(object):
     N_BATCH = 1
-    TS = 0.25
+    TS = 0.275
     NT_qp = 4
     NT_mpc = 1
     NS = 4

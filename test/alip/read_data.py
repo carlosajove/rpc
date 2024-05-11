@@ -2,13 +2,14 @@ from plot_utils import *
 import os
 
 
-lbound_time = 3#5
+lbound_time = 1#5
 ubound_time = 100#8
 
 script_directory = os.path.dirname(os.path.abspath(__file__))
 
 print(script_directory)
 
+#d = '/home/carlos/Desktop/TFG overleaf photos/PERFORMANCE/Ly_range/one_step_RL/'
 trAlip2 = all_trajectories('Alip2Swing_trajectory.txt')
 trRobotSwing = readRobotSwTr('robotSwingFootTraj.txt')
 #trSw = merge_swing_traj(trSw1, trSw2)
@@ -36,6 +37,9 @@ mpc_coor_L_x = COMmpcoor[:,12]
 mpc_coor_L_y = COMmpcoor[:,13]
 mpc_coor_L_z = COMmpcoor[:,14]
 alip_time = COMmpcoor[:,15]
+torso_roll = COMmpcoor[:,16]
+torso_pitch = COMmpcoor[:, 17]
+torso_yaw = COMmpcoor[:,18]
 
 timeCOM = alip_time
 time = alip_time

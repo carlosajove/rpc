@@ -14,8 +14,8 @@ from simulator.pybullet.rl.env_2 import *
 
 
 class DracoEnvOneStepMpcRange(DracoEnv_v2):
-    def __init__(self, mpc_freq, sim_dt, eval = None, burn_in: bool = False, reduced_obs_size: bool = True, render: bool = False, video = None) -> None:
-        super().__init__(mpc_freq, sim_dt, eval = eval, reduced_obs_size=reduced_obs_size, render=render, video=video)
+    def __init__(self, mpc_freq, sim_dt, eval = None, burn_in: bool = False, reduced_obs_size: bool = True, render: bool = False) -> None:
+        super().__init__(mpc_freq, sim_dt, eval=eval, reduced_obs_size=reduced_obs_size,render= render)
 
         self._reduced_obs_size = reduced_obs_size
         self._burn_in = burn_in
@@ -86,7 +86,8 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
 
     def set_action_command_in_sensor_data(self):
         #maybe set also time in newer version
-        Ly_list = [-25, -20, -15, -10, -5, 0, 5, 10, 15,20, 25]
+        Ly_list = [-25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25]
+        #Ly_list = [10, 15, 20, 25]
         self._Ly = random.choice(Ly_list)
         dir_command = np.array((0, self._Ly, 0))
 
@@ -103,14 +104,14 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
         #reward terms
         self._w_roll_pitch = -0.5
         self._w_com_height = -1
-        self._w_penalise_excessive_Lx = -4 
-        self._w_desired_Lx = -4
-        self._w_desired_Ly = -10.
-        self._w_desired_yaw = -1.
+        self._w_penalise_excessive_Lx = 0.5
+        self._w_desired_Lx = 0.5
+        self._w_desired_Ly = 1
+        self._w_desired_yaw = 0.1
         self._w_excessive_fp = -0.5
         self._w_excessive_angle = -2
-        self._w_termination = -10.
-        self._w_alive_bonus = 5.
+        self._w_termination = 0
+        self._w_alive_bonus = 0.3
 
 
     def _compute_reward(self, wbc_obs, action, done):
@@ -152,8 +153,8 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
         error = L - self._new_wbc_obs[7]  #+ self._old_wbc_obs[1:3] - self._new_wbc_obs[9:11]  #desired Lx,y - observedLx,y at the end of the step
         error /= (self._mass*self._zH)
         
-        error = np.square(error)
-        #error = np.exp(-error)
+        error = np.square(error/0.1)
+        error = np.exp(-error)
 
         error *= self._w_desired_Lx
         return error
@@ -162,10 +163,11 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
         error = np.abs(self._new_wbc_obs[7] - self._old_wbc_obs[1]) - self._Lx_main
         error /= (self._mass*self._zH)
 
-        if error > 0:
-            error *= self._w_penalise_excessive_Lx
-            return error
-        return 0
+        if error < 0:
+            return self._w_penalise_excessive_Lx
+        error = np.square(error)
+        error = np.exp(-error/0.05)
+        return error
         
     
     def reward_tracking_com_Ly(self):
@@ -173,16 +175,15 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
         error /= (self._mass*self._zH)
 
         error = np.square(error)
-        #error = np.exp(-error)
+        error = np.exp(-error/0.05)
 
         error *= self._w_desired_Ly
         return error
 
     def reward_tracking_yaw(self):
         error = self._new_wbc_obs[15] - self._old_wbc_obs[15] - self._old_wbc_obs[3]
-        #error = np.square(error)
-        #eror = np.exp(-error)
-        error = np.abs(error)
+        error = np.square(error)
+        eror = np.exp(-error/0.05)
         error *= self._w_desired_yaw
 
         return error
@@ -230,13 +231,21 @@ if __name__ == "__main__":
     interface = info["interface"]
     iter = 0
     flag = False
-
+    counter = 0
     while True:
+        counter += 1
         action = np.zeros(3)
         obs, reward, done, trunc, info = env.step(action)
-        #print(info['reward_components'])
+        print(info['reward_components'])
         if done or trunc:
+            print("hey 1")
             obs,info = env.reset()
         if flag:
+            print("hey2")
             flag = False
             obs,info = env.reset()
+        if counter > 10:
+            print("hey 3")
+            counter = 0
+            obs,info = env.reset()
+

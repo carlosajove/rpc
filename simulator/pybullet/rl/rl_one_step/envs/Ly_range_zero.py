@@ -13,7 +13,7 @@ from config.draco.pybullet_simulation import *
 from simulator.pybullet.rl.env_2 import *
 
 
-class DracoEnvOneStepMpcRange(DracoEnv_v2):
+class DracoEnvOneStepMpcRangeZero(DracoEnv_v2):
     def __init__(self, mpc_freq, sim_dt, eval = None, burn_in: bool = False, reduced_obs_size: bool = True, render: bool = False, video = None) -> None:
         super().__init__(mpc_freq, sim_dt, eval = eval, reduced_obs_size=reduced_obs_size, render=render, video=video)
 
@@ -63,7 +63,7 @@ class DracoEnvOneStepMpcRange(DracoEnv_v2):
         return policy_obs
 
     def _normalise_action(self, action):
-        _wbc_action = 0.1*action
+        _wbc_action = 0*action
         if self._burn_in:
             _wbc_action = 0*_wbc_action
         return _wbc_action

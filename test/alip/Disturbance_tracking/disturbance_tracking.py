@@ -13,12 +13,21 @@ script_directory = os.path.dirname(os.path.abspath(__file__))
 print(script_directory)
 
 #trSw = merge_swing_traj(trSw1, trSw2)
+"""
+MpcComState = readRobotSwTr('One_Step/RL/MpcCOMstate.txt')
 
-MpcComState = readRobotSwTr('MPC_dist_freq/MpcCOMstate.txt')
+COMmpcoor = readRobotSwTr('One_Step/RL/RobotCOMmpcOri.txt')
 
-COMmpcoor = readRobotSwTr('MPC_dist_freq/RobotCOMmpcOri.txt')
+Force = read_disturbance_file('One_Step/RL/disturbance.txt')
 
-Force = read_disturbance_file('MPC_dist_freq/disturbance.txt')
+with open('One_Step/RL/LandTime.txt', 'r') as file:
+    landingTime = [float(line.strip()) for line in file]
+"""
+MpcComState = readRobotSwTr('One_Step/MPC/MpcCOMstate.txt')
+COMmpcoor = readRobotSwTr('One_Step/MPC/RobotCOMmpcOri.txt')
+Force = read_disturbance_file('One_Step/MPC/disturbance.txt')
+with open('One_Step/RL/LandTime.txt', 'r') as file:
+    landingTime = [float(line.strip()) for line in file]
 
 
 mpc_coor_x = COMmpcoor[:, 0]
@@ -56,8 +65,7 @@ MpczH = MpcComState[:,11]
 MpcMassCom = MpcComState[:,12]
 MpcTs = MpcComState[:,13]
 
-with open('RL_dist_freq/LandTime.txt', 'r') as file:
-    landingTime = [float(line.strip()) for line in file]
+
 
 
 inter = sliceTime(time, lbound_time, ubound_time)

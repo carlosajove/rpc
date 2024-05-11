@@ -27,27 +27,24 @@ from stable_baselines3.common.monitor import Monitor
 from util.python_utils.util import read_config
 
 
-from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_turn_20_v3 import DracoEnvMpcFreq_turn_20_v3
+from simulator.pybullet.rl.rl_one_step.envs.Ly_range_new_reward_r8 import DracoEnvOneStepMpcRange_v8
 
 if __name__ == "__main__":
     #from stable_baselines3.common.env_checker import check_env
     #check_env(env)
-    load_path = os.path.join(cwd, 'rl_model/freq_env/Ly_10/PPO/redObsyaw_20_v3_n_steps_32768_batch_2048')
-    load_path = '/home/carlos/Desktop/Austin/FREQ_RESULTS/freq_env/rl_model/PPO/redObsyaw_20_v3_n_steps_32768_batch_2048'
 
-   
-    CURR_TIMESTEP = 19000000
+    load_path = os.path.join(cwd + '/rl_model/Ly_range/PPO', 'redObsLy_range_reward_7')
+    CURR_TIMESTEP = 500000
     model_name = f'_TIME{CURR_TIMESTEP}.zip'
     norm_name = f'TIME{CURR_TIMESTEP}.pkl'
     norm_path = os.path.join(load_path, norm_name)
     load_path = os.path.join(load_path, model_name)
-    reduced_obs_size = True
-    mpc_freq = 5
+
+    reduced_obs_size = True#
+    mpc_freq = 0
     sim_dt = Config.CONTROLLER_DT
 
-    yaw = math.pi*20/180
-    env = DracoEnvMpcFreq_turn_20_v3(mpc_freq, sim_dt, eval = [0,0,yaw] ,reduced_obs_size=reduced_obs_size, render = True,
-                                     video = 'mpc_freq_RL_yaw_20_v2.mp4')
+    env = DracoEnvOneStepMpcRange_v8(mpc_freq, sim_dt, eval = [0,0,0], reduced_obs_size=reduced_obs_size,  render = True)
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
     norm_env = VecNormalize.load(norm_path, vec_env)
@@ -59,33 +56,40 @@ if __name__ == "__main__":
 
 
     model = PPO.load(load_path, env=norm_env)
-    counter = 0
     
     #Leg Width must be 0.1
+    counter = 0
     while True:
-        counter+=1
+        counter +=1
         #action = torch.ones(AlipParams.N_BATCH,3)
         action, _ = model.predict(obs, deterministic=True)
         #action = 0*action
-        config = read_config('/home/carlos/Desktop/Austin/SeungHyeonProject/rpc/config/draco/alip_command.ini')
         
+        config = read_config('/home/carlosaj/Desktop/rpc/config/draco/alip_command.ini')
+        try:
+            PARAMS = config['Parameters']
+            Ly_des    = PARAMS.getfloat('LY_DES')    
+            des_com_yaw = PARAMS.getfloat('COM_YAW') 
+            des_com_yaw = des_com_yaw*math.pi/180
 
-        
+            Lx_offset = PARAMS.getfloat('LX_OFFSET')
+        except KeyError:
+            print("hey")
+
         ini_st_leg = np.random.choice([1, -1])  
-        #print("action: ",         env._normalise_action(action))
+        env._set_command_policy_sim(Lx_offset, Ly_des, des_com_yaw, ini_st_leg)
+
+        print("action: ", action)
         obs, reward, done, trunc, info = env.step(action)
         obs = norm_env.normalize_obs(obs)
-        #print("reward", reward)
-        #print("reward info", info["reward_components"])
+        print("reward", reward)
+        print("reward info", info["reward_components"])
         if done:
-            #print(done)
+            print(done)
             obs,info = env.reset()
-            #print(obs)
             obs = norm_env.normalize_obs(obs)
-            #print(obs)
-            
         """
-        if counter > 20*32:
+        if counter > 15:
             counter = 0
             obs,info = env.reset()
             obs = norm_env.normalize_obs(obs)

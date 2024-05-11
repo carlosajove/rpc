@@ -27,27 +27,30 @@ from stable_baselines3.common.monitor import Monitor
 from util.python_utils.util import read_config
 
 
-from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_turn_20_v3 import DracoEnvMpcFreq_turn_20_v3
+from simulator.pybullet.rl.rl_one_step.envs.dist_env_Ly_10_test import DracoEnvOneStepMpc_Ly_10_dist_diag
 
 if __name__ == "__main__":
     #from stable_baselines3.common.env_checker import check_env
     #check_env(env)
-    load_path = os.path.join(cwd, 'rl_model/freq_env/Ly_10/PPO/redObsyaw_20_v3_n_steps_32768_batch_2048')
-    load_path = '/home/carlos/Desktop/Austin/FREQ_RESULTS/freq_env/rl_model/PPO/redObsyaw_20_v3_n_steps_32768_batch_2048'
 
-   
-    CURR_TIMESTEP = 19000000
+    load_path = '/home/carlos/Desktop/Austin/ONE_STEP_RESULTS/rl_model/Ly_range/PPO/redObsLy_10_dist'
+    #load_path = os.path.join(cwd, 'rl_model/freq_env/Ly_10/PPO/redObsLy_10_disturbance_full')
+    CURR_TIMESTEP = 430000
     model_name = f'_TIME{CURR_TIMESTEP}.zip'
     norm_name = f'TIME{CURR_TIMESTEP}.pkl'
     norm_path = os.path.join(load_path, norm_name)
     load_path = os.path.join(load_path, model_name)
+
     reduced_obs_size = True
-    mpc_freq = 5
+    mpc_freq = 0
     sim_dt = Config.CONTROLLER_DT
 
-    yaw = math.pi*20/180
-    env = DracoEnvMpcFreq_turn_20_v3(mpc_freq, sim_dt, eval = [0,0,yaw] ,reduced_obs_size=reduced_obs_size, render = True,
-                                     video = 'mpc_freq_RL_yaw_20_v2.mp4')
+    env = DracoEnvOneStepMpc_Ly_10_dist_diag(mpc_freq, 
+                                sim_dt, 
+                                eval = [0, 10, 0], 
+                                reduced_obs_size=reduced_obs_size, 
+                                render = True,
+                                disturbance = True)
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
     norm_env = VecNormalize.load(norm_path, vec_env)
@@ -66,24 +69,23 @@ if __name__ == "__main__":
         counter+=1
         #action = torch.ones(AlipParams.N_BATCH,3)
         action, _ = model.predict(obs, deterministic=True)
-        #action = 0*action
-        config = read_config('/home/carlos/Desktop/Austin/SeungHyeonProject/rpc/config/draco/alip_command.ini')
-        
+        action = 0*action
 
-        
         ini_st_leg = np.random.choice([1, -1])  
+        # env._set_command_policy_sim(0, 10, 0, ini_st_leg)
+        env._set_command_policy_sim(0, 10, 0, ini_st_leg)
+
         #print("action: ",         env._normalise_action(action))
+
         obs, reward, done, trunc, info = env.step(action)
+        #print(obs)
         obs = norm_env.normalize_obs(obs)
         #print("reward", reward)
         #print("reward info", info["reward_components"])
         if done:
-            #print(done)
+            print(done)
             obs,info = env.reset()
-            #print(obs)
             obs = norm_env.normalize_obs(obs)
-            #print(obs)
-            
         """
         if counter > 20*32:
             counter = 0
