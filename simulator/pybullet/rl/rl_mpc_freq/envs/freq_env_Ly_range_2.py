@@ -12,7 +12,7 @@ from config.draco.pybullet_simulation import *
 from simulator.pybullet.rl.env_2 import *
 import random
 
-class DracoEnvMpcFreq_Ly_range_new_reward(DracoEnv_v2):
+class DracoEnvMpcFreq_Ly_range_new_reward_plus(DracoEnv_v2):
     def __init__(self, mpc_freq, sim_dt, eval = None, burn_in: bool = False, reduced_obs_size: bool = False, render: bool = False, disturbance: bool = False) -> None:
         super().__init__(mpc_freq=mpc_freq, sim_dt=sim_dt, reduced_obs_size=reduced_obs_size, render=render, eval = eval, disturbance = disturbance)
         
@@ -22,12 +22,14 @@ class DracoEnvMpcFreq_Ly_range_new_reward(DracoEnv_v2):
             print("FREQ SET TO 0. PLEASE INCREASE FREQ")
             raise Warning
         
-        self._set_max_steps_iter(32*35)
+        self._set_max_steps_iter(32*200)
 
         self._freq_push_dict = {'long_push_x': [572, 10, 0], 'short_push_x': [6, 80, 0],
                                 'long_push_y': [572, 0, 10], 'short_push_y': [6, 0, 100]}
         self._push_trigger = 2000
         self._push_ = [-1, -1, -1]
+        self._COUNTER = 0
+
         #raise Warning
 
     def _set_observation_space(self):
@@ -101,7 +103,7 @@ class DracoEnvMpcFreq_Ly_range_new_reward(DracoEnv_v2):
     
     def set_action_command_in_sensor_data(self):
         #maybe set also time in newer version
-        Ly_list = [-25, -20, -15, -10, -5, 0, 5, 10, 15, 25]
+        Ly_list = [-25, -20, -15, -10, -5, 0, 5, 10, 15, 18, 20, 24, 25]
         self._Ly = random.choice(Ly_list)
         dir_command = np.array((0, self._Ly, 0))
         initial_stance_leg = np.random.choice(np.array([-1, 1]))
@@ -144,9 +146,9 @@ class DracoEnvMpcFreq_Ly_range_new_reward(DracoEnv_v2):
 
         if (self._old_wbc_obs[0] != self._new_wbc_obs[0]):
             reward = self._w_alive_bonus
-            #reward += self.reward_tracking_com_Lx()
-            #reward += self.penalise_outside_Lx_bounds()
-            reward += self.tracking_Lx_offset()
+            reward += self.reward_tracking_com_Lx()
+            reward += self.penalise_outside_Lx_bounds()
+            #reward += self.tracking_Lx_offset()
             reward += self.reward_tracking_com_Ly()
             reward += self.reward_tracking_yaw()
             reward += self.reward_com_height()
@@ -159,6 +161,11 @@ class DracoEnvMpcFreq_Ly_range_new_reward(DracoEnv_v2):
                                         self.reward_tracking_yaw(), self.reward_com_height(),
                                         self.reward_roll_pitch(), self.penalise_excessive_fp(),
                                         self.penalise_excessive_yaw()])
+            self._COUNTER += 1
+            if (self._COUNTER >= 20): 
+                self.set_action_command_in_sensor_data()
+                self._COUNTER = 0
+                
         else:
             reward = self.r_intra_different_policy()
             reward += self.r_intra_excessive_Lx()

@@ -27,25 +27,25 @@ from stable_baselines3.common.monitor import Monitor
 from util.python_utils.util import read_config
 
 
-from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_Ly_range import DracoEnvMpcFreq_Ly_10
+from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_Ly_Range_new_reward import DracoEnvMpcFreq_Ly_range_new_reward
 
 if __name__ == "__main__":
     #from stable_baselines3.common.env_checker import check_env
     #check_env(env)
 
     #load_path = os.path.join('/home/carlos/Desktop/Austin/RL results/Ly_range/PPO', 'redObsLy_range_std_2')
-    load_path = os.path.join(cwd, 'rl_model/freq_env/Ly_10/PPO/fullObsLy_10')
-    CURR_TIMESTEP = 1500000
+    load_path = os.path.join(cwd, 'rl_model/freq_env/Ly_10/PPO/redObsLy_range__batch_2048_nsteps32768_plus')
+    CURR_TIMESTEP = 10000000
     model_name = f'_TIME{CURR_TIMESTEP}.zip'
     norm_name = f'TIME{CURR_TIMESTEP}.pkl'
     norm_path = os.path.join(load_path, norm_name)
     load_path = os.path.join(load_path, model_name)
 
-    reduced_obs_size = False
+    reduced_obs_size = True
     mpc_freq = 5
     sim_dt = Config.CONTROLLER_DT
 
-    env = DracoEnvMpcFreq_Ly_10(mpc_freq, sim_dt, eval = reduced_obs_size=reduced_obs_size, render = True)
+    env = DracoEnvMpcFreq_Ly_range_new_reward(mpc_freq, sim_dt, eval = [0,0,0],reduced_obs_size=reduced_obs_size, render = True)
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
     norm_env = VecNormalize.load(norm_path, vec_env)
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         #action = torch.ones(AlipParams.N_BATCH,3)
         action, _ = model.predict(obs, deterministic=True)
         #action = 0*action
-        config = read_config('/home/carlos/Desktop/Austin/SeungHyeonProject/rpc/config/draco/alip_command.ini')
+        config = read_config('/home/carlosaj/Desktop/rpc_2/rpc/config/draco/alip_command.ini')
         
         try:
             PARAMS = config['Parameters']
@@ -78,7 +78,7 @@ if __name__ == "__main__":
             print("hey")
         
         ini_st_leg = np.random.choice([1, -1])  
-        env._set_command_policy_sim(0, 10, 0, ini_st_leg)
+        env._set_command_policy_sim(0, Ly_des, 0, ini_st_leg)
         print("action: ",         env._normalise_action(action))
         obs, reward, done, trunc, info = env.step(action)
         obs = norm_env.normalize_obs(obs)
@@ -90,9 +90,10 @@ if __name__ == "__main__":
             print(obs)
             obs = norm_env.normalize_obs(obs)
             print(obs)
-            break
-
+            
+        """
         if counter > 20*32:
             counter = 0
             obs,info = env.reset()
             obs = norm_env.normalize_obs(obs)
+        """
