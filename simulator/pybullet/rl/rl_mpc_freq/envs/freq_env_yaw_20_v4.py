@@ -10,9 +10,9 @@ from util.python_utils import pybullet_util_rl
 from config.draco.pybullet_simulation import *
 
 from simulator.pybullet.rl.env_2 import *
-import random
 
-class DracoEnvMpcFreq_Ly_range_new_reward(DracoEnv_v2):
+
+class DracoEnvMpcFreq_turn_20_v4(DracoEnv_v2):
     def __init__(self, mpc_freq, sim_dt, eval = None, burn_in: bool = False, reduced_obs_size: bool = False, render: bool = False, disturbance: bool = False) -> None:
         super().__init__(mpc_freq=mpc_freq, sim_dt=sim_dt, reduced_obs_size=reduced_obs_size, render=render, eval = eval, disturbance = disturbance)
         
@@ -33,19 +33,20 @@ class DracoEnvMpcFreq_Ly_range_new_reward(DracoEnv_v2):
     def _set_observation_space(self):
         if self._reduced_obs_size:
             self.observation_space = gym.spaces.Box(  #observation space added Tr and previous full_action x and y
-                low = np.array([-100]*21),
-                high = np.array([100]*21),
+                low = np.array([-100]*20),
+                high = np.array([100]*20),
                 dtype = np.float64
             )
         else:
             self.observation_space = gym.spaces.Box(  #observation space
-                low = np.array([-100]*75),
-                high = np.array([100]*75),
+                low = np.array([-100]*74),
+                high = np.array([100]*74),
                 dtype = np.float64
             )
 
 
     def _get_observation(self, wbc_obs) -> dict:
+        #print(wbc_obs)
         """ Desired state is not an input to nn implicit in the env
         stance_leg
         com_pos_desired_frame x3
@@ -55,7 +56,6 @@ class DracoEnvMpcFreq_Ly_range_new_reward(DracoEnv_v2):
         torso_ang_vel         x3
         Tr                    x1
         last policy           x3
-
         """
         COM = np.concatenate((np.array([wbc_obs[0]]), 
                                         wbc_obs[4:10], 
@@ -72,9 +72,6 @@ class DracoEnvMpcFreq_Ly_range_new_reward(DracoEnv_v2):
                 self.link_id_dict, self.client)
             joint_obs = np.concatenate((joint_pos, joint_vel))
             policy_obs = np.concatenate((joint_obs, COM))
-
-        policy_obs = np.concatenate((policy_obs, [self._Ly]), axis = 0)
-
         return policy_obs
 
     def _normalise_action(self, action):
@@ -87,23 +84,23 @@ class DracoEnvMpcFreq_Ly_range_new_reward(DracoEnv_v2):
         if np.abs(_wbc_obs[23] - 12) < 0.5:  #12 is the alip state
             if _wbc_obs is not None:
                 #condition = np.any((_wbc_obs[6] < 0.5) | (_wbc_obs[6] > 0.8))  #0.69
-                if _wbc_obs[6] > 1:
+                if _wbc_obs[6] > 1.2:
                     return True
-                if _wbc_obs[6] < 0.45:
+                if _wbc_obs[6] < 0.35:
                     return True
                 if np.abs(_wbc_obs[7]) > (np.abs(self._Lx_main+_wbc_obs[1])+100):
 
                     return True
-                if np.abs(_wbc_obs[8] - _wbc_obs[2]) > 50:
+                if np.abs(_wbc_obs[8] - _wbc_obs[2]) > 100:
 
                     return True
         return False
     
     def set_action_command_in_sensor_data(self):
         #maybe set also time in newer version
-        Ly_list = [-25, -20, -15, -10, -5, 0, 5, 10, 15, 25]
-        self._Ly = random.choice(Ly_list)
-        dir_command = np.array((0, self._Ly, 0))
+        yaw = 20*math.pi/180
+        dir_command = np.array((0, 0, yaw))
+
         initial_stance_leg = np.random.choice(np.array([-1, 1]))
 
         self._rpc_draco_sensor_data.initial_stance_leg_ = initial_stance_leg
@@ -114,22 +111,19 @@ class DracoEnvMpcFreq_Ly_range_new_reward(DracoEnv_v2):
         #reward terms
         self._w_roll_pitch = -1
         self._w_com_height = -1
-        self._w_penalise_excessive_Lx = 0.4
-        self._w_desired_Lx = 1
-        self._w_Lx_offset = 1.5
-
-        self._w_desired_Ly = 2
-        self._w_desired_yaw = 1.
+        self._w_penalise_excessive_Lx = 0.3
+        self._w_desired_Lx = 0.6
+        self._w_desired_Ly = 1
+        self._w_desired_yaw = 1.5
         self._w_excessive_fp = -1
         self._w_excessive_angle = -3
         self._w_termination = 0
-        self._w_alive_bonus = 0.3
-        self._w_intra_pol = 0.04
-        self._w_intra_Lx = 0.01
-        self._w_intra_Ly = 0.005
+        self._w_alive_bonus = 2
+        self._w_intra_pol = 0.1
+        self._w_intra_Lx = 0.001
+        self._w_intra_Ly = 0.001
 
-    def _set_push_trigger(self):
-        return 3000000
+
 
     def _compute_reward(self, wbc_obs, action, done):
         if (done): 
@@ -144,9 +138,8 @@ class DracoEnvMpcFreq_Ly_range_new_reward(DracoEnv_v2):
 
         if (self._old_wbc_obs[0] != self._new_wbc_obs[0]):
             reward = self._w_alive_bonus
-            #reward += self.reward_tracking_com_Lx()
-            #reward += self.penalise_outside_Lx_bounds()
-            reward += self.tracking_Lx_offset()
+            reward += self.reward_tracking_com_Lx()
+            reward += self.penalise_outside_Lx_bounds()
             reward += self.reward_tracking_com_Ly()
             reward += self.reward_tracking_yaw()
             reward += self.reward_com_height()
@@ -179,7 +172,7 @@ class DracoEnvMpcFreq_Ly_range_new_reward(DracoEnv_v2):
         error = L - self._new_wbc_obs[7]  #+ self._old_wbc_obs[1:3] - self._new_wbc_obs[9:11]  #desired Lx,y - observedLx,y at the end of the step
         error /= (self._mass*self._zH)
         
-        error = np.square(error/0.1)
+        error = np.square(error/0.05)
         error = np.exp(-error)
 
         error *= self._w_desired_Lx
@@ -195,13 +188,6 @@ class DracoEnvMpcFreq_Ly_range_new_reward(DracoEnv_v2):
         error = np.exp(-error/0.01)
         return error
         
-    def tracking_Lx_offset(self):
-        error = self._new_wbc_obs[7] - self._old_wbc_obs[1]
-        error /= (self._mass*self._zH)
-        error = np.square(error)
-        #error = np.exp(-error/0.03)
-        error = np.exp(-error/0.1)
-        return self._w_Lx_offset*error
     
     def reward_tracking_com_Ly(self):
         error = self._old_wbc_obs[2] - self._new_wbc_obs[8]
@@ -214,7 +200,7 @@ class DracoEnvMpcFreq_Ly_range_new_reward(DracoEnv_v2):
         return error
 
     def reward_tracking_yaw(self):
-        error = self._new_wbc_obs[15] - self._old_wbc_obs[15] - self._old_wbc_obs[3]
+        error = self._new_wbc_obs[29]
         #error = np.square(error)
         #eror = np.exp(-error)
         error = np.square(error)
@@ -259,7 +245,7 @@ class DracoEnvMpcFreq_Ly_range_new_reward(DracoEnv_v2):
         error = self._new_wbc_obs[17:20] - self._old_wbc_obs[17:20]
         error /= self._sim_dt*self._mpc_freq
         error = np.sum(np.square(error))
-        error = np.exp(-error/0.01)
+        error = np.exp(-error/0.001)
         return self._w_intra_pol * error
     
     def r_intra_excessive_Lx(self):
@@ -269,14 +255,14 @@ class DracoEnvMpcFreq_Ly_range_new_reward(DracoEnv_v2):
         if error < 0:
             return self._w_intra_Lx
         
-        error = np.exp(-error/0.01)
+        error = np.exp(-error/0.03)
         return self._w_intra_Lx * error
     
     def r_intra_excessive_Ly(self):
         error = self._old_wbc_obs[2] - self._new_wbc_obs[8]
         error /= (self._mass*self._zH)
         error = np.square(error)
-        error = np.exp(-error/0.04)
+        error = np.exp(-error/0.05)
         return self._w_intra_Ly * error
 
 
@@ -317,7 +303,7 @@ class DracoEnvMpcFreq_Ly_range_new_reward(DracoEnv_v2):
 
 
 if __name__ == "__main__":
-    env = DracoEnvMpcFreq_Ly_range_new_reward( 5, Config.CONTROLLER_DT, reduced_obs_size=True, render = True)
+    env = DracoEnvMpcFreq_turn_20( 5, Config.CONTROLLER_DT, reduced_obs_size=True, render = True)
     from stable_baselines3.common.env_checker import check_env
     check_env(env)
 

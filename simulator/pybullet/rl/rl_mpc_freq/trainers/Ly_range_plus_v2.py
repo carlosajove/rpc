@@ -16,7 +16,7 @@ from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback,
 cwd = os.getcwd()
 sys.path.append(cwd)
 sys.path.append(cwd + "/build/lib")
-from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_2 import DracoEnvMpcFreq_Ly_range_new_reward_ss
+from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_Ly_range_plus_2 import DracoEnvMpcFreq_Ly_range_new_reward_ss_2
 
 from config.draco.pybullet_simulation import Config
 
@@ -25,7 +25,7 @@ env_dir = cwd + "/rl_env/freq_env/Ly_10/PPO"
 #import tracemalloc
 import argparse
 import torch
-new_model = False
+new_model = True
 
 if __name__ == "__main__":
     if not new_model:
@@ -34,21 +34,21 @@ if __name__ == "__main__":
         args = parser.parse_args()
         bash_timesteps = int(args.timesteps)
 
-    n_steps_ = 32768 #32768 #16384 #256
-    batch_size_ = 2048 #1024 #2048
+    n_steps_ = 500000 #32768 #16384 #256
+    batch_size_ = 5000 #1024 #2048
     learning_rate_ = 0.0003
     mpc_freq = 5
     sim_dt = 0.00175
     reduced_obs_size = True
 
     render = False
-    env = DracoEnvMpcFreq_Ly_range_new_reward_ss(mpc_freq, sim_dt, reduced_obs_size=reduced_obs_size, render = False)
+    env = DracoEnvMpcFreq_Ly_range_new_reward_ss_2(mpc_freq, sim_dt, reduced_obs_size=reduced_obs_size, render = False)
 
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
 
     #MODEL EVALUATION
-    eval_env = DracoEnvMpcFreq_Ly_range_new_reward_ss(mpc_freq, sim_dt,reduced_obs_size=reduced_obs_size, render = render)
+    eval_env = DracoEnvMpcFreq_Ly_range_new_reward_ss_2(mpc_freq, sim_dt,reduced_obs_size=reduced_obs_size, render = render)
     eval_monitor_env = Monitor(eval_env)
     eval_vec_env = DummyVecEnv([lambda: eval_monitor_env])
     norm_eval_env = VecNormalize(eval_vec_env,norm_obs = True, norm_reward = False, clip_obs = 60, gamma = 0.99)
@@ -59,8 +59,8 @@ if __name__ == "__main__":
     else:
         str1 = 'fullObs'
     
-    save_dir = str1 + f"Ly_range__batch_{batch_size_}_nsteps{n_steps_}_step_mod" 
-    load_dir = str1 + f"Ly_range__batch_{batch_size_}_nsteps{n_steps_}_step_mod" 
+    save_dir = str1 + f"Ly_range__batch_{batch_size_}_nsteps{n_steps_}_plus_22" 
+    load_dir = str1 + f"Ly_range__batch_{batch_size_}_nsteps{n_steps_}_plus_22" 
     load_path = os.path.join(model_dir, load_dir) 
     save_path = os.path.join(model_dir, save_dir)      
     ## train model
@@ -75,6 +75,7 @@ if __name__ == "__main__":
                     batch_size=batch_size_, 
                     tensorboard_log=tensorboard_dir, 
                     learning_rate=learning_rate_,
+                    n_epochs=20,
                     #use_sde=True,
                     #policy_kwargs=policy_kwargs,
                     device='cpu') #policy_kwargs=dict(net_arch=[64,64, dict(vf=[], pi=[])]),

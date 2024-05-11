@@ -59,8 +59,8 @@ if __name__ == "__main__":
     else:
         str1 = 'fullObs'
     
-    save_dir = str1 + f"Ly_range__batch_{batch_size_}_nsteps{n_steps_}_step_mod" 
-    load_dir = str1 + f"Ly_range__batch_{batch_size_}_nsteps{n_steps_}_step_mod" 
+    save_dir = str1 + f"Ly_range__batch_{batch_size_}_nsteps{n_steps_}_plus" 
+    load_dir = str1 + f"Ly_range__batch_{batch_size_}_nsteps{n_steps_}_plus" 
     load_path = os.path.join(model_dir, load_dir) 
     save_path = os.path.join(model_dir, save_dir)      
     ## train model
