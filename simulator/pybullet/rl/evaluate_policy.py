@@ -27,44 +27,79 @@ from stable_baselines3.common.evaluation import evaluate_policy
 from util.python_utils.util import read_config
 
 
-from simulator.pybullet.rl.rl_one_step.envs.Ly_range import DracoEnvOneStepMpcRange
-from simulator.pybullet.rl.rl_one_step.envs.Ly_range_zero import DracoEnvOneStepMpcRangeZero
+from simulator.pybullet.rl.rl_one_step.envs.turn_20 import DracoEnvOneStepMpcYaw_20
+from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_turn_20_v3 import DracoEnvMpcFreq_turn_20_v3
 if __name__ == "__main__":
     #from stable_baselines3.common.env_checker import check_env
     #check_env(env)
-    path1 = '/home/carlos/Desktop/Austin/ONE_STEP_RESULTS'
-    path2 = 'rl_model/Ly_range/PPO'
-    file_name = 'redObsLy_range_new_r_second'
-    file_name = 'redObsLy_range_new_reward_Lx_mod'
-    load_path = os.path.join(path1, path2, file_name)
-    CURR_TIMESTEP = 900000
-    model_name = f'_TIME{CURR_TIMESTEP}.zip'
-    norm_name = f'TIME{CURR_TIMESTEP}.pkl'
-    norm_path = os.path.join(load_path, norm_name)
-    load_path = os.path.join(load_path, model_name)
+    one_step_path = '/home/carlos/Desktop/Austin/ONE_STEP_RESULTS/rl_model/Ly_range/PPO/redObsLy_turn_20_third/'
+    freq_path = '/home/carlos/Desktop/Austin/FREQ_RESULTS/freq_env/rl_model/PPO/redObsyaw_20_v3_n_steps_32768_batch_2048'
 
-    reduced_obs_size = True
-    mpc_freq = 0
+    CURR_TIMESTEP_freq = 19000000
+    CURR_TIMESTEP_one = 340000
+    model_name_one = f'_TIME{CURR_TIMESTEP_one}.zip'
+    norm_name_one = f'TIME{CURR_TIMESTEP_one}.pkl'
+    norm_path_one = os.path.join(one_step_path, norm_name_one)
+    load_path_one = os.path.join(one_step_path, model_name_one)
+
+    model_name_freq = f'_TIME{CURR_TIMESTEP_freq}.zip'
+    norm_name_freq = f'TIME{CURR_TIMESTEP_freq}.pkl'
+    norm_path_freq = os.path.join(freq_path, norm_name_freq)
+    load_path_freq = os.path.join(freq_path, model_name_freq)
+
+
     sim_dt = Config.CONTROLLER_DT
 
-    env = DracoEnvOneStepMpcRange(mpc_freq, sim_dt, 
-                                  reduced_obs_size=reduced_obs_size,  
+    env_one_zero = DracoEnvOneStepMpcYaw_20(0, sim_dt, 
+                                  reduced_obs_size=True,  
+                                  render = False,
+                                  video = None,
+                                  zero = True)
+    monitor_env_one_zero = Monitor(env_one_zero)
+
+
+    env_one = DracoEnvOneStepMpcYaw_20(0, sim_dt, 
+                                  reduced_obs_size=True,  
                                   render = False,
                                   video = None)
-    monitor_env = Monitor(env)
-    vec_env = DummyVecEnv([lambda: monitor_env])
-    norm_env = VecNormalize.load(norm_path, vec_env)
-    norm_env.training = False
-    norm_env.norm_reward = False
+    monitor_env_one = Monitor(env_one)
+    vec_env_one = DummyVecEnv([lambda: monitor_env_one])
+    norm_env_one = VecNormalize.load(norm_path_one, vec_env_one)
+    norm_env_one.training = False
+    norm_env_one.norm_reward = False
 
 
-    env_zero = DracoEnvOneStepMpcRangeZero(mpc_freq, sim_dt, 
-                                    reduced_obs_size=reduced_obs_size,  
-                                    render = False,
-                                    video = None)
-    mon_env_zero = Monitor(env_zero)
 
-    model = PPO.load(load_path, env=norm_env)
-    
-    print("eval1", evaluate_policy(model, norm_env, n_eval_episodes=25, deterministic = True, render = False, warn = True, return_episode_rewards=True))
-    print("zero", evaluate_policy(model, env_zero, n_eval_episodes=25, deterministic = True, render = False, warn = True,return_episode_rewards=True))
+    model_one = PPO.load(load_path_one, env=norm_env_one)
+    print("start")
+    #print("one eval", evaluate_policy(model_one, norm_env_one, n_eval_episodes=100, deterministic = True, render = False, warn = True, return_episode_rewards=True))
+    #print("one zero", evaluate_policy(model_one, monitor_env_one_zero, n_eval_episodes=100, deterministic = True, render = False, warn = True,return_episode_rewards=True))
+
+
+
+
+    env_freq_zero = DracoEnvMpcFreq_turn_20_v3(5, sim_dt, 
+                                        reduced_obs_size=True,  
+                                        render = False,
+                                        video = None,
+                                        zero = True)
+    monitor_env_freq_zero = Monitor(env_freq_zero)
+
+    env_freq = DracoEnvMpcFreq_turn_20_v3(5, sim_dt, 
+                                          reduced_obs_size=True,  
+                                          render = False,
+                                          video = None)
+    monitor_env_freq = Monitor(env_freq)
+
+    vec_env_freq = DummyVecEnv([lambda: monitor_env_freq])
+    norm_env_freq = VecNormalize.load(norm_path_freq, vec_env_freq)
+    norm_env_freq.training = False
+    norm_env_freq.norm_reward = False
+
+    model_freq = PPO.load(load_path_freq, env=norm_env_freq)
+
+    print("freq eval", evaluate_policy(model_freq, norm_env_freq, n_eval_episodes=100, deterministic = True, render = False, warn = True, return_episode_rewards=True))
+    print("freq zero", evaluate_policy(model_freq, monitor_env_freq_zero, n_eval_episodes=100, deterministic = True, render = False, warn = True,return_episode_rewards=True))
+
+
+

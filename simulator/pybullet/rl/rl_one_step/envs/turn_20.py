@@ -15,9 +15,9 @@ from simulator.pybullet.rl.env_2 import *
 
 class DracoEnvOneStepMpcYaw_20(DracoEnv_v2):
     def __init__(self, mpc_freq, sim_dt, eval = None, burn_in: bool = False, reduced_obs_size: bool = True, 
-                 render: bool = False, disturbance: bool = False, video = None) -> None:
+                 render: bool = False, disturbance: bool = False, video = None, zero : bool = False) -> None:
         super().__init__(mpc_freq, sim_dt, eval=eval, reduced_obs_size=reduced_obs_size,render= render, disturbance=disturbance, video = video)
-
+        self._zero = zero
         self._reduced_obs_size = reduced_obs_size
         self._burn_in = burn_in
         if mpc_freq != 0:
@@ -71,6 +71,8 @@ class DracoEnvOneStepMpcYaw_20(DracoEnv_v2):
 
     def _normalise_action(self, action):
         _wbc_action = 0.05*action
+        if self._zero:
+            _wbc_action = 0*_wbc_action
         if self._burn_in:
             _wbc_action = 0*_wbc_action
         return _wbc_action
@@ -81,16 +83,18 @@ class DracoEnvOneStepMpcYaw_20(DracoEnv_v2):
             if _wbc_obs is not None:
                 #condition = np.any((_wbc_obs[6] < 0.5) | (_wbc_obs[6] > 0.8))  #0.69
                 if _wbc_obs[6] > 1:
-                    print("high")
+                    #print("high")
                     return True
                 if _wbc_obs[6] < 0.45:
-                    print("low")
+                    #print("low")
                     return True
                 if np.abs(_wbc_obs[7]) > (np.abs(self._Lx_main+_wbc_obs[1])+100):
-                    print("Lx")
+                    #print("Lx")
+                    a=1
                     #return True
                 if np.abs(_wbc_obs[8] - _wbc_obs[2]) > 50:
-                    print("Ly")
+                    #print("Ly")
+                    a=1
                     #return True
         return False
     
