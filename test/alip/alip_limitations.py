@@ -5,10 +5,10 @@ import numpy as np
 import scipy
 from scipy.linalg import expm
 from plot_utils import *
+
 matplotlib.use('TkAgg')
 
 from read_data import *
-
 """
 #########################################################
 ## Plots ALIP continuous trajectory vs real trajectory ##
@@ -21,7 +21,7 @@ def alip_trajectory(x0, dt): #x = [x y Lx Ly]
                  [0, 0, -1/(mass*zH), 0],
                  [0, -mass*g, 0, 0],
                  [mass*g , 0, 0, 0]])
-    Adt = expm(A*dt) 
+    Adt = expm(A*dt)
     res = np.matmul(Adt, x0)
     return res
 """
@@ -79,18 +79,18 @@ def plot_alip_traj_vs_real(dim, mpc_coor_, name_robot, name_pred, axis_y, eps1=1
     plt.figure(figsize=(9, 6))
     #plt.plot(time[traj_indices[0]+5:traj_indices[-2]], mpc_coor_[traj_indices[0]+5:traj_indices[-2]], label="real " + name)
     real_traj_mask = np.abs(np.diff(mpc_coor_[traj_indices[0]:traj_indices[-2]], prepend=mpc_coor_[traj_indices[0]])) < eps1
-    
+
     # Plot filtered real trajectory
     #plt.plot(time[traj_indices[0]:traj_indices[-2]], np.where(real_traj_mask, mpc_coor_[traj_indices[0]:traj_indices[-2]], np.nan), label=name_robot)
     plt.plot(time[traj_indices[0]:traj_indices[-2]], mpc_coor_[traj_indices[0]:traj_indices[-2]], label=name_robot)
     # Calculate mask for points with discontinuities greater than epsilon
     mask = np.abs(np.diff(alip_state_traj[:, dim], prepend=alip_state_traj[0, dim])) < eps2
-    
+
     # Plot ALIP trajectory with discontinuities filtered
     alip_time_filtered = np.where(mask, alip_time_traj, np.nan)
     alip_state_filtered = np.where(mask, alip_state_traj[:, dim], np.nan)
     #plt.plot(alip_time_traj, alip_state_filtered, label=name_pred)
-    
+
     plt.plot(alip_time_traj, alip_state_traj[:, dim], label=name_pred)
     for i in range(len(landingTimes_in_range) - 1):
         plt.axvspan(landingTimes_in_range[i], landingTimes_in_range[i+1], color=colors[i % len(colors)], alpha=0.3)
@@ -166,35 +166,38 @@ plt.subplots_adjust(left=0.145)
 ######################################
 ### Plot mpc freq output #############
 ######################################
-one_inter = [i for i in range(traj_indices[1]+4,traj_indices[2])]
-
+one_inter = [i for i in range(traj_indices[10] + 4, traj_indices[11])]
 
 sl = slice(one_inter[0], one_inter[-1], 4)
 #End foot command
 plt.figure(figsize=(9, 6))
-plt.scatter(end_foot_commandx[sl], end_foot_commandy[sl], marker = 'x')
-plt.xlabel('Time (s)', fontsize = 20)
-plt.ylabel("$L_{y} \, (kg \dot m^{2} \dot s^{-1})$", fontsize = 20, labelpad=20)
+plt.scatter(end_foot_commandx[sl], end_foot_commandy[sl], marker='x')
+plt.xlabel('Time (s)', fontsize=20)
+plt.ylabel("$L_{y} \, (kg \dot m^{2} \dot s^{-1})$", fontsize=20, labelpad=20)
 plt.legend(fontsize=20)
 plt.subplots_adjust(left=0.145)
 
 plt.figure(figsize=(9, 6))
-plt.scatter(time[sl], end_foot_commandx[sl], marker = 'x', label = '$u_{fp}^{x}(t)$')
-plt.xlabel('Time (s)', fontsize = 20)
-plt.ylabel("$x (m)$", fontsize = 20, labelpad=20)
+plt.scatter(time[sl],
+            end_foot_commandx[sl],
+            marker='x',
+            label='$u_{fp}^{x}(t)$')
+plt.xlabel('Time (s)', fontsize=20)
+plt.ylabel("$x (m)$", fontsize=20, labelpad=20)
 plt.legend(fontsize=20)
 plt.subplots_adjust(left=0.145)
 
 plt.figure(figsize=(9, 6))
-plt.scatter(time[sl], end_foot_commandy[sl], marker = 'x', label = '$u_{fp}^{y}(t)$')
-plt.xlabel('Time (s)', fontsize = 20)
-plt.ylabel("$y (m)$", fontsize = 20, labelpad=20)
+plt.scatter(time[sl],
+            end_foot_commandy[sl],
+            marker='x',
+            label='$u_{fp}^{y}(t)$')
+plt.xlabel('Time (s)', fontsize=20)
+plt.ylabel("$y (m)$", fontsize=20, labelpad=20)
 plt.legend(fontsize=20)
 plt.subplots_adjust(left=0.145)
 
 print(plt.rcParams['axes.prop_cycle'].by_key()['color'])
-
-
 """
 
 ############################
@@ -234,19 +237,17 @@ plt.subplots_adjust(left=0.145)
 """
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
-ax.plot(swingXCommand[one_inter], 
-        swingYCommand[one_inter], 
-        swingZCommand[one_inter], 
-        marker='x', label = 'Reference trajectory')
-ax.plot(trRobotSwing[one_inter,0], 
-        trRobotSwing[one_inter,1], 
-        trRobotSwing[one_inter,2], 
-        marker = 'x', color = 'red', label = 'Position')
+ax.plot(swingXCommand[one_inter],
+        swingYCommand[one_inter],
+        swingZCommand[one_inter],
+        marker='x',
+        label='Reference trajectory')
+ax.plot(trRobotSwing[one_inter, 0],
+        trRobotSwing[one_inter, 1],
+        trRobotSwing[one_inter, 2],
+        marker='x',
+        color='red',
+        label='Position')
 ax.legend()
-
-
-
-
-
 
 plt.show()
