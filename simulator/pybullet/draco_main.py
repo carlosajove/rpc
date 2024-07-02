@@ -367,11 +367,12 @@ if __name__ == "__main__":
                                  useFixedBase=0,
                                  flags=pb.URDF_USE_SELF_COLLISION)
 
-    ground = pb.loadURDF(cwd + "/robot_model/ground/plane.urdf",
-                         useFixedBase=1)
+    #ground = pb.loadURDF(cwd + "/robot_model/ground/plane.urdf",
+    #                     useFixedBase=1)
     """ground = pb.loadURDF(cwd + "/robot_model/ground/plane100.urdf",
                          [0, 0, 0], pb.getQuaternionFromEuler([0, 0, 0]))"""
-    """ground = pb.loadURDF(cwd + "/robot_model/ground/model.urdf") """            
+    """ground = pb.loadURDF(cwd + "/robot_model/ground/model.urdf") """ 
+    ground = pb.loadURDF(cwd + "/robot_model/ground/tilted_plane.urdf")           
     pb.configureDebugVisualizer(pb.COV_ENABLE_RENDERING, 1)
 
     #TODO:modify this function without dictionary container

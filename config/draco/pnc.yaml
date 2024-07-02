@@ -389,8 +389,8 @@ lmpc_walking:
 #mpc freq == 0 --> mu = 0.4
 #mpc freq == 5 --> mu = 0.1
 alip_mpc_walking:
-  verbose: false
-  save_freq: 100000
+  verbose: true
+  save_freq: 1
   new_solver: false #true is better for mpc freq
   #mpc_freq: 0  #50aag
   step_horizon: "4"
@@ -407,7 +407,7 @@ alip_mpc_walking:
   #Lx_offset: 0 #0
   #Ly_des: 0 #3
   #com_yaw: 10  #degrees
-  kx: 0
+  kx: 0.1
   ky: 0
   #old solver:
   y_mech_max: 0.15

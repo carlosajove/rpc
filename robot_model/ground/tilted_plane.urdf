@@ -11,9 +11,9 @@
     <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="1 0 0"/>
+      <origin rpy="0 0.1 0" xyz="0.0 0 0"/>
       <geometry>
-				<mesh filename="plane.obj" scale="1 1 1"/>
+        <mesh filename="plane.obj" scale="0.5 0.5 0.5"/>
       </geometry>
        <material name="white">
         <color rgba="1 1 1 1"/>
@@ -21,12 +21,21 @@
     </visual>
 
     <collision>
-      <origin rpy="${pi/4} 0 0" xyz="1 0 0"/>
+      <origin rpy="0 0.1 0" xyz="0.0 0 0"/>
       <geometry>
-         <plane normal="-1 0 1"/>
+         <!--<plane normal="-1 0 1"/>-->
+         <plane normal="0 0 1"/>
       </geometry>
     </collision>
-
+    <!--<visual>-->
+      <!--<origin rpy="0 0.165 0" xyz="0 0 0"/>-->
+      <!--<geometry>-->
+        <!--<box size="0.304 0.6 0.304"/>-->
+      <!--</geometry>-->
+       <!--<material name="brown2">-->
+           <!--<color rgba="0.545 0.27 0.074 1.0"/>-->
+      <!--</material>-->
+    <!--</visual>-->
   </link>
 
 </robot>

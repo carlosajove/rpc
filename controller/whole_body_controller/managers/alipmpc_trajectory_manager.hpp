@@ -22,8 +22,10 @@ public:
 
   virtual ~AlipMpcTrajectoryManager()  = default;
 
-  void initializeOri();
-  void setNewOri(const double &des_com_yaw);
+  void initializeOri(const double& kx, const double& ky);
+  void setNewOri(const double &des_com_yaw, const double& kx, const double& ky);
+  void toTiltedOrientation(Eigen::Quaterniond& quat, const double& kx, const double& ky);
+
   void MpcSolutions(const double &tr_, const double &st_leg_, 
                     const double &Lx_offset_, const double &Ly_des_,
                     const double &com_yaw_, 
@@ -34,7 +36,7 @@ public:
   void safety_proj();
   
   void InertiaToMpcCoordinates(const bool &first);
-  void OutputMpcToInertiaCoordinates();
+  void OutputMpcToInertiaCoordinates(const double& kx, const double& ky);
 
   void turning_self_collision();
   void GenerateTrajs(const double &tr_, const bool &ori_traj);
@@ -46,7 +48,7 @@ public:
 
   void UpdateDesired(const double t);
   void MakeParallelToGround(Eigen::Isometry3d &pose);
-  double ComputeZpos(const double &x, const double &y, const double &zH_);
+  double ComputeZpos(const double &x, const double &y, const double &zH_, const double& kx, const double& ky);
 
   void SetSwingFootStart(Eigen::Vector3d pos){Swingfoot_start = pos;}
   void SetLydes(double des){indata.Ly_des = des;}

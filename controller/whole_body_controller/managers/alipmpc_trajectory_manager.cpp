@@ -47,15 +47,18 @@ AlipMpcTrajectoryManager::AlipMpcTrajectoryManager(NewStep_mpc *alipMpc,
 
 }  //need to add ori 
 
-void AlipMpcTrajectoryManager::initializeOri(){
+void AlipMpcTrajectoryManager::initializeOri(const double& kx, const double& ky){
   des_end_torso_iso_ = robot_->GetLinkIsometry(draco_link::torso_link);
   FootStep::MakeHorizontal(des_end_torso_iso_);
   des_end_torso_quat_ = Eigen::Quaterniond(des_end_torso_iso_.linear());
   des_end_swfoot_quat_ = des_end_torso_quat_;
+
+  this->toTiltedOrientation(des_end_swfoot_quat_, kx, ky);
+
 }
 
 
-void AlipMpcTrajectoryManager::setNewOri(const double& des_com_yaw){
+void AlipMpcTrajectoryManager::setNewOri(const double& des_com_yaw, const double& kx,  const double& ky){
     com_yaw_ = des_com_yaw;
     if (com_yaw_ != 0){
       des_end_torso_iso_ = robot_->GetLinkIsometry(draco_link::torso_link);
@@ -68,7 +71,19 @@ void AlipMpcTrajectoryManager::setNewOri(const double& des_com_yaw){
       des_end_swfoot_iso_ = des_end_torso_iso_;
       des_end_torso_quat_ = Eigen::Quaterniond(des_end_torso_iso_.linear());
       des_end_swfoot_quat_ = des_end_torso_quat_;
+
+      this->toTiltedOrientation(des_end_swfoot_quat_, kx, ky);
     }
+}
+
+void AlipMpcTrajectoryManager::toTiltedOrientation(Eigen::Quaterniond& quat, const double& kx, const double& ky){
+  double roll = atan(ky);
+  double pitch = atan(kx);
+  Eigen::Quaterniond tilted_terrain;
+  tilted_terrain = Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX())
+    * Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY());
+  quat = tilted_terrain*quat;
+
 }
 
 
@@ -85,13 +100,22 @@ void AlipMpcTrajectoryManager::MpcSolutions(const double &tr_, const double &st_
   indata.Lx_offset = Lx_offset_;
   indata.Ly_des = Ly_des_;
   com_yaw_ = com_yaw;
-  indata.kx = kx_;
-  indata.ky = ky_;
+
+  //CHECK THE SIGN (HERE IT'S THE TRANSPOSED)
+  Eigen::Matrix2d rotationMatrix;
+    rotationMatrix << std::cos(com_yaw_), std::sin(com_yaw_),
+                      -std::sin(com_yaw_),  std::cos(com_yaw_);
+
+  Eigen::Vector2d K;
+  K << kx_, ky_;
+  K = rotationMatrix*K;
+  indata.kx = K(0);
+  indata.ky = K(1);
   indata.mu = mu_;
   indata.stance_leg = st_leg_;
   this->InertiaToMpcCoordinates(first);
   alipMpc->Update_(indata, outdata, fullsol);
-  this->OutputMpcToInertiaCoordinates();
+  this->OutputMpcToInertiaCoordinates(kx_, ky_);
 }
 
 //use torso horientazion with make horizontal
@@ -136,7 +160,6 @@ void AlipMpcTrajectoryManager::InertiaToMpcCoordinates(const bool &first){
     indata.zH += terrain(2)*(rotpos(2)-stleg_pos_torso_ori(2));
     */
     indata.zH = refzH;
-
     pos = Eigen::Vector3d(indata.xlip_current[0],indata.xlip_current[1],indata.zH);
     //pos = Eigen::Vector3d(indata.xlip_current[0],indata.xlip_current[1],indataxlip_current_z);
     Eigen::Vector3d vel = robot_->GetRobotComLinVel();   //check? the velocity frame needs to be aligned with the foot frame. 
@@ -151,12 +174,12 @@ void AlipMpcTrajectoryManager::InertiaToMpcCoordinates(const bool &first){
 }
 
 
-void AlipMpcTrajectoryManager::OutputMpcToInertiaCoordinates(){
+void AlipMpcTrajectoryManager::OutputMpcToInertiaCoordinates(const double& kx, const double& ky){
   //COM
   double sw_end_x = outdata.ufp_wrt_st[0];
   double sw_end_y = outdata.ufp_wrt_st[1];
 
-  double sw_end_z = this->ComputeZpos(sw_end_x, sw_end_y, 0); //assumes flat surface
+  double sw_end_z = this->ComputeZpos(sw_end_x, sw_end_y, 0, kx, ky); //assumes flat surface
                                                               //if not flat should be Swingfoot_end instead of 0 
   Swingfoot_end << sw_end_x, sw_end_y, sw_end_z;
 
@@ -164,7 +187,7 @@ void AlipMpcTrajectoryManager::OutputMpcToInertiaCoordinates(){
 
   Swingfoot_end = Swingfoot_end + stleg_pos;
 
-  Swingfoot_end(2) = this->ComputeZpos(Swingfoot_end(0), Swingfoot_end(1), 0);
+  Swingfoot_end(2) = this->ComputeZpos(Swingfoot_end(0), Swingfoot_end(1), 0, kx, ky);
 }
 
 Eigen::Vector3d AlipMpcTrajectoryManager::add_residual_rl_action(const Eigen::VectorXd &action){
@@ -322,15 +345,19 @@ void AlipMpcTrajectoryManager::UpdateDesired(const double t){
   //in single_support_swing update both the tasks
   //for the stance leg they use UseCurrent. Is it really necessary
   //it would mean that tasks are erased at each controller iteration
+  double com_z_des; 
+
   if (indata.stance_leg == 1){ //update left
     lfoot_task->UpdateDesired(des_swfoot_pos, des_swfoot_vel, des_swfoot_acc);
     lfoot_ori->UpdateDesired(des_swfoot_ori, des_swfoot_ori_vel, des_swfoot_ori_acc);
 
     rfoot_task->UpdateDesired(stance_rfoot, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
     rfoot_ori->UpdateDesired(stance_rfoot_quat_coef, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
+
+    com_z_des = stance_rfoot(2) + refzH;
     //this->UpdateCurrentPos(rfoot_task);
     //this->UpdateCurrentOri(rfoot_ori);
-
+    
     //Set hierarchy weights
     com_xy_task->SetWeight(com_xy_task_weight);
     com_z_task->SetWeight(com_z_task_weight);
@@ -347,7 +374,7 @@ void AlipMpcTrajectoryManager::UpdateDesired(const double t){
     lfoot_ori->UpdateDesired(stance_lfoot_quat_coef, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
     //this->UpdateCurrentPos(lfoot_task);
     //this->UpdateCurrentOri(lfoot_ori);
-
+    com_z_des = stance_lfoot(2) + refzH;
     //set hierarchy weights
     com_xy_task->SetWeight(com_xy_task_weight);
     com_z_task->SetWeight(com_z_task_weight);
@@ -360,7 +387,7 @@ void AlipMpcTrajectoryManager::UpdateDesired(const double t){
   }
   
   Eigen::VectorXd Z(1);
-  Z << refzH;
+  Z << com_z_des;
   com_z_task->UpdateDesired(Z, Eigen::VectorXd::Zero(1),
                             Eigen::VectorXd::Zero(1));
                             
@@ -456,8 +483,8 @@ void AlipMpcTrajectoryManager::MakeParallelToGround(Eigen::Isometry3d &pose){
   pose.linear() = T*R;
 }
 
-double AlipMpcTrajectoryManager::ComputeZpos(const double &x, const double &y, const double &zH_){
-  return indata.kx*x + indata.ky*y + zH_;
+double AlipMpcTrajectoryManager::ComputeZpos(const double &x, const double &y, const double &zH_, const double& kx, const double& ky){
+  return kx*x + ky*y + zH_;
 }
 
 

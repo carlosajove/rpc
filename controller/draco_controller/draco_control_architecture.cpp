@@ -243,8 +243,8 @@ void DracoControlArchitecture::GetCommand(void *command) {
             b_state_first_visit_ = true;
             if (state_ == draco_states::AlipLocomotion) {
                 sp_->rl_trigger_ = true;
-                alip_tm_->initializeOri();
-                alip_tm_->setNewOri(sp_->des_com_yaw_);
+                alip_tm_->initializeOri(sp_->kx_, sp_->ky_);
+                alip_tm_->setNewOri(sp_->des_com_yaw_, sp_->kx_, sp_->ky_);
                 sp_->des_end_torso_iso_ = alip_tm_->Get_des_end_torso_iso();
                 alip_tm_->saveDoubleStanceFoot();
             }
