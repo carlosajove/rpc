@@ -80,8 +80,7 @@ void AlipMpcTrajectoryManager::toTiltedOrientation(Eigen::Quaterniond& quat, con
   double roll = atan(ky);
   double pitch = atan(kx);
   Eigen::Quaterniond tilted_terrain;
-  tilted_terrain = Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX())
-    * Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY());
+  tilted_terrain = util::EulerZYXtoQuat(roll, pitch, 0);
   quat = tilted_terrain*quat;
 
 }
@@ -278,7 +277,8 @@ void AlipMpcTrajectoryManager::GenerateTrajs(const double &tr_, const bool &ori_
   }
   
   //Alip 2
-  AlipSwingPos2 = new AlipSwing2(Swingfoot_start, Swingfoot_end, swing_height, indata.Ts);
+  double traj_height = Swingfoot_start(2) + swing_height;
+  AlipSwingPos2 = new AlipSwing2(Swingfoot_start, Swingfoot_end, traj_height, indata.Ts);
 
   swfoot_ori_curve_= new HermiteQuaternionCurve(start_swfoot_quat_, Eigen::Vector3d::Zero(),
                                                   des_end_swfoot_quat_, Eigen::Vector3d::Zero(), indata.Ts);
@@ -403,8 +403,8 @@ void AlipMpcTrajectoryManager::saveDoubleStanceFoot(){
 
     stance_rfoot = rfoot_iso.translation();
     stance_lfoot = lfoot_iso.translation();
-    stance_rfoot(2) = -0.001;
-    stance_lfoot(2) = -0.001;
+    //stance_rfoot(2) = -0.001;
+    //stance_lfoot(2) = -0.001;
 
     FootStep::MakeHorizontal(rfoot_iso);
     FootStep::MakeHorizontal(lfoot_iso);

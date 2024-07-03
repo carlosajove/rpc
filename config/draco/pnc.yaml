@@ -407,7 +407,7 @@ alip_mpc_walking:
   #Lx_offset: 0 #0
   #Ly_des: 0 #3
   #com_yaw: 10  #degrees
-  kx: 0.1
+  kx: -0.1
   ky: 0
   #old solver:
   y_mech_max: 0.15
