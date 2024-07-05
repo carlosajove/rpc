@@ -31,7 +31,7 @@ public:
                     const double &mu_, const bool &first);
 
   Eigen::Vector3d add_residual_rl_action(const Eigen::VectorXd &action);
-  Eigen::Vector3d full_residual_rl_action(const Eigen::VectorXd &action);
+  Eigen::Vector3d full_residual_rl_action(const Eigen::VectorXd &action, const double stance_leg);
   
   void safety_proj();
   

@@ -60,10 +60,10 @@ void AlipLocomotion::FirstVisit(){  //represents when MPC computation
   //ctrl_arch_->alip_tm_->MpcSolutions(Tr, stance_leg, sp_->Lx_offset_des_, sp_->Ly_des_, sp_->des_com_yaw_,
   //                                      sp_->kx_, sp_->ky_, sp_->mu_, new_leg);
 
-  if (sp_->des_com_yaw_ != 0) ctrl_arch_->alip_tm_->turning_self_collision();
+  if (sp_->des_com_yaw_ != 0) ctrl_arch_->alip_tm_->turning_self_collision(); // TODO: turning stance leg change needed for RL only policy
 
   //sp_->full_policy_ = ctrl_arch_->alip_tm_->add_residual_rl_action(sp_->res_rl_action_);
-  sp_->full_policy_ = ctrl_arch_->alip_tm_->full_residual_rl_action(sp_->res_rl_action_);
+  sp_->full_policy_ = ctrl_arch_->alip_tm_->full_residual_rl_action(sp_->res_rl_action_, stance_leg);
   
   ctrl_arch_->alip_tm_->GenerateTrajs(Tr, new_leg);
   new_leg = false;
@@ -142,7 +142,6 @@ bool AlipLocomotion::SwitchLeg(){  //ahora asume que tocamos en Tr o antes. Que 
       //ctrl_arch_->tci_container_->task_map_["rf_pos"]->SetMaxFz(0.01);
       ctrl_arch_->alip_tm_->SetSwingFootStart(robot_->GetLinkIsometry(draco_link::r_foot_contact).translation());
       ctrl_arch_->alip_tm_->saveDoubleStanceFoot();
-      std::cout << "left foot touch!!" << std::endl;
 
 
     }  //else if((stance_leg == -1) && (sp_->b_rf_contact_)){
@@ -162,7 +161,6 @@ bool AlipLocomotion::SwitchLeg(){  //ahora asume que tocamos en Tr o antes. Que 
 
       ctrl_arch_->alip_tm_->SetSwingFootStart(robot_->GetLinkIsometry(draco_link::l_foot_contact).translation());
       ctrl_arch_->alip_tm_->saveDoubleStanceFoot();
-      std::cout << "right foot touch!!" << std::endl;
     }
   }
   sp_->stance_leg_ = stance_leg;

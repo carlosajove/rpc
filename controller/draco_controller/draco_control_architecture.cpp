@@ -174,10 +174,8 @@ DracoControlArchitecture::~DracoControlArchitecture() {
 }
 
 void DracoControlArchitecture::GetCommand(void *command) {
-    std::cout << "GetCommand in ctrlarch" << std::endl;
   if(state_ == draco_states::AlipLocomotion){
   //  util::PrettyConstructor(1,"ctrlarch GetCommand ") ;
-  std::cout << "draco_states::AlipLocomotion" << std::endl;
 
     if (alipIter == 0) {
         state_machine_container_[draco_states::AlipLocomotion]->FirstVisit();
@@ -222,7 +220,6 @@ void DracoControlArchitecture::GetCommand(void *command) {
        //sp_->outsideCommand(cfg_["alip_mpc_walking"]);
        sp_->rl_trigger_ = true;
        first_ever = true;
-       std::cout <<"switch leg!!!!!!!" << std::endl;
     }
 
   //  std::cout << "ctroarch end Get Command" << std::endl << std::endl;
@@ -251,7 +248,6 @@ void DracoControlArchitecture::GetCommand(void *command) {
                 alip_tm_->setNewOri(sp_->des_com_yaw_);
                 sp_->des_end_torso_iso_ = alip_tm_->Get_des_end_torso_iso();
                 alip_tm_->saveDoubleStanceFoot();
-                std::cout << "first time ALIP LOCMOTION statemachine" << std::endl;
             }
         }   
   }

@@ -20,19 +20,19 @@ from simulator.pybullet.rl.rl_mpc_freq.envs.only_rl_low_freq import DracoEnvMpcF
 
 from config.draco.pybullet_simulation import Config
 
-model_dir = cwd + "/rl_model/freq_env/Ly_10/PPO"
-env_dir = cwd + "/rl_env/freq_env/Ly_10/PPO"
+model_dir = cwd + "/rl_model/freq_env/Ly_range_ONLY_RL_low_freq/PPO"
+env_dir = cwd + "/rl_env/freq_env/Ly_range_ONLY_RL_low_freq/PPO"
 #import tracemalloc
 import argparse
 import torch
-new_model = False
+new_model = True
 
 if __name__ == "__main__":
     if not new_model:
         parser = argparse.ArgumentParser(description='Training script for your RL model')
         parser.add_argument('--timesteps', type=str, help='FileToLoad')  # Default value is set as an example
         args = parser.parse_args()
-        bash_timesteps = int(args.timesteps)
+        bash_timesteps = int(args.timesteps)    
 
     n_steps_ = 4096 #32768 #16384 #256 #8192
     batch_size_ = 256 #1024 #2048

@@ -107,7 +107,7 @@ def get_sensor_data_from_pybullet(robot):
     imu_dvel = pybullet_util.simulate_dVel_data(robot, link_id_dict,
                                                 previous_torso_velocity)
 
-    #LFf
+    #LF
     joint_vel[0] = pb.getJointState(robot, DracoJointIdx.l_hip_ie)[1]
     joint_vel[1] = pb.getJointState(robot, DracoJointIdx.l_hip_aa)[1]
     joint_vel[2] = pb.getJointState(robot, DracoJointIdx.l_hip_fe)[1]
@@ -641,8 +641,6 @@ if __name__ == "__main__":
         a1 = TicToc()
         a1.tic()
         """
-        print("======================================")
-        print("before gecomamnd in python")
         rpc_draco_interface.GetCommand(rpc_draco_sensor_data,
                                        rpc_draco_command)
         """

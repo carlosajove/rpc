@@ -153,7 +153,7 @@ void AlipMpcTrajectoryManager::InertiaToMpcCoordinates(const bool &first){
     Eigen::Vector3d vel = robot_->GetRobotComLinVel();   //check? the velocity frame needs to be aligned with the foot frame. 
                                                         //now it is aligned with the inertia frame. Maybe a rotation of robot pos and vel is needed.
     vel = des_end_torso_iso_.linear().transpose() * vel;   //we are assuming that the rotation matrix doens't change with time
-    vel(3) = 0.;
+    //vel(3) = 0.;
     Eigen::Vector3d L = pos.cross(mass*vel);
     L += Lc;
     indata.xlip_current[2]= L[0];             
@@ -189,7 +189,10 @@ Eigen::Vector3d AlipMpcTrajectoryManager::add_residual_rl_action(const Eigen::Ve
   return res;
 }
 
-Eigen::Vector3d AlipMpcTrajectoryManager::full_residual_rl_action(const Eigen::VectorXd &action){
+Eigen::Vector3d AlipMpcTrajectoryManager::full_residual_rl_action(const Eigen::VectorXd &action, const double stance_leg){
+    //update stance leg info
+    indata.stance_leg = stance_leg;
+
   Eigen::Vector3d res_pos(action(0), action(1), 0);
   Swingfoot_end = res_pos;
   Eigen::Quaterniond res_quat = util::EulerZYXtoQuat(0, 0, action(2));

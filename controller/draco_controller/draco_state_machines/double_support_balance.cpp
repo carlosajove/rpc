@@ -28,7 +28,7 @@ DoubleSupportBalance::DoubleSupportBalance(const StateId state_id,
 }
 
 void DoubleSupportBalance::FirstVisit() {
-  std::cout << "draco_states: kDoubleSupportBalance" << std::endl;
+  //std::cout << "draco_states: kDoubleSupportBalance" << std::endl;
   state_machine_start_time_ = sp_->current_time_;
 
   // reset flags
@@ -54,10 +54,7 @@ void DoubleSupportBalance::OneStep() {
 }
 
 bool DoubleSupportBalance::EndOfState() {
-  if (state_machine_time_ > 0.1){
-      std::cout << "end of double support balance" << std::endl; 
-      return true;
-  }
+  if (state_machine_time_ > 0.1) return true;
   return false;
 }
 

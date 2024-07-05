@@ -20,8 +20,8 @@ from simulator.pybullet.rl.rl_mpc_freq.envs.only_rl_low_freq import DracoEnvMpcF
 
 from config.draco.pybullet_simulation import Config
 
-model_dir = cwd + "/rl_model/freq_env/Ly_10_higher_lr/PPO"
-env_dir = cwd + "/rl_env/freq_env/Ly_10_higher_lr/PPO"
+model_dir = cwd + "/rl_model/freq_env/Ly_range_ONLY_RL_low_freq_higher_lr/PPO"
+env_dir = cwd + "/rl_env/freq_env/Ly_range_ONLY_RL_low_freq_higher_lr/PPO"
 #import tracemalloc
 import argparse
 import torch
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     ## train model
     #policy_kwargs = { 'full_std': False}
     if new_model:
-        tensorboard_dir = cwd + "/rl_log/freq_env/ONLY_RL_low_freq_higher_lr/"
+        tensorboard_dir = cwd + "/rl_log/freq_env/Ly_range_ONLY_RL_low_freq_higher_lr/"
 
         norm_env = VecNormalize(vec_env, norm_obs = True, norm_reward = False, clip_obs = 60, gamma = 0.99)
 
