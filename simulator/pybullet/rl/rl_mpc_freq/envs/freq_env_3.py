@@ -22,7 +22,7 @@ class DracoEnvMpcFreq_Ly_range_new_reward_ss(DracoEnv_v2):
             print("FREQ SET TO 0. PLEASE INCREASE FREQ")
             raise Warning
         
-        self._set_max_steps_iter(32*150)
+        self._set_max_steps_iter(8*150)
 
         self._freq_push_dict = {'long_push_x': [572, 10, 0], 'short_push_x': [6, 80, 0],
                                 'long_push_y': [572, 0, 10], 'short_push_y': [6, 0, 100]}
@@ -80,7 +80,7 @@ class DracoEnvMpcFreq_Ly_range_new_reward_ss(DracoEnv_v2):
         return policy_obs
 
     def _normalise_action(self, action):
-        _wbc_action = 0.2*action
+        _wbc_action = 0.05*action
         if self._burn_in:
             _wbc_action = 0*_wbc_action
         return _wbc_action

@@ -20,7 +20,7 @@ public:
                            ForceTask *lf_force_task, ForceTask *rg_force_task,
                            PinocchioRobotSystem *robot);
 
-  virtual ~AlipMpcTrajectoryManager()  = default;
+  virtual ~AlipMpcTrajectoryManager();
 
   void initializeOri();
   void setNewOri(const double &des_com_yaw);
@@ -31,6 +31,8 @@ public:
                     const double &mu_, const bool &first);
 
   Eigen::Vector3d add_residual_rl_action(const Eigen::VectorXd &action);
+  Eigen::Vector3d full_residual_rl_action(const Eigen::VectorXd &action);
+  
   void safety_proj();
   
   void InertiaToMpcCoordinates(const bool &first);

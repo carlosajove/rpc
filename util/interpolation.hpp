@@ -292,6 +292,9 @@ public:
                        const double &z2, const double &t2);
   ~QuadraticLagrangePol();
 
+  void Initialize(const double &z0, const double &t0, 
+                       const double &z1, const double &t1,
+                       const double &z2, const double &t2);
   double Evaluate(const double t);
   double EvaluateFirstDerivative(const double t);
   double EvaluateSecondDerivative(const double t);
@@ -308,12 +311,15 @@ public:
 class AlipSwing2{ //alip swing but with z  is a lagrange polinomial
 public:
   AlipSwing2();
-  AlipSwing2(const Eigen::Vector3d &start_pos_, 
+  // AlipSwing2(const Eigen::Vector3d &start_pos_, 
+  //             const Eigen::Vector3d &end_pos_,
+  //             const double &mid_z_pos_, 
+  //             const double &duration_);
+  ~AlipSwing2();
+  void Initialize(const Eigen::Vector3d &start_pos_, 
               const Eigen::Vector3d &end_pos_,
               const double &mid_z_pos_, 
               const double &duration_);
-  ~AlipSwing2();
-
   Eigen::Vector3d Evaluate(const double t);
   Eigen::Vector3d EvaluateFirstDerivative(const double t);
   Eigen::Vector3d EvaluateSecondDerivative(const double t);

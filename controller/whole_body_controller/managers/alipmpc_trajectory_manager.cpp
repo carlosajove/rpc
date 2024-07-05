@@ -45,7 +45,18 @@ AlipMpcTrajectoryManager::AlipMpcTrajectoryManager(NewStep_mpc *alipMpc,
   file11.open(THIS_COM "/test/alip/RobotCOMmpcOri.txt", std::fstream::out);
   //Swingfootvel_end(2) = -0.5;
 
+  swfoot_ori_curve_= new HermiteQuaternionCurve();
+  torso_ori_curve_ = new HermiteQuaternionCurve();
+  AlipSwingPos2 = new AlipSwing2();
+
+
 }  //need to add ori 
+
+AlipMpcTrajectoryManager::~AlipMpcTrajectoryManager(){
+  delete swfoot_ori_curve_;
+  delete torso_ori_curve_;
+  delete AlipSwingPos2;
+}
 
 void AlipMpcTrajectoryManager::initializeOri(){
   des_end_torso_iso_ = robot_->GetLinkIsometry(draco_link::torso_link);
@@ -178,6 +189,18 @@ Eigen::Vector3d AlipMpcTrajectoryManager::add_residual_rl_action(const Eigen::Ve
   return res;
 }
 
+Eigen::Vector3d AlipMpcTrajectoryManager::full_residual_rl_action(const Eigen::VectorXd &action){
+  Eigen::Vector3d res_pos(action(0), action(1), 0);
+  Swingfoot_end = res_pos;
+  Eigen::Quaterniond res_quat = util::EulerZYXtoQuat(0, 0, action(2));
+  des_end_swfoot_quat_ = res_quat*des_end_torso_quat_;
+  Eigen::Vector3d res;
+  res << Swingfoot_end.head<2>(), com_yaw_ + action(2);
+
+  return res;
+}
+
+
 
 void AlipMpcTrajectoryManager::turning_self_collision(){
   Eigen::Isometry3d stfoot_iso;
@@ -255,13 +278,13 @@ void AlipMpcTrajectoryManager::GenerateTrajs(const double &tr_, const bool &ori_
   }
   
   //Alip 2
-  AlipSwingPos2 = new AlipSwing2(Swingfoot_start, Swingfoot_end, swing_height, indata.Ts);
+  AlipSwingPos2->Initialize(Swingfoot_start, Swingfoot_end, swing_height, indata.Ts);
 
-  swfoot_ori_curve_= new HermiteQuaternionCurve(start_swfoot_quat_, Eigen::Vector3d::Zero(),
+  swfoot_ori_curve_->Initialize(start_swfoot_quat_, Eigen::Vector3d::Zero(),
                                                   des_end_swfoot_quat_, Eigen::Vector3d::Zero(), indata.Ts);
 
   if (ori_traj){
-    torso_ori_curve_ = new HermiteQuaternionCurve(start_torso_quat_, Eigen::Vector3d::Zero(), 
+    torso_ori_curve_->Initialize(start_torso_quat_, Eigen::Vector3d::Zero(), 
                                                   des_end_torso_quat_, Eigen::Vector3d::Zero(), indata.Ts);
 
   }                                         

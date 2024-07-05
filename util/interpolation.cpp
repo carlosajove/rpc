@@ -581,11 +581,27 @@ Eigen::Vector3d AlipSwing::EvaluateSecondDerivative(const double t){
 
 //TODO: need to find why is works better with velocity with other derivative
 
-AlipSwing2::AlipSwing2() {}
+AlipSwing2::AlipSwing2() {
+  z_curve = new QuadraticLagrangePol();
+}
 //Destructor
-AlipSwing2::~AlipSwing2() {}
+AlipSwing2::~AlipSwing2() {
+  delete z_curve;
+}
 
-AlipSwing2::AlipSwing2(const Eigen::Vector3d &start_pos_, 
+// AlipSwing2::AlipSwing2(const Eigen::Vector3d &start_pos_, 
+//                      const Eigen::Vector3d &end_pos_,
+//                      const double &mid_z_pos_, 
+//                      const double &duration_){
+
+//   start_pos = start_pos_;
+//   end_pos = end_pos_;
+//   duration = duration_;
+//   z_curve = new QuadraticLagrangePol(start_pos_(2), 0, 
+//                                    mid_z_pos_, duration_/2, 
+//                                    end_pos_(2), duration_);
+// }
+void AlipSwing2::Initialize(const Eigen::Vector3d &start_pos_, 
                      const Eigen::Vector3d &end_pos_,
                      const double &mid_z_pos_, 
                      const double &duration_){
@@ -593,7 +609,7 @@ AlipSwing2::AlipSwing2(const Eigen::Vector3d &start_pos_,
   start_pos = start_pos_;
   end_pos = end_pos_;
   duration = duration_;
-  z_curve = new QuadraticLagrangePol(start_pos_(2), 0, 
+  z_curve->Initialize(start_pos_(2), 0, 
                                    mid_z_pos_, duration_/2, 
                                    end_pos_(2), duration_);
 }
@@ -648,6 +664,21 @@ QuadraticLagrangePol::QuadraticLagrangePol(){}
 QuadraticLagrangePol::~QuadraticLagrangePol(){}
 
 QuadraticLagrangePol::QuadraticLagrangePol(const double &z0, const double &t0, 
+                                           const double &z1, const double &t1,
+                                           const double &z2, const double &t2){
+  Eigen::Vector3d z = Eigen::Vector3d(z0, z1, z2);
+  Eigen::Matrix3d T;
+  duration = t2;
+  T << t0*t0, t0, 1,
+       t1*t1, t1, 1,
+       t2*t2, t2, 1;
+
+  Eigen::Vector3d coefs  = T.householderQr().solve(z);
+  a = coefs(0);
+  b = coefs(1);
+  c = coefs(2);
+}
+void QuadraticLagrangePol::Initialize(const double &z0, const double &t0, 
                                            const double &z1, const double &t1,
                                            const double &z2, const double &t2){
   Eigen::Vector3d z = Eigen::Vector3d(z0, z1, z2);

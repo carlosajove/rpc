@@ -67,6 +67,9 @@ DracoInterface::~DracoInterface() {
 }
 
 void DracoInterface::GetCommand(void *sensor_data, void *command_data) {
+    std::cout << "===================================" << std::endl;
+    std::cout << "getcommand in Interface" << std::endl;
+    std::cout << "===================================" << std::endl;
   sp_->count_ = count_;
   sp_->current_time_ = static_cast<double>(count_) * sp_->servo_dt_;
   sp_->state_ = ctrl_arch_->state();
