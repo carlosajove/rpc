@@ -13,7 +13,7 @@ class Config(object):
 
     MEASURE_COMPUTATION_TIME = False
 
-    VIDEO_RECORD = False
+    VIDEO_RECORD = True
     RECORD_FREQ = 50
 
     ##TODO:
