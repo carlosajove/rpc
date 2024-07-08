@@ -112,8 +112,11 @@ def dict_to_numpy(obs_dict):
     return np.array(obs)
    
 class DracoEnv_v2(gym.Env):
-    metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 50}
-    def __init__(self, mpc_freq, sim_dt, eval = None, reduced_obs_size: bool = False, render: bool = False, disturbance: bool = False, video = None) -> None:
+    metadata = {
+        "render.modes": ["human", "rgb_array"],
+        "video.frames_per_second": 50
+    }
+
     def __init__(self,
                  mpc_freq,
                  sim_dt,
