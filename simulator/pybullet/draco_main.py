@@ -341,14 +341,14 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 if __name__ == "__main__":
-
+    print("hfaskdhjf awfhjÑLASFKJGOI")
     ## connect pybullet sim server
     pb.connect(pb.GUI)
     #pb.connect(pb.DIRECT)
     pb.resetDebugVisualizerCamera(cameraDistance=1,
-                                  cameraYaw=90,   #120
+                                  cameraYaw=180,   #120
                                   cameraPitch=-15,  #-30
-                                  cameraTargetPosition=[0.5, 0, 0.9])
+                                  cameraTargetPosition=[0.5, 1, 0.9])
     ## sim physics setting
     pb.setPhysicsEngineParameter(fixedTimeStep=Config.CONTROLLER_DT,
                                  numSubSteps=Config.N_SUBSTEP)
@@ -372,7 +372,8 @@ if __name__ == "__main__":
     """ground = pb.loadURDF(cwd + "/robot_model/ground/plane100.urdf",
                          [0, 0, 0], pb.getQuaternionFromEuler([0, 0, 0]))"""
     """ground = pb.loadURDF(cwd + "/robot_model/ground/model.urdf") """ 
-    ground = pb.loadURDF(cwd + "/robot_model/ground/tilted_plane.urdf")           
+    ground = pb.loadURDF(cwd + "/robot_model/ground/tilted_plane.urdf")  
+    #ground = pb.loadURDF(cwd + "/robot_model/ground/tilted_plane_2.urdf")         
     pb.configureDebugVisualizer(pb.COV_ENABLE_RENDERING, 1)
 
     #TODO:modify this function without dictionary container

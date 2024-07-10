@@ -10,44 +10,39 @@ from util.python_utils import pybullet_util_rl
 from config.draco.pybullet_simulation import *
 
 from simulator.pybullet.rl.env_tilted_10 import *
+import random
 
-
-class DracoEnvMpcFreq_turn_20_v3(DracoEnv_tilted_plane_10_downhill):
-    def __init__(self, mpc_freq, sim_dt, eval = None, burn_in: bool = False, reduced_obs_size: bool = False, render: bool = False, disturbance: bool = False, video = None, zero: bool = False) -> None:
+class DracoEnvMpcFreq_tilted_ground_Ly_15(DracoEnv_tilted_plane_10_downhill):
+    def __init__(self, mpc_freq, sim_dt, eval = None, burn_in: bool = False, reduced_obs_size: bool = False, render: bool = False, disturbance: bool = False, video = None) -> None:
         super().__init__(mpc_freq=mpc_freq, sim_dt=sim_dt, reduced_obs_size=reduced_obs_size, render=render, eval = eval, disturbance = disturbance, video = video)
-        self._zero = zero
+        
         #self._reduced_obs_size = reduced_obs_size
         self._burn_in = burn_in
         if mpc_freq == 0:
             print("FREQ SET TO 0. PLEASE INCREASE FREQ")
             raise Warning
         
-        #self._set_max_steps_iter(32*35)
-        self._set_max_steps_iter(32*100)
+        self._set_max_steps_iter(32*35)
 
-        self._freq_push_dict = {'long_push_x': [572, 10, 0], 'short_push_x': [6, 80, 0],
-                                'long_push_y': [572, 0, 10], 'short_push_y': [6, 0, 100]}
-        self._push_trigger = 2000
-        self._push_ = [-1, -1, -1]
+
         #raise Warning
 
     def _set_observation_space(self):
         if self._reduced_obs_size:
             self.observation_space = gym.spaces.Box(  #observation space added Tr and previous full_action x and y
-                low = np.array([-100]*20),
-                high = np.array([100]*20),
+                low = np.array([-100]*21),
+                high = np.array([100]*21),
                 dtype = np.float64
             )
         else:
             self.observation_space = gym.spaces.Box(  #observation space
-                low = np.array([-100]*74),
-                high = np.array([100]*74),
+                low = np.array([-100]*75),
+                high = np.array([100]*75),
                 dtype = np.float64
             )
 
 
     def _get_observation(self, wbc_obs) -> dict:
-        #print(wbc_obs)
         """ Desired state is not an input to nn implicit in the env
         stance_leg
         com_pos_desired_frame x3
@@ -57,6 +52,7 @@ class DracoEnvMpcFreq_turn_20_v3(DracoEnv_tilted_plane_10_downhill):
         torso_ang_vel         x3
         Tr                    x1
         last policy           x3
+
         """
         COM = np.concatenate((np.array([wbc_obs[0]]), 
                                         wbc_obs[4:10], 
@@ -73,12 +69,13 @@ class DracoEnvMpcFreq_turn_20_v3(DracoEnv_tilted_plane_10_downhill):
                 self.link_id_dict, self.client)
             joint_obs = np.concatenate((joint_pos, joint_vel))
             policy_obs = np.concatenate((joint_obs, COM))
+
+        policy_obs = np.concatenate((policy_obs, [self._Ly]), axis = 0)
+
         return policy_obs
 
     def _normalise_action(self, action):
         _wbc_action = 0.05*action
-        if self._zero:
-            _wbc_action = 0*_wbc_action
         if self._burn_in:
             _wbc_action = 0*_wbc_action
         return _wbc_action
@@ -87,27 +84,36 @@ class DracoEnvMpcFreq_turn_20_v3(DracoEnv_tilted_plane_10_downhill):
         if np.abs(_wbc_obs[23] - 12) < 0.5:  #12 is the alip state
             if _wbc_obs is not None:
                 #condition = np.any((_wbc_obs[6] < 0.5) | (_wbc_obs[6] > 0.8))  #0.69
-                if _wbc_obs[6] > 1.3:
-                    #print('high')
+                """
+                if _wbc_obs[6] > 1:
                     return True
-                if _wbc_obs[6] < 0.15:
-                    #print('low')
+                if _wbc_obs[6] < 0.45:
                     return True
                 if np.abs(_wbc_obs[7]) > (np.abs(self._Lx_main+_wbc_obs[1])+100):
-                    #print('Lx')
-                    a=1
+
+                    return True
+                if np.abs(_wbc_obs[8] - _wbc_obs[2]) > 50:
+
+                    return True
+                """
+                if _wbc_obs[6] > 1.3:
+                    return True
+                if _wbc_obs[6] < 0.25:
+                    return True
+                if np.abs(_wbc_obs[7]) > (np.abs(self._Lx_main+_wbc_obs[1])+100):
+                    pass
                     #return True
-                if np.abs(_wbc_obs[8] - _wbc_obs[2]) > 100:
-                    #print('Ly')
+                if np.abs(_wbc_obs[8] - _wbc_obs[2]) > 50:
+                    pass
                     #return True
-                    a=1
         return False
     
     def set_action_command_in_sensor_data(self):
         #maybe set also time in newer version
-        yaw = 20*math.pi/180
-        dir_command = np.array((0, 0, yaw))
-
+        #Ly_list = [-25, -20, -15, -10, -5, 0, 5, 10, 15, 25]
+        #self._Ly = random.choice(Ly_list)
+        self._Ly = 15
+        dir_command = np.array((0, self._Ly, 0))
         initial_stance_leg = np.random.choice(np.array([-1, 1]))
 
         self._rpc_draco_sensor_data.initial_stance_leg_ = initial_stance_leg
@@ -118,19 +124,22 @@ class DracoEnvMpcFreq_turn_20_v3(DracoEnv_tilted_plane_10_downhill):
         #reward terms
         self._w_roll_pitch = -1
         self._w_com_height = -1
-        self._w_penalise_excessive_Lx = 0.3
-        self._w_desired_Lx = 0.6
-        self._w_desired_Ly = 1
-        self._w_desired_yaw = 1.5
+        self._w_penalise_excessive_Lx = 0.4
+        self._w_desired_Lx = 1
+        self._w_Lx_offset = 1.5
+
+        self._w_desired_Ly = 2
+        self._w_desired_yaw = 1.
         self._w_excessive_fp = -1
         self._w_excessive_angle = -3
         self._w_termination = 0
-        self._w_alive_bonus = 2
-        self._w_intra_pol = 0.1
+        self._w_alive_bonus = 0.3
+        self._w_intra_pol = 0.04
         self._w_intra_Lx = 0.01
         self._w_intra_Ly = 0.005
 
-
+    def _set_push_trigger(self):
+        pass
 
     def _compute_reward(self, wbc_obs, action, done):
         if (done): 
@@ -145,8 +154,9 @@ class DracoEnvMpcFreq_turn_20_v3(DracoEnv_tilted_plane_10_downhill):
 
         if (self._old_wbc_obs[0] != self._new_wbc_obs[0]):
             reward = self._w_alive_bonus
-            reward += self.reward_tracking_com_Lx()
-            reward += self.penalise_outside_Lx_bounds()
+            #reward += self.reward_tracking_com_Lx()
+            #reward += self.penalise_outside_Lx_bounds()
+            reward += self.tracking_Lx_offset()
             reward += self.reward_tracking_com_Ly()
             reward += self.reward_tracking_yaw()
             reward += self.reward_com_height()
@@ -179,7 +189,7 @@ class DracoEnvMpcFreq_turn_20_v3(DracoEnv_tilted_plane_10_downhill):
         error = L - self._new_wbc_obs[7]  #+ self._old_wbc_obs[1:3] - self._new_wbc_obs[9:11]  #desired Lx,y - observedLx,y at the end of the step
         error /= (self._mass*self._zH)
         
-        error = np.square(error/0.05)
+        error = np.square(error/0.1)
         error = np.exp(-error)
 
         error *= self._w_desired_Lx
@@ -195,6 +205,13 @@ class DracoEnvMpcFreq_turn_20_v3(DracoEnv_tilted_plane_10_downhill):
         error = np.exp(-error/0.01)
         return error
         
+    def tracking_Lx_offset(self):
+        error = self._new_wbc_obs[7] - self._old_wbc_obs[1]
+        error /= (self._mass*self._zH)
+        error = np.square(error)
+        #error = np.exp(-error/0.03)
+        error = np.exp(-error/0.1)
+        return self._w_Lx_offset*error
     
     def reward_tracking_com_Ly(self):
         error = self._old_wbc_obs[2] - self._new_wbc_obs[8]
@@ -207,7 +224,7 @@ class DracoEnvMpcFreq_turn_20_v3(DracoEnv_tilted_plane_10_downhill):
         return error
 
     def reward_tracking_yaw(self):
-        error = self._new_wbc_obs[29]
+        error = self._new_wbc_obs[15] - self._old_wbc_obs[15] - self._old_wbc_obs[3]
         #error = np.square(error)
         #eror = np.exp(-error)
         error = np.square(error)
@@ -252,7 +269,7 @@ class DracoEnvMpcFreq_turn_20_v3(DracoEnv_tilted_plane_10_downhill):
         error = self._new_wbc_obs[17:20] - self._old_wbc_obs[17:20]
         error /= self._sim_dt*self._mpc_freq
         error = np.sum(np.square(error))
-        error = np.exp(-error/0.001)
+        error = np.exp(-error/0.01)
         return self._w_intra_pol * error
     
     def r_intra_excessive_Lx(self):
@@ -274,43 +291,14 @@ class DracoEnvMpcFreq_turn_20_v3(DracoEnv_tilted_plane_10_downhill):
 
 
     def apply_disturbance(self):
-        #print("dfa")
-        self._push_trigger -= 1
-        #print(self._push_trigger)
-        if self._push_trigger == 0:
-            choice = np.random.randint(0,4)
-            if choice == 0:
-                print("short_push x ")
-                self._push_ = copy.deepcopy(self._freq_push_dict['short_push_x'])
-            elif choice == 1:
-                print("short_push y")
-
-                self._push_ = copy.deepcopy(self._freq_push_dict['short_push_y'])
-            elif choice == 2:
-                print("long_push x ")
-
-                self._push_ = copy.deepcopy(self._freq_push_dict['long_push_x'])
-            else :
-                print("long_push y")
-
-                self._push_ = copy.deepcopy(self._freq_push_dict['long_push_y'])
-
-            self._push_dir = np.random.choice([-1, 1])
-        if self._push_[0] > 0: 
-            self._push_[0] -= 1
-            force = np.array((self._push_[1], self._push_[2],0))
-            force *= self._push_dir
-            #print(force)  
-            self.client.applyExternalForce(self.robot, 1, force, np.zeros(3), flags = self.client.WORLD_FRAME)
-            #print("push")
-            if self._push_[0] == 0: self._push_trigger = 3000
+        pass
 
 
 
 
 
 if __name__ == "__main__":
-    env = DracoEnvMpcFreq_turn_20( 5, Config.CONTROLLER_DT, reduced_obs_size=True, render = True)
+    env = DracoEnvMpcFreq_Ly_range_new_reward( 5, Config.CONTROLLER_DT, reduced_obs_size=True, render = True)
     from stable_baselines3.common.env_checker import check_env
     check_env(env)
 

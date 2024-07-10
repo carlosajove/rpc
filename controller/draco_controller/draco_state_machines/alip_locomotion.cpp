@@ -99,10 +99,7 @@ void AlipLocomotion::OneStep(){
     state_machine_time_ = sp_->current_time_ - state_machine_start_time_;
     double t = state_machine_time_; //+ Tr - Ts; //time since Tr was computed (mpc solution and trajectory generated)
     ctrl_arch_->alip_tm_->UpdateDesired(t);
-    if (Tr < 0){
-      std::cout << "XXXXXXXXXXXXXXXXXXX" << std::endl << "TR NEGATIVE" << std::endl << "XXXXXXXXXXXXXXXXXXX" << std::endl;
-    }
-    std::cout << "start_time: " << state_machine_start_time_ << " | time: " << t << " | Tr: " << Tr << " " << sp_->Tr_ << std::endl;
+
 }
 void AlipLocomotion::LastVisit(){ 
 
