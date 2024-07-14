@@ -27,7 +27,6 @@ import cv2
 
 from loop_rate_limiters import RateLimiter
 
-
 import draco_interface_py
 
 if Config.MEASURE_COMPUTATION_TIME:
@@ -37,16 +36,17 @@ if Config.MEASURE_COMPUTATION_TIME:
 imu_dvel_bias = np.array([0.0, 0.0, 0.0])
 l_contact_volt_noise = 0.001
 r_contact_volt_noise = 0.001
-imu_ang_vel_noise_std_dev = 0.      # based on real IMU: 0.0052
-
+imu_ang_vel_noise_std_dev = 0.  # based on real IMU: 0.0052
 
 # Function to read configuration from file
+
 
 def print_command(rpc_command):
 
     print("pos cmd", rpc_command.joint_pos_cmd_)
     print("joint vel cmd", rpc_command.joint_vel_cmd_)
     print("joint acc cmd", rpc_command.joint_trq_cmd_)
+
 
 def print_sensor_data(data):
     print("imu sens", data.imu_frame_quat_)
@@ -142,19 +142,25 @@ def get_sensor_data_from_pybullet(robot):
 
     # normal force measured on each foot
     _l_normal_force = 0
-    contacts = pb.getContactPoints(bodyA=robot, linkIndexA=DracoLinkIdx.l_ankle_ie_link)
+    contacts = pb.getContactPoints(bodyA=robot,
+                                   linkIndexA=DracoLinkIdx.l_ankle_ie_link)
     for contact in contacts:
         # add z-component on all points of contact
         _l_normal_force += contact[9]
 
     _r_normal_force = 0
-    contacts = pb.getContactPoints(bodyA=robot, linkIndexA=DracoLinkIdx.r_ankle_ie_link)
+    contacts = pb.getContactPoints(bodyA=robot,
+                                   linkIndexA=DracoLinkIdx.r_ankle_ie_link)
     for contact in contacts:
         # add z-component on all points of contact
         _r_normal_force += contact[9]
-    
-    b_lf_contact = True if pb.getLinkState(robot, DracoLinkIdx.l_foot_contact,  #C: change the contact setting from distance to force
-                                           1, 1)[0][2] <= 0.005 else False
+
+    b_lf_contact = True if pb.getLinkState(
+        robot,
+        DracoLinkIdx.
+        l_foot_contact,  #C: change the contact setting from distance to force
+        1,
+        1)[0][2] <= 0.005 else False
     b_rf_contact = True if pb.getLinkState(robot, DracoLinkIdx.r_foot_contact,
                                            1, 1)[0][2] <= 0.005 else False
     """
@@ -284,7 +290,7 @@ def apply_control_input_to_pybullet(robot, command):
 
 def set_init_config_pybullet_robot(robot):
     # Upperbody
-    
+
     pb.resetJointState(robot, DracoJointIdx.l_shoulder_aa, np.pi / 6, 0.)
     pb.resetJointState(robot, DracoJointIdx.l_elbow_fe, -np.pi / 2, 0.)
     pb.resetJointState(robot, DracoJointIdx.r_shoulder_aa, -np.pi / 6, 0.)
@@ -303,7 +309,8 @@ def set_init_config_pybullet_robot(robot):
     pb.resetJointState(robot, DracoJointIdx.l_knee_fe_jp, np.pi / 4, 0.)
 
     pb.resetJointState(robot, DracoJointIdx.l_knee_fe_jd, np.pi / 4, 0.)
-    pb.resetJointState(robot, DracoJointIdx.l_ankle_fe, -np.pi / 4, 0.)
+    pb.resetJointState(robot, DracoJointIdx.l_ankle_fe, -np.pi / 4 + 0.1, 0.)
+    # pb.resetJointState(robot, DracoJointIdx.l_ankle_fe, -np.pi / 4, 0.)
     pb.resetJointState(robot, DracoJointIdx.l_ankle_ie,
                        np.radians(-hip_yaw_angle), 0.)
 
@@ -312,7 +319,8 @@ def set_init_config_pybullet_robot(robot):
     pb.resetJointState(robot, DracoJointIdx.r_hip_fe, -np.pi / 4, 0.)
     pb.resetJointState(robot, DracoJointIdx.r_knee_fe_jp, np.pi / 4, 0.)
     pb.resetJointState(robot, DracoJointIdx.r_knee_fe_jd, np.pi / 4, 0.)
-    pb.resetJointState(robot, DracoJointIdx.r_ankle_fe, -np.pi / 4, 0.)
+    pb.resetJointState(robot, DracoJointIdx.r_ankle_fe, -np.pi / 4 + 0.1, 0.)
+    # pb.resetJointState(robot, DracoJointIdx.r_ankle_fe, -np.pi / 4, 0.)
     pb.resetJointState(robot, DracoJointIdx.r_ankle_ie,
                        np.radians(hip_yaw_angle), 0.)
 
@@ -345,10 +353,11 @@ if __name__ == "__main__":
     ## connect pybullet sim server
     pb.connect(pb.GUI)
     #pb.connect(pb.DIRECT)
-    pb.resetDebugVisualizerCamera(cameraDistance=1,
-                                  cameraYaw=180,   #120
-                                  cameraPitch=-15,  #-30
-                                  cameraTargetPosition=[0.5, 1, 0.9])
+    pb.resetDebugVisualizerCamera(
+        cameraDistance=1,
+        cameraYaw=180,  #120
+        cameraPitch=-15,  #-30
+        cameraTargetPosition=[0.5, 1, 0.9])
     ## sim physics setting
     pb.setPhysicsEngineParameter(fixedTimeStep=Config.CONTROLLER_DT,
                                  numSubSteps=Config.N_SUBSTEP)
@@ -371,9 +380,9 @@ if __name__ == "__main__":
     #                     useFixedBase=1)
     """ground = pb.loadURDF(cwd + "/robot_model/ground/plane100.urdf",
                          [0, 0, 0], pb.getQuaternionFromEuler([0, 0, 0]))"""
-    """ground = pb.loadURDF(cwd + "/robot_model/ground/model.urdf") """ 
-    ground = pb.loadURDF(cwd + "/robot_model/ground/tilted_plane.urdf")  
-    #ground = pb.loadURDF(cwd + "/robot_model/ground/tilted_plane_2.urdf")         
+    """ground = pb.loadURDF(cwd + "/robot_model/ground/model.urdf") """
+    ground = pb.loadURDF(cwd + "/robot_model/ground/tilted_plane.urdf")
+    #ground = pb.loadURDF(cwd + "/robot_model/ground/tilted_plane_2.urdf")
     pb.configureDebugVisualizer(pb.COV_ENABLE_RENDERING, 1)
 
     #TODO:modify this function without dictionary container
@@ -449,10 +458,10 @@ if __name__ == "__main__":
         os.makedirs(video_dir)
 
     previous_torso_velocity = np.array([0., 0., 0.])
-    rate = RateLimiter(frequency=1. / (dt*2))
+    rate = RateLimiter(frequency=1. / (dt * 2))
     i = 0
 
-    #push_info: 
+    #push_info:
     #next push iteration time
     #actual push remaining duration
     #x dir push N
@@ -537,9 +546,12 @@ if __name__ == "__main__":
         l_normal_force = pybullet_util.simulate_contact_sensor(l_normal_force)
         r_normal_force = pybullet_util.simulate_contact_sensor(r_normal_force)
         imu_dvel = pybullet_util.add_sensor_noise(imu_dvel, imu_dvel_bias)
-        imu_ang_vel = pybullet_util.add_sensor_noise(imu_ang_vel, imu_ang_vel_noise)
-        l_normal_force = pybullet_util.add_sensor_noise(l_normal_force, l_normal_volt_noise)
-        r_normal_force = pybullet_util.add_sensor_noise(r_normal_force, r_normal_volt_noise)
+        imu_ang_vel = pybullet_util.add_sensor_noise(imu_ang_vel,
+                                                     imu_ang_vel_noise)
+        l_normal_force = pybullet_util.add_sensor_noise(
+            l_normal_force, l_normal_volt_noise)
+        r_normal_force = pybullet_util.add_sensor_noise(
+            r_normal_force, r_normal_volt_noise)
 
         #copy sensor data to rpc sensor data class
         rpc_draco_sensor_data.imu_frame_quat_ = imu_frame_quat
@@ -559,7 +571,6 @@ if __name__ == "__main__":
         if Config.MEASURE_COMPUTATION_TIME:
             timer.tic()
 
-        
         ############
         # MPC freq:
         ############
@@ -582,13 +593,19 @@ if __name__ == "__main__":
         # x dir : N per iteration
         # y dir : N per iteration
 
-        freq_push_dict = {'long_push_x': [572, 10, 0], 'short_push_x': [10, 250, 0],
-                          'long_push_y': [572, 0, 10], 'short_push_y': [10, 0, 250]}
-        
-        
-        one_push_dict = {'long_push_x': [572, 50, 0], 'short_push_x': [6, 150, 0],
-                         'long_push_y': [572, 0, 50], 'short_push_y': [6, 0, 150]}
+        freq_push_dict = {
+            'long_push_x': [572, 10, 0],
+            'short_push_x': [10, 250, 0],
+            'long_push_y': [572, 0, 10],
+            'short_push_y': [10, 0, 250]
+        }
 
+        one_push_dict = {
+            'long_push_x': [572, 50, 0],
+            'short_push_x': [6, 150, 0],
+            'long_push_y': [572, 0, 50],
+            'short_push_y': [6, 0, 150]
+        }
         """
         #print("dfa")
         push_trigger -= 1
@@ -604,41 +621,37 @@ if __name__ == "__main__":
                 pb.applyExternalForce(draco_humanoid,-1 , force, np.zeros(3), flags = pb.LINK_FRAME)
             if push_[0] == 0: push_trigger = 3000
         """
-        
 
-
-
-
-        config = read_config(cwd+'/config/draco/alip_command.ini')
+        config = read_config(cwd + '/config/draco/alip_command.ini')
         try:
             PARAMS = config['Parameters']
-            Ly_des    = PARAMS.getfloat('LY_DES')    
-            des_com_yaw = PARAMS.getfloat('COM_YAW') 
-            des_com_yaw = des_com_yaw* math.pi/180
+            Ly_des = PARAMS.getfloat('LY_DES')
+            des_com_yaw = PARAMS.getfloat('COM_YAW')
+            des_com_yaw = des_com_yaw * math.pi / 180
 
             Lx_offset = PARAMS.getfloat('LX_OFFSET')
             MPC_freq = int(PARAMS.getfloat('MPC_FREQ'))
         except KeyError:
             print("hey")
-            
+
         #print(Lx_offset)
         #print(Ly_des)
         #print(MPC_freq)
 
         #Lxdes, Lydes, yawdes
-        yaw = 0* math.pi/180
+        yaw = 0 * math.pi / 180
 
         #compute imput
         rpc_draco_sensor_data.MPC_freq_ = MPC_freq
         rpc_draco_sensor_data.res_rl_action_ = np.array([0, 0, 0])
         rpc_draco_sensor_data.initial_stance_leg_ = 1
-        rpc_draco_sensor_data.policy_command_ = np.array([Lx_offset, Ly_des, des_com_yaw])
+        rpc_draco_sensor_data.policy_command_ = np.array(
+            [Lx_offset, Ly_des, des_com_yaw])
 
         if (base_com_pos[2] > 1.2) or (base_com_pos[2] < 0.45):
             if (i > 800):
                 print("BREAK", base_com_pos[2])
                 break
-        
         """
         a1 = TicToc()
         a1.tic()
@@ -650,7 +663,7 @@ if __name__ == "__main__":
         with open('WBCtime.txt', 'a') as file:
             file.write(str(a1.tocvalue()) + '\n')
         """
-        
+
         if Config.MEASURE_COMPUTATION_TIME:
             comp_time = timer.tocvalue()
             compuation_cal_list.append(comp_time)
@@ -700,7 +713,6 @@ if __name__ == "__main__":
         with open('stepSimtime.txt', 'a') as file:
             file.write(str(a2.tocvalue()) + '\n')
         """
-        rate.sleep()  # while loop rate limiter
+        # rate.sleep()  # while loop rate limiter
 
         count += 1
-

@@ -26,17 +26,19 @@ from stable_baselines3.common.monitor import Monitor
 
 from util.python_utils.util import read_config
 
-from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_Ly_Range_new_reward import DracoEnvMpcFreq_Ly_range_new_reward
+# from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_Ly_Range_new_reward import DracoEnvMpcFreq_Ly_range_new_reward
+from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_tilted_ground_Ly_15 import DracoEnvMpcFreq_tilted_ground_Ly_15
 
 if __name__ == "__main__":
     #from stable_baselines3.common.env_checker import check_env
     #check_env(env)
 
-    #load_path = os.path.join('/home/carlos/Desktop/Austin/RL results/Ly_range/PPO', 'redObsLy_range_std_2')
-    #load_path = os.path.join(cwd, 'rl_model/freq_env/Ly_10/PPO/fullObsLy_10')
-    load_path = '/home/carlos/Desktop/Austin/FREQ_RESULTS/freq_env/rl_model/PPO/redObsLy_range__batch_2048_nsteps32768_plus'
+    load_path = os.path.join(
+        cwd,
+        'rl_model/freq_env/tilted_ground_Ly_15/PPO/redObsLy_15_tilted_10_downhill'
+    )
 
-    CURR_TIMESTEP = 15800000
+    CURR_TIMESTEP = 5200000
     model_name = f'_TIME{CURR_TIMESTEP}.zip'
     norm_name = f'TIME{CURR_TIMESTEP}.pkl'
     norm_path = os.path.join(load_path, norm_name)
@@ -46,13 +48,13 @@ if __name__ == "__main__":
     mpc_freq = 5
     sim_dt = Config.CONTROLLER_DT
 
-    env = DracoEnvMpcFreq_Ly_range_new_reward(
+    env = DracoEnvMpcFreq_tilted_ground_Ly_15(
         mpc_freq,
         sim_dt,
         eval=[0, 0, 0],
         reduced_obs_size=reduced_obs_size,
-        render=True,
-        video='freq_env_RL_Ly_range.mp4')
+        render=True)
+    # video='freq_env_RL_Ly_range.mp4')
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
     norm_env = VecNormalize.load(norm_path, vec_env)
@@ -71,8 +73,7 @@ if __name__ == "__main__":
         #action = torch.ones(AlipParams.N_BATCH,3)
         action, _ = model.predict(obs, deterministic=True)
         #action = 0*action
-        config = read_config(
-            '/home/carlosaj/Desktop/rpc_2/rpc/config/draco/alip_command.ini')
+        config = read_config(cwd + '/config/draco/alip_command.ini')
 
         try:
             PARAMS = config['Parameters']

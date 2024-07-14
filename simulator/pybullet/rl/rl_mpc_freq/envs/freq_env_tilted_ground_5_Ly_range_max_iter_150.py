@@ -13,7 +13,8 @@ from simulator.pybullet.rl.env_tilted_5_degree import *
 import random
 
 
-class DracoEnvMpcFreq_tilted_ground_Ly_15(DracoEnv_tilted_plane_5_downhill):
+class DracoEnvMpcFreq_tilted_ground_Ly_range_max_iter_150(
+        DracoEnv_tilted_plane_5_downhill):
 
     def __init__(self,
                  mpc_freq,
@@ -38,7 +39,8 @@ class DracoEnvMpcFreq_tilted_ground_Ly_15(DracoEnv_tilted_plane_5_downhill):
             print("FREQ SET TO 0. PLEASE INCREASE FREQ")
             raise Warning
 
-        self._set_max_steps_iter(32 * 35)
+        self._set_max_steps_iter(32 *
+                                 150)  ## this is changed from the previous one
 
         #raise Warning
 
@@ -120,9 +122,9 @@ class DracoEnvMpcFreq_tilted_ground_Ly_15(DracoEnv_tilted_plane_5_downhill):
 
     def set_action_command_in_sensor_data(self):
         #maybe set also time in newer version
-        #Ly_list = [-25, -20, -15, -10, -5, 0, 5, 10, 15, 25]
-        #self._Ly = random.choice(Ly_list)
-        self._Ly = 15
+        Ly_list = [-25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25]
+        self._Ly = random.choice(Ly_list)
+        # self._Ly = 15
         dir_command = np.array((0, self._Ly, 0))
         initial_stance_leg = np.random.choice(np.array([-1, 1]))
 

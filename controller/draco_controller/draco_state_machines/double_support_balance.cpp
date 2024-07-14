@@ -10,7 +10,7 @@ DoubleSupportBalance::DoubleSupportBalance(const StateId state_id,
                                            PinocchioRobotSystem *robot,
                                            DracoControlArchitecture *ctrl_arch)
     : StateMachine(state_id, robot), ctrl_arch_(ctrl_arch) {
-  //util::PrettyConstructor(2, "DoubleSupportBalance");
+  // util::PrettyConstructor(2, "DoubleSupportBalance");
 
   try {
     YAML::Node cfg =
@@ -28,7 +28,7 @@ DoubleSupportBalance::DoubleSupportBalance(const StateId state_id,
 }
 
 void DoubleSupportBalance::FirstVisit() {
-  //std::cout << "draco_states: kDoubleSupportBalance" << std::endl;
+  // std::cout << "draco_states: kDoubleSupportBalance" << std::endl;
   state_machine_start_time_ = sp_->current_time_;
 
   // reset flags
@@ -54,7 +54,8 @@ void DoubleSupportBalance::OneStep() {
 }
 
 bool DoubleSupportBalance::EndOfState() {
-  if (state_machine_time_ > 0.1) return true;
+  if (state_machine_time_ > 0.1)
+    return true;
   return false;
 }
 
@@ -75,8 +76,7 @@ void DoubleSupportBalance::LastVisit() {
 }
 
 StateId DoubleSupportBalance::GetNextState() {
-    return draco_states::AlipLocomotion;
-  }
-
+  return draco_states::AlipLocomotion;
+}
 
 void DoubleSupportBalance::SetParameters(const YAML::Node &node) {}

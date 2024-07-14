@@ -5,8 +5,8 @@ servo_dt: 0.00175
 
 ip_address: "tcp://127.0.0.1:5557"
 
-#data_save_freq: 1
-data_save_freq: 50
+data_save_freq: 1
+#data_save_freq: 50
 
 b_sim: true ## if false, all the "exp_" parameters are used
 #b_sim: false ## if false, all the "exp_" parameters are used
@@ -389,7 +389,7 @@ lmpc_walking:
 #mpc freq == 0 --> mu = 0.4
 #mpc freq == 5 --> mu = 0.1
 alip_mpc_walking:
-  verbose: true
+  verbose: false
   save_freq: 1
   new_solver: false #true is better for mpc freq
   #mpc_freq: 0  #50aag
