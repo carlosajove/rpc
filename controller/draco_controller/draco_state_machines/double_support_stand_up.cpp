@@ -27,7 +27,6 @@ DoubleSupportStandUp::DoubleSupportStandUp(const StateId state_id,
 }
 
 void DoubleSupportStandUp::FirstVisit() {
-  // std::cout << "draco_states::kDoubleSupportStandUp" << std::endl;
   state_machine_start_time_ = sp_->current_time_;
 
   Eigen::Isometry3d stance_foot_iso =

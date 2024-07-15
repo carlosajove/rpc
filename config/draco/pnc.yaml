@@ -324,7 +324,7 @@ state_machine:
       wait_time: 15.
 
     stand_up:
-      standup_duration: 0.3
+      standup_duration: 0.2
       target_com_height: 0.685
       target_base_height: 0.90
 

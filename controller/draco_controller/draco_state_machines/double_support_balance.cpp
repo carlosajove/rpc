@@ -28,7 +28,6 @@ DoubleSupportBalance::DoubleSupportBalance(const StateId state_id,
 }
 
 void DoubleSupportBalance::FirstVisit() {
-  // std::cout << "draco_states: kDoubleSupportBalance" << std::endl;
   state_machine_start_time_ = sp_->current_time_;
 
   // reset flags

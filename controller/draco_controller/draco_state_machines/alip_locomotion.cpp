@@ -28,6 +28,7 @@ AlipLocomotion::AlipLocomotion(StateId state_id, PinocchioRobotSystem *robot,
 }
 
 void AlipLocomotion::FirstVisit() { // represents when MPC computation
+  // std::cout << "draco_states::AlipLocomotion" << std::endl;
   if (first_ever) {
     stance_leg = sp_->initial_stance_leg_;
     state_machine_start_time_ = sp_->current_time_;
@@ -96,6 +97,7 @@ void AlipLocomotion::FirstVisit() { // represents when MPC computation
   */
 }
 void AlipLocomotion::OneStep() {
+  // std::cout << "draco_states::AlipLocomotion onstep!!" << std::endl;
   state_machine_time_ = sp_->current_time_ - state_machine_start_time_;
   double t = state_machine_time_; //+ Tr - Ts; //time since Tr was computed (mpc
                                   // solution and trajectory generated)
