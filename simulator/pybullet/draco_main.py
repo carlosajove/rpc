@@ -309,7 +309,7 @@ def set_init_config_pybullet_robot(robot):
     pb.resetJointState(robot, DracoJointIdx.l_knee_fe_jp, np.pi / 4, 0.)
 
     pb.resetJointState(robot, DracoJointIdx.l_knee_fe_jd, np.pi / 4, 0.)
-    pb.resetJointState(robot, DracoJointIdx.l_ankle_fe, -np.pi / 4 + 0.1, 0.)
+    pb.resetJointState(robot, DracoJointIdx.l_ankle_fe, -np.pi / 4 + 0.2, 0.)
     # pb.resetJointState(robot, DracoJointIdx.l_ankle_fe, -np.pi / 4, 0.)
     pb.resetJointState(robot, DracoJointIdx.l_ankle_ie,
                        np.radians(-hip_yaw_angle), 0.)
@@ -319,7 +319,7 @@ def set_init_config_pybullet_robot(robot):
     pb.resetJointState(robot, DracoJointIdx.r_hip_fe, -np.pi / 4, 0.)
     pb.resetJointState(robot, DracoJointIdx.r_knee_fe_jp, np.pi / 4, 0.)
     pb.resetJointState(robot, DracoJointIdx.r_knee_fe_jd, np.pi / 4, 0.)
-    pb.resetJointState(robot, DracoJointIdx.r_ankle_fe, -np.pi / 4 + 0.1, 0.)
+    pb.resetJointState(robot, DracoJointIdx.r_ankle_fe, -np.pi / 4 + 0.2, 0.)
     # pb.resetJointState(robot, DracoJointIdx.r_ankle_fe, -np.pi / 4, 0.)
     pb.resetJointState(robot, DracoJointIdx.r_ankle_ie,
                        np.radians(hip_yaw_angle), 0.)
@@ -381,8 +381,8 @@ if __name__ == "__main__":
     """ground = pb.loadURDF(cwd + "/robot_model/ground/plane100.urdf",
                          [0, 0, 0], pb.getQuaternionFromEuler([0, 0, 0]))"""
     """ground = pb.loadURDF(cwd + "/robot_model/ground/model.urdf") """
-    ground = pb.loadURDF(cwd + "/robot_model/ground/tilted_plane.urdf")
-    #ground = pb.loadURDF(cwd + "/robot_model/ground/tilted_plane_2.urdf")
+    # ground = pb.loadURDF(cwd + "/robot_model/ground/tilted_plane.urdf")
+    ground = pb.loadURDF(cwd + "/robot_model/ground/tilted_plane_2.urdf")
     pb.configureDebugVisualizer(pb.COV_ENABLE_RENDERING, 1)
 
     #TODO:modify this function without dictionary container
@@ -651,7 +651,7 @@ if __name__ == "__main__":
         if (base_com_pos[2] > 1.2) or (base_com_pos[2] < 0.45):
             if (i > 800):
                 print("BREAK", base_com_pos[2])
-                break
+                # break
         """
         a1 = TicToc()
         a1.tic()

@@ -26,6 +26,8 @@ public:
   void setNewOri(const double &des_com_yaw, const double &kx, const double &ky);
   void toTiltedOrientation(Eigen::Quaterniond &quat, const double &kx,
                            const double &ky);
+  void toTiltedOrientation(Eigen::Isometry3d &iso, const double &kx,
+                           const double &ky);
 
   void MpcSolutions(const double &tr_, const double &st_leg_,
                     const double &Lx_offset_, const double &Ly_des_,

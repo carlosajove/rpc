@@ -63,9 +63,14 @@ void AlipMpcTrajectoryManager::initializeOri(const double &kx,
   des_end_torso_iso_ = robot_->GetLinkIsometry(draco_link::torso_link);
   FootStep::MakeHorizontal(des_end_torso_iso_);
   des_end_torso_quat_ = Eigen::Quaterniond(des_end_torso_iso_.linear());
+  this->toTiltedOrientation(des_end_torso_quat_, kx, ky);
   des_end_swfoot_quat_ = des_end_torso_quat_;
 
-  this->toTiltedOrientation(des_end_swfoot_quat_, kx, ky);
+  // this->toTiltedOrientation(des_end_swfoot_quat_, kx, ky);
+  //  std::cout << "=========================" << std::endl;
+  //  std::cout << "In initializeOri function:" << std::endl;
+  //  std::cout << util::QuatToEulerZYX(des_end_swfoot_quat_).transpose()
+  //<< std::endl;
 }
 
 void AlipMpcTrajectoryManager::setNewOri(const double &des_com_yaw,
@@ -81,18 +86,28 @@ void AlipMpcTrajectoryManager::setNewOri(const double &des_com_yaw,
     des_end_swfoot_iso_ = des_end_torso_iso_;
     des_end_torso_quat_ = Eigen::Quaterniond(des_end_torso_iso_.linear());
     des_end_swfoot_quat_ = des_end_torso_quat_;
-
-    this->toTiltedOrientation(des_end_swfoot_quat_, kx, ky);
   }
+  // std::cout << "=========================" << std::endl;
+  // std::cout << "In setNewOri function:" << std::endl;
+  // std::cout << util::QuatToEulerZYX(des_end_swfoot_quat_).transpose()
+  //<< std::endl;
+}
+void AlipMpcTrajectoryManager::toTiltedOrientation(Eigen::Isometry3d &iso,
+                                                   const double &kx,
+                                                   const double &ky) {
+  double roll = atan(-ky);
+  double pitch = atan(-kx);
+  // Eigen::Quaterniond tilted_terrain = util::EulerZYXtoQuat(roll, pitch, 0);
+  Eigen::Matrix3d tilted_terrain = util::SO3FromRPY(roll, pitch, 0);
+  iso.linear() = tilted_terrain * iso.linear();
 }
 
 void AlipMpcTrajectoryManager::toTiltedOrientation(Eigen::Quaterniond &quat,
                                                    const double &kx,
                                                    const double &ky) {
-  double roll = atan(ky);
-  double pitch = atan(kx);
-  Eigen::Quaterniond tilted_terrain;
-  tilted_terrain = util::EulerZYXtoQuat(roll, pitch, 0);
+  double roll = atan(-ky);
+  double pitch = atan(-kx);
+  Eigen::Quaterniond tilted_terrain = util::EulerZYXtoQuat(roll, pitch, 0);
   quat = tilted_terrain * quat;
 }
 
@@ -292,7 +307,7 @@ void AlipMpcTrajectoryManager::GenerateTrajs(
     curr_swfoot_iso = robot_->GetLinkIsometry(
         draco_link::l_foot_contact); // chequear si contact solo funciona cuando
                                      // es stance foot
-    FootStep::MakeHorizontal(curr_swfoot_iso);
+    // FootStep::MakeHorizontal(curr_swfoot_iso);
     if (ori_traj) {
       start_swfoot_quat_ = Eigen::Quaterniond(
           robot_->GetLinkIsometry(draco_link::l_foot_contact).linear());
@@ -301,7 +316,7 @@ void AlipMpcTrajectoryManager::GenerateTrajs(
     }
   } else {
     curr_swfoot_iso = robot_->GetLinkIsometry(draco_link::r_foot_contact);
-    FootStep::MakeHorizontal(curr_swfoot_iso);
+    // FootStep::MakeHorizontal(curr_swfoot_iso);
     if (ori_traj) {
       start_swfoot_quat_ = Eigen::Quaterniond(
           robot_->GetLinkIsometry(draco_link::r_foot_contact).linear());
@@ -348,10 +363,10 @@ void AlipMpcTrajectoryManager::UpdateDesired(const double t) {
     curr_swfoot_iso = robot_->GetLinkIsometry(
         draco_link::l_foot_contact); // chequear si contact solo funciona cuando
                                      // es stance foot
-    FootStep::MakeHorizontal(curr_swfoot_iso);
+    // FootStep::MakeHorizontal(curr_swfoot_iso);
   } else {
     curr_swfoot_iso = robot_->GetLinkIsometry(draco_link::r_foot_contact);
-    FootStep::MakeHorizontal(curr_swfoot_iso);
+    // FootStep::MakeHorizontal(curr_swfoot_iso);
   }
   // file7 << curr_swfoot_iso.translation().transpose() << "  " << std::endl;
 
@@ -363,6 +378,10 @@ void AlipMpcTrajectoryManager::UpdateDesired(const double t) {
   swfoot_ori_curve_->GetAngularVelocity(t, des_swfoot_ang_vel_);
   swfoot_ori_curve_->GetAngularAcceleration(t, des_swfoot_ang_acc_);
 
+  // std::cout << "============================================" << std::endl;
+  // std::cout << "swing foot ori desired: " << std::endl;
+  // std::cout << util::QuatToEulerZYX(des_swfoot_quat_).transpose() <<
+  // std::endl;
   Eigen::VectorXd des_swfoot_ori(4);
   des_swfoot_ori << des_swfoot_quat_.normalized().coeffs();
   Eigen::VectorXd des_swfoot_ori_vel(3);
@@ -373,6 +392,10 @@ void AlipMpcTrajectoryManager::UpdateDesired(const double t) {
   torso_ori_curve_->Evaluate(t, des_torso_quat_);
   torso_ori_curve_->GetAngularVelocity(t, des_torso_ang_vel_);
   torso_ori_curve_->GetAngularAcceleration(t, des_torso_ang_acc_);
+  // std::cout << "============================================" << std::endl;
+  // std::cout << "torso ori desired: " << std::endl;
+  // std::cout << util::QuatToEulerZYX(des_torso_quat_).transpose() <<
+  // std::endl;
 
   Eigen::VectorXd des_torso_ori(4);
   des_torso_ori << des_torso_quat_.normalized().coeffs();
@@ -575,7 +598,7 @@ void AlipMpcTrajectoryManager::saveCurrentCOMstate(const double t) {
   Eigen::Vector3d posWorld = pos;
 
   Eigen::Isometry3d torso_iso = robot_->GetLinkIsometry(draco_link::torso_link);
-  FootStep::MakeHorizontal(torso_iso);
+  // FootStep::MakeHorizontal(torso_iso);
 
   pos = torso_iso.linear().transpose() * pos;
   Eigen::Vector3d stleg_pos_torso_ori =
@@ -636,11 +659,11 @@ void AlipMpcTrajectoryManager::saveSwingState(const double t) {
     curr_swfoot_iso = robot_->GetLinkIsometry(
         draco_link::l_foot_contact); // chequear si contact solo funciona cuando
                                      // es stance foot
-    FootStep::MakeHorizontal(curr_swfoot_iso);
+    // FootStep::MakeHorizontal(curr_swfoot_iso);
     curr_swfoot_vel = robot_->GetLinkBodySpatialVel(draco_link::l_foot_contact);
   } else {
     curr_swfoot_iso = robot_->GetLinkIsometry(draco_link::r_foot_contact);
-    FootStep::MakeHorizontal(curr_swfoot_iso);
+    // FootStep::MakeHorizontal(curr_swfoot_iso);
     curr_swfoot_vel = robot_->GetLinkBodySpatialVel(draco_link::r_foot_contact);
   }
   file7 << curr_swfoot_iso.translation().transpose() << "  " << t << " "
