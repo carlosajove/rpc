@@ -45,11 +45,12 @@ if __name__ == "__main__":
     mpc_freq = 0
     sim_dt = Config.CONTROLLER_DT
 
-    env = DracoEnvOneStepMpcRange(mpc_freq, sim_dt, 
-                                  eval=[0, 0,0], 
-                                  reduced_obs_size=reduced_obs_size,  
-                                  render = True,
-                                  video = 'one_step_MPC_range.mp4')
+    env = DracoEnvOneStepMpcRange(mpc_freq,
+                                  sim_dt,
+                                  eval=[0, 0, 0],
+                                  reduced_obs_size=reduced_obs_size,
+                                  render=True,
+                                  video='one_step_MPC_range.mp4')
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
     norm_env = VecNormalize.load(norm_path, vec_env)
@@ -59,26 +60,27 @@ if __name__ == "__main__":
     obs, info = env.reset()
     obs = norm_env.normalize_obs(obs)
 
-
     model = PPO.load(load_path, env=norm_env)
-    
+
     #Leg Width must be 0.1
     while True:
         #action = torch.ones(AlipParams.N_BATCH,3)
         action, _ = model.predict(obs, deterministic=True)
-        action = 0*action
-        config = read_config('/home/carlos/Desktop/Austin/SeungHyeonProject/rpc/config/draco/alip_command.ini')
+        action = 0 * action
+        config = read_config(
+            '/home/carlos/Desktop/Austin/SeungHyeonProject/rpc/config/draco/alip_command.ini'
+        )
         try:
             PARAMS = config['Parameters']
-            Ly_des    = PARAMS.getfloat('LY_DES')    
-            des_com_yaw = PARAMS.getfloat('COM_YAW') 
-            des_com_yaw = des_com_yaw* math.pi/180
+            Ly_des = PARAMS.getfloat('LY_DES')
+            des_com_yaw = PARAMS.getfloat('COM_YAW')
+            des_com_yaw = des_com_yaw * math.pi / 180
 
             Lx_offset = PARAMS.getfloat('LX_OFFSET')
         except KeyError:
             print("hey")
 
-        ini_st_leg = np.random.choice([1, -1])  
+        ini_st_leg = np.random.choice([1, -1])
         env._set_command_policy_sim(Lx_offset, Ly_des, des_com_yaw, ini_st_leg)
         print("action: ", action)
         obs, reward, done, trunc, info = env.step(action)
@@ -87,4 +89,4 @@ if __name__ == "__main__":
         print("reward info", info["reward_components"])
         if done:
             print(done)
-            obs,info = env.reset()
+            obs, info = env.reset()

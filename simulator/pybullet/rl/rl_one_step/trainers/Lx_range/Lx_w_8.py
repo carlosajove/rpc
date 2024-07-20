@@ -16,18 +16,18 @@ from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback,
 cwd = os.getcwd()
 sys.path.append(cwd)
 sys.path.append(cwd + "/build/lib")
-from simulator.pybullet.rl.rl_one_step.envs.Ly_range_new_r_2 import DracoEnvOneStepMpcRange_v2
+from simulator.pybullet.rl.rl_one_step.envs.Lx_range_w_8 import DracoEnvOneStepMpc_Lx_range_w_8
 
 from config.draco.pybullet_simulation import Config
 
-model_dir = cwd + "/rl_model/Ly_range/PPO"
-env_dir = cwd + "/rl_env/Ly_range/PPO"
+model_dir = cwd + "/rl_model/Lx_range_w_8/PPO"
+env_dir = cwd + "/rl_env/Lx_range_w_8/PPO"
 #import tracemalloc
 import argparse
 
 import argparse
 
-new_model = False
+new_model = True
 
 if __name__ == "__main__":
     if not new_model:
@@ -47,47 +47,45 @@ if __name__ == "__main__":
     reduced_obs_size = True
 
     render = False
-    env = DracoEnvOneStepMpcRange_v2(mpc_freq,
-                                     sim_dt,
-                                     reduced_obs_size=reduced_obs_size,
-                                     render=render)
+    env = DracoEnvOneStepMpc_Lx_range_w_8(mpc_freq,
+                                          sim_dt,
+                                          reduced_obs_size=reduced_obs_size,
+                                          render=render)
 
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
 
     #MODEL EVALUATION
-    eval_env = DracoEnvOneStepMpcRange_v2(mpc_freq,
-                                          sim_dt,
-                                          reduced_obs_size=reduced_obs_size,
-                                          render=render)
-    eval_monitor_env = Monitor(eval_env)
-    eval_vec_env = DummyVecEnv([lambda: eval_monitor_env])
-    norm_eval_env = VecNormalize(eval_vec_env,
-                                 norm_obs=True,
-                                 norm_reward=False,
-                                 clip_obs=60,
-                                 gamma=0.99)
-    eval_callback = EvalCallback(
-        norm_eval_env,
-        eval_freq=5000,
-        deterministic=True,
-        render=False,
-    )
+    # eval_env = DracoEnvOneStepMpc_Lx_range_w_8(
+    # mpc_freq, sim_dt, reduced_obs_size=reduced_obs_size, render=render)
+    # eval_monitor_env = Monitor(eval_env)
+    # eval_vec_env = DummyVecEnv([lambda: eval_monitor_env])
+    # norm_eval_env = VecNormalize(eval_vec_env,
+    # norm_obs=True,
+    # norm_reward=False,
+    # clip_obs=60,
+    # gamma=0.99)
+    # eval_callback = EvalCallback(
+    # norm_eval_env,
+    # eval_freq=5000,
+    # deterministic=True,
+    # render=False,
+    # )
 
     if reduced_obs_size:
         str1 = 'redObs'
     else:
         str1 = 'fullObs'
 
-    save_dir = str1 + f"Ly_range_new_reward_Lx_mod"
-    load_dir = str1 + f"Ly_range_new_reward_Lx"
+    save_dir = str1 + f"Lx_range_w_8"
+    load_dir = str1 + f"Lx_range_w_8"
     load_path = os.path.join(model_dir, load_dir)
     save_path = os.path.join(model_dir, save_dir)
     ## train model
 
     #policy_kwargs = {'log_std_init' : -0.5} #previous -0.3
     if new_model:
-        tensorboard_dir = cwd + "/rl_log/one_step/ppo/Ly_range/"
+        tensorboard_dir = cwd + "/rl_log/one_step/Lx_range_w_8/"
 
         norm_env = VecNormalize(vec_env,
                                 norm_obs=True,
@@ -130,12 +128,12 @@ if __name__ == "__main__":
         save_env_path = os.path.join(load_path, env_file)
         norm_env = VecNormalize.load(save_env_path, vec_env)
 
-        learning_rate_ = 0.00003  #OLD LEARNING RATE 0.0003
-        custom_objects = {'learning_rate': learning_rate_}
-        model = PPO.load(model_path,
-                         env=norm_env,
-                         custom_objects=custom_objects)
-
+        # learning_rate_ = 0.00003  #OLD LEARNING RATE 0.0003
+        # custom_objects = {'learning_rate': learning_rate_}
+        # model = PPO.load(model_path,
+        # env=norm_env,
+        # custom_objects=custom_objects)
+        model = PPO.load(model_path, env=norm_env)
         TIMESTEPS = 10000
 
     while (True):
@@ -143,8 +141,8 @@ if __name__ == "__main__":
             model.learn(total_timesteps=TIMESTEPS,
                         progress_bar=True,
                         reset_num_timesteps=False,
-                        tb_log_name=save_dir,
-                        callback=eval_callback)
+                        tb_log_name=save_dir)
+            # callback=eval_callback)
             endTime = time.time()
             print("Model train time: " +
                   str(datetime.timedelta(seconds=endTime - startTime)))

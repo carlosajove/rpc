@@ -13,7 +13,7 @@ from config.draco.pybullet_simulation import *
 from simulator.pybullet.rl.env_2 import *
 
 
-class DracoEnvOneStepMpcRange_v2(DracoEnv_v2):
+class DracoEnvOneStepMpc_Lx_range_w_8(DracoEnv_v2):
 
     def __init__(self,
                  mpc_freq,
@@ -81,11 +81,11 @@ class DracoEnvOneStepMpcRange_v2(DracoEnv_v2):
             joint_obs = np.concatenate((joint_pos, joint_vel))
             policy_obs = np.concatenate((joint_obs, COM))
 
-        policy_obs = np.concatenate((policy_obs, [self._Ly]), axis=0)
+        policy_obs = np.concatenate((policy_obs, [self._Lx]), axis=0)
         return policy_obs
 
     def _normalise_action(self, action):
-        _wbc_action = 0.1 * action
+        _wbc_action = 0.05 * action
         if self._burn_in:
             _wbc_action = 0 * _wbc_action
         return _wbc_action
@@ -107,9 +107,9 @@ class DracoEnvOneStepMpcRange_v2(DracoEnv_v2):
 
     def set_action_command_in_sensor_data(self):
         #maybe set also time in newer version
-        Ly_list = [-25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25]
-        self._Ly = random.choice(Ly_list)
-        dir_command = np.array((0, self._Ly, 0))
+        Lx_list = [-20, -10, 0, 10, 20]
+        self._Lx = random.choice(Lx_list)
+        dir_command = np.array((self._Lx, 0, 0))
 
         initial_stance_leg = np.random.choice(np.array([-1, 1]))
 
@@ -121,7 +121,7 @@ class DracoEnvOneStepMpcRange_v2(DracoEnv_v2):
         self._w_roll_pitch = -0.5
         self._w_com_height = -1
         self._w_penalise_excessive_Lx = 0.5
-        self._w_desired_Lx = 0.5
+        self._w_desired_Lx = 8
         self._w_Lx_offset = 1
         self._w_desired_Ly = 1
         self._w_desired_yaw = 0.1
@@ -142,9 +142,9 @@ class DracoEnvOneStepMpcRange_v2(DracoEnv_v2):
         self._rl_action = np.copy(action)
 
         reward = self._w_alive_bonus
-        #reward += self.reward_tracking_com_Lx()
-        #reward += self.penalise_outside_Lx_bounds()
-        reward += self.tracking_Lx_offset()
+        reward += self.reward_tracking_com_Lx()
+        reward += self.penalise_outside_Lx_bounds()
+        # reward += self.tracking_Lx_offset()
         reward += self.reward_tracking_com_Ly()
         reward += self.reward_tracking_yaw()
         reward += self.reward_com_height()

@@ -26,33 +26,29 @@ from stable_baselines3.common.monitor import Monitor
 
 from util.python_utils.util import read_config
 
-from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_Ly_Range_new_reward import DracoEnvMpcFreq_Ly_range_new_reward
+from simulator.pybullet.rl.rl_one_step.envs.Lx_range_w_8 import DracoEnvOneStepMpc_Lx_range_w_8
 
 if __name__ == "__main__":
     #from stable_baselines3.common.env_checker import check_env
     #check_env(env)
-
-    #load_path = os.path.join('/home/carlos/Desktop/Austin/RL results/Ly_range/PPO', 'redObsLy_range_std_2')
-    #load_path = os.path.join(cwd, 'rl_model/freq_env/Ly_10/PPO/fullObsLy_10')
-    load_path = '/home/carlos/Desktop/Austin/FREQ_RESULTS/freq_env/rl_model/PPO/redObsLy_range__batch_2048_nsteps32768_plus'
-
-    CURR_TIMESTEP = 15600000
+    load_path = os.path.join(cwd +
+                             '/rl_model/Lx_range_w_8/PPO/redObsLx_range_w_8')
+    CURR_TIMESTEP = 990000
     model_name = f'_TIME{CURR_TIMESTEP}.zip'
     norm_name = f'TIME{CURR_TIMESTEP}.pkl'
     norm_path = os.path.join(load_path, norm_name)
     load_path = os.path.join(load_path, model_name)
 
     reduced_obs_size = True
-    mpc_freq = 5
+    mpc_freq = 0
     sim_dt = Config.CONTROLLER_DT
 
-    env = DracoEnvMpcFreq_Ly_range_new_reward(
-        mpc_freq,
-        sim_dt,
-        eval=[0, 0, 0],
-        reduced_obs_size=reduced_obs_size,
-        render=True,
-        video='freq_env_MPC_Ly_range_auto_2.mp4')
+    env = DracoEnvOneStepMpc_Lx_range_w_8(mpc_freq,
+                                          sim_dt,
+                                          eval=[0, 0, 0],
+                                          reduced_obs_size=reduced_obs_size,
+                                          render=True)
+    # video='one_step_MPC_range.mp4')
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
     norm_env = VecNormalize.load(norm_path, vec_env)
@@ -64,20 +60,17 @@ if __name__ == "__main__":
 
     model = PPO.load(load_path, env=norm_env)
     des_counter = 0
-    Ly_des = [0, 5, 10, 15, 20, 25, 0, -5, -10, -15, -20, -25]
+    Lx_des = [0, 10, 20, 0, -10, -20]
     #Leg Width must be 0.1
     step_counter = 0
     while True:
         step_counter += 1
         #action = torch.ones(AlipParams.N_BATCH,3)
         action, _ = model.predict(obs, deterministic=True)
-        #action = 0*action
-        config = read_config(
-            '/home/carlos/Desktop/Austin/SeungHyeonProject/rpc/config/draco/alip_command.ini'
-        )
+        # action = 0 * action
 
         ini_st_leg = np.random.choice([1, -1])
-        env._set_command_policy_sim(0, Ly_des[des_counter], 0, ini_st_leg)
+        env._set_command_policy_sim(Lx_des[des_counter], 0, 0, ini_st_leg)
         print("action: ", env._normalise_action(action))
         obs, reward, done, trunc, info = env.step(action)
         obs = norm_env.normalize_obs(obs)
@@ -92,8 +85,8 @@ if __name__ == "__main__":
         if step_counter > 32 * 20:
             des_counter += 1
             step_counter = 0
-            if des_counter >= 13:
+            if des_counter >= len(Lx_des):
                 break
-            #env._set_command_policy_sim(0, Ly_des[des_counter], 0, ini_st_leg)
+            #env._set_command_policy_sim(0, Lx_des[des_counter], 0, ini_st_leg)
             #obs,info = env.reset()
             #obs = norm_env.normalize_obs(obs)
