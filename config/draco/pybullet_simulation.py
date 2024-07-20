@@ -15,7 +15,7 @@ class Config(object):
     MEASURE_COMPUTATION_TIME = False
 
     VIDEO_RECORD = False
-    RECORD_FREQ = 50
+    RECORD_FREQ = 24
 
     ##TODO:
     USE_MESHCAT = False

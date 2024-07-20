@@ -26,26 +26,18 @@ from stable_baselines3.common.monitor import Monitor
 
 from util.python_utils.util import read_config
 
-# from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_tilted_ground_10_Ly_range import DracoEnvMpcFreq_tilted_ground_Ly_range
-from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_tilted_ground_10_Ly_range_larger import DracoEnvMpcFreq_tilted_ground_Ly_range_larger
+from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_tilted_ground_10_Ly_range import DracoEnvMpcFreq_tilted_ground_Ly_range
 
 if __name__ == "__main__":
     #from stable_baselines3.common.env_checker import check_env
     #check_env(env)
 
-    #load_path = os.path.join('/home/carlos/Desktop/Austin/RL results/Ly_range/PPO', 'redObsLy_range_std_2')
-    # load_path = '/home/carlos/Desktop/Austin/FREQ_RESULTS/freq_env/rl_model/PPO/redObsLy_range__batch_2048_nsteps32768_plus'
     load_path = os.path.join(
         cwd,
-        'rl_model/freq_env/tilted_ground_10_Ly_range_larger/PPO/redObsLy_range_larger_tilted_10_downhill'
+        'rl_model/freq_env/tilted_ground_10_Ly_range/PPO/redObsLy_range_tilted_10_downhill'
     )
-    # load_path = os.path.join(
-    # cwd,
-    # 'rl_model/freq_env/tilted_ground_10_Ly_range/PPO/redObsLy_range_tilted_10_downhill'
-    # )
 
-    # CURR_TIMESTEP = 32000000
-    CURR_TIMESTEP = 25400000
+    CURR_TIMESTEP = 17000000
     model_name = f'_TIME{CURR_TIMESTEP}.zip'
     norm_name = f'TIME{CURR_TIMESTEP}.pkl'
     norm_path = os.path.join(load_path, norm_name)
@@ -61,7 +53,7 @@ if __name__ == "__main__":
     record_freq = Config.RECORD_FREQ
     ####################################
 
-    env = DracoEnvMpcFreq_tilted_ground_Ly_range_larger(
+    env = DracoEnvMpcFreq_tilted_ground_Ly_range(
         mpc_freq,
         sim_dt,
         eval=[0, 0, 0],
@@ -81,19 +73,17 @@ if __name__ == "__main__":
 
     model = PPO.load(load_path, env=norm_env)
     des_counter = 0
-    # Ly_des = [0, 5, 10, 15, 20, 10, 0, -10, -15, -20]  #Ly_larger range
-    # Ly_des = [0, 5, 10, 20, 10, 0, -10, -20]  #Ly_larger range
-    # Ly_des = [0, -5, -10, -15, -20]  #Ly_larger range
-    Ly_des = [0, 5, 10, 15, 20, 25]  #Ly_larger range
-    # Ly_des = [-10, -8, -5, -3, 0, 3, 5, 8, 10]
-    # Ly_des = [0, 3, 5, 8, 10, 0, -3, -5, -8, -10]
+    # Ly_des = [0, 5, 10, 15, 20, 25, 0, -5, -10, -15, -20, -25]
+    # Ly_des = [0, 5, 10, 15, 20, 10, 0, -5, -10, -15, -20, -25]
+    # Ly_des = [0, -3, -5, -8, -10]  #TODO: it's working
+    Ly_des = [0, 3, 5, 8, 10]  #TODO: it's working
     #Leg Width must be 0.1
     step_counter = 0
     while True:
         step_counter += 1
         #action = torch.ones(AlipParams.N_BATCH,3)
         action, _ = model.predict(obs, deterministic=True)
-        action = 0 * action
+        #action = 0*action
 
         ini_st_leg = np.random.choice([1, -1])
         env._set_command_policy_sim(0, Ly_des[des_counter], 0, ini_st_leg)

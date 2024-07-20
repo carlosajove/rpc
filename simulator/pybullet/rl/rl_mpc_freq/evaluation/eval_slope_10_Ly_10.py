@@ -26,26 +26,19 @@ from stable_baselines3.common.monitor import Monitor
 
 from util.python_utils.util import read_config
 
-# from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_tilted_ground_10_Ly_range import DracoEnvMpcFreq_tilted_ground_Ly_range
-from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_tilted_ground_10_Ly_range_larger import DracoEnvMpcFreq_tilted_ground_Ly_range_larger
+# from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_Ly_Range_new_reward import DracoEnvMpcFreq_Ly_range_new_reward
+from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_tilted_ground_10_Ly_10 import DracoEnvMpcFreq_tilted_ground_Ly_10
 
 if __name__ == "__main__":
     #from stable_baselines3.common.env_checker import check_env
     #check_env(env)
 
-    #load_path = os.path.join('/home/carlos/Desktop/Austin/RL results/Ly_range/PPO', 'redObsLy_range_std_2')
-    # load_path = '/home/carlos/Desktop/Austin/FREQ_RESULTS/freq_env/rl_model/PPO/redObsLy_range__batch_2048_nsteps32768_plus'
     load_path = os.path.join(
         cwd,
-        'rl_model/freq_env/tilted_ground_10_Ly_range_larger/PPO/redObsLy_range_larger_tilted_10_downhill'
+        'rl_model/freq_env/tilted_ground_10_Ly_range/PPO/redObsLy_10_tilted_10_downhill'
     )
-    # load_path = os.path.join(
-    # cwd,
-    # 'rl_model/freq_env/tilted_ground_10_Ly_range/PPO/redObsLy_range_tilted_10_downhill'
-    # )
 
-    # CURR_TIMESTEP = 32000000
-    CURR_TIMESTEP = 25400000
+    CURR_TIMESTEP = 6600000
     model_name = f'_TIME{CURR_TIMESTEP}.zip'
     norm_name = f'TIME{CURR_TIMESTEP}.pkl'
     norm_path = os.path.join(load_path, norm_name)
@@ -61,7 +54,7 @@ if __name__ == "__main__":
     record_freq = Config.RECORD_FREQ
     ####################################
 
-    env = DracoEnvMpcFreq_tilted_ground_Ly_range_larger(
+    env = DracoEnvMpcFreq_tilted_ground_Ly_10(
         mpc_freq,
         sim_dt,
         eval=[0, 0, 0],
@@ -69,7 +62,7 @@ if __name__ == "__main__":
         render=True,
         b_video_jpg=b_video_jpg,
         record_freq=record_freq)
-    # video='freq_env_MPC_Ly_range_auto_2.mp4')
+    # video='freq_env_RL_Ly_range.mp4')
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
     norm_env = VecNormalize.load(norm_path, vec_env)
@@ -80,23 +73,29 @@ if __name__ == "__main__":
     obs = norm_env.normalize_obs(obs)
 
     model = PPO.load(load_path, env=norm_env)
-    des_counter = 0
-    # Ly_des = [0, 5, 10, 15, 20, 10, 0, -10, -15, -20]  #Ly_larger range
-    # Ly_des = [0, 5, 10, 20, 10, 0, -10, -20]  #Ly_larger range
-    # Ly_des = [0, -5, -10, -15, -20]  #Ly_larger range
-    Ly_des = [0, 5, 10, 15, 20, 25]  #Ly_larger range
-    # Ly_des = [-10, -8, -5, -3, 0, 3, 5, 8, 10]
-    # Ly_des = [0, 3, 5, 8, 10, 0, -3, -5, -8, -10]
+    counter = 0
+
     #Leg Width must be 0.1
-    step_counter = 0
     while True:
-        step_counter += 1
+        counter += 1
         #action = torch.ones(AlipParams.N_BATCH,3)
         action, _ = model.predict(obs, deterministic=True)
-        action = 0 * action
+        # action = 0 * action
+        # config = read_config(cwd + '/config/draco/alip_command.ini')
 
+        # try:
+        # PARAMS = config['Parameters']
+        # Ly_des = PARAMS.getfloat('LY_DES')
+        # des_com_yaw = PARAMS.getfloat('COM_YAW')
+        # des_com_yaw = des_com_yaw * math.pi / 180
+
+        # Lx_offset = PARAMS.getfloat('LX_OFFSET')
+        # except KeyError:
+        # print("hey")
+
+        Ly_des = 10
         ini_st_leg = np.random.choice([1, -1])
-        env._set_command_policy_sim(0, Ly_des[des_counter], 0, ini_st_leg)
+        env._set_command_policy_sim(0, Ly_des, 0, ini_st_leg)
         print("action: ", env._normalise_action(action))
         obs, reward, done, trunc, info = env.step(action)
         obs = norm_env.normalize_obs(obs)
@@ -108,11 +107,3 @@ if __name__ == "__main__":
             print(obs)
             obs = norm_env.normalize_obs(obs)
             print(obs)
-        if step_counter > 32 * 15:
-            des_counter += 1
-            step_counter = 0
-            if des_counter >= len(Ly_des):
-                break
-            #env._set_command_policy_sim(0, Ly_des[des_counter], 0, ini_st_leg)
-            #obs,info = env.reset()
-            #obs = norm_env.normalize_obs(obs)

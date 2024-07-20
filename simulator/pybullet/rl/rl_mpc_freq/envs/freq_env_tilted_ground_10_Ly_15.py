@@ -13,7 +13,8 @@ from simulator.pybullet.rl.env_tilted_10_degree import *
 import random
 
 
-class DracoEnvMpcFreq_tilted_ground_Ly_10(DracoEnv_tilted_plane_10_downhill):
+class DracoEnvMpcFreq_tilted_ground_10_Ly_15(DracoEnv_tilted_plane_10_downhill
+                                             ):
 
     def __init__(self,
                  mpc_freq,
@@ -23,18 +24,14 @@ class DracoEnvMpcFreq_tilted_ground_Ly_10(DracoEnv_tilted_plane_10_downhill):
                  reduced_obs_size: bool = False,
                  render: bool = False,
                  disturbance: bool = False,
-                 video=None,
-                 b_video_jpg: bool = False,
-                 record_freq: int = 1) -> None:
+                 video=None) -> None:
         super().__init__(mpc_freq=mpc_freq,
                          sim_dt=sim_dt,
                          reduced_obs_size=reduced_obs_size,
                          render=render,
                          eval=eval,
                          disturbance=disturbance,
-                         video=video,
-                         b_video_jpg=b_video_jpg,
-                         record_freq=record_freq)
+                         video=video)
 
         #self._reduced_obs_size = reduced_obs_size
         self._burn_in = burn_in
@@ -126,7 +123,7 @@ class DracoEnvMpcFreq_tilted_ground_Ly_10(DracoEnv_tilted_plane_10_downhill):
         #maybe set also time in newer version
         # self._Ly = 15
         # Ly_list = [-10, -8, -5, -3, 0, 3, 5, 8, 10]
-        Ly_list = [10]
+        Ly_list = [15]
         self._Ly = random.choice(Ly_list)
         dir_command = np.array((0, self._Ly, 0))
         initial_stance_leg = np.random.choice(np.array([-1, 1]))

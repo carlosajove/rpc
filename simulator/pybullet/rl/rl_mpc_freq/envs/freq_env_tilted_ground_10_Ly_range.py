@@ -24,14 +24,18 @@ class DracoEnvMpcFreq_tilted_ground_Ly_range(DracoEnv_tilted_plane_10_downhill
                  reduced_obs_size: bool = False,
                  render: bool = False,
                  disturbance: bool = False,
-                 video=None) -> None:
+                 video=None,
+                 b_video_jpg: bool = False,
+                 record_freq: int = 1) -> None:
         super().__init__(mpc_freq=mpc_freq,
                          sim_dt=sim_dt,
                          reduced_obs_size=reduced_obs_size,
                          render=render,
                          eval=eval,
                          disturbance=disturbance,
-                         video=video)
+                         video=video,
+                         b_video_jpg=b_video_jpg,
+                         record_freq=record_freq)
 
         #self._reduced_obs_size = reduced_obs_size
         self._burn_in = burn_in
