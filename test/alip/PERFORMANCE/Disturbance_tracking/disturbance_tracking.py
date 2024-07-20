@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append('/home/carlos/Desktop/Austin/SeungHyeonProject/rpc/test/alip')
+sys.path.append('/Users/seunghyeonbang/rpc_rl/rpc/test/alip')
 from plot_utils import *
 from disturbance_test import read_disturbance_file
 import os
@@ -14,19 +14,19 @@ print(script_directory)
 
 #trSw = merge_swing_traj(trSw1, trSw2)
 """
-MpcComState = readRobotSwTr('One_Step/RL/MpcCOMstate.txt')
+MpcComState = readRobotSwTr('Feedback/MPC/MpcCOMstate.txt')
 
-COMmpcoor = readRobotSwTr('One_Step/RL/RobotCOMmpcOri.txt')
+COMmpcoor = readRobotSwTr('Feedback/MPC/RobotCOMmpcOri.txt')
 
-Force = read_disturbance_file('One_Step/RL/disturbance.txt')
+Force = read_disturbance_file('Feedback/MPC/disturbance.txt')
 
-with open('One_Step/RL/LandTime.txt', 'r') as file:
+with open('Feedback/MPC/LandTime.txt', 'r') as file:
     landingTime = [float(line.strip()) for line in file]
 """
-MpcComState = readRobotSwTr('One_Step/RL/MpcCOMstate.txt')
-COMmpcoor = readRobotSwTr('One_Step/RL/RobotCOMmpcOri.txt')
-Force = read_disturbance_file('One_Step/RL/disturbance.txt')
-with open('One_Step/RL/LandTime.txt', 'r') as file:
+MpcComState = readRobotSwTr('Feedback/RL_dist_freq/MpcCOMstate.txt')
+COMmpcoor = readRobotSwTr('Feedback/RL_dist_freq/RobotCOMmpcOri.txt')
+Force = read_disturbance_file('Feedback/RL_dist_freq/disturbance.txt')
+with open('Feedback/RL_dist_freq/LandTime.txt', 'r') as file:
     landingTime = [float(line.strip()) for line in file]
 
 mpc_coor_x = COMmpcoor[:, 0]
@@ -125,6 +125,7 @@ plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
 
 fig, ax1 = plt.subplots(figsize=(10, 6))
+
 # Plot vy with the first y-axis
 color = 'tab:blue'
 ax1.set_xlabel('Time (s)', fontsize=20)
@@ -134,15 +135,11 @@ ax1.set_ylabel(r'$\frac{L_{y}}{mz_{H}}$',
                color='black')
 ax1.plot(time[inter], Ly_m, color=color, label=r'$L_y$')
 ax1.tick_params(axis='y', labelcolor='black')
-# ax1.xlim(1, 35)
-ax1.grid(True)
 
 # Plot Lx_m with the first y-axis
 color = 'tab:orange'
 ax1.plot(time[inter], Lydes_m, color=color, label=r'$L_y^{des}$')
 ax1.tick_params(axis='y', labelcolor='black')
-# ax1.xlim(1, 35)
-ax1.grid(True)
 
 # Create a single y-axis for Fx and Fy
 ax2 = ax1.twinx()
@@ -158,19 +155,17 @@ print(inter_force)
 ax2.plot(time[inter], Force[inter_force, 0], color='Red', label=r'$F_x$')
 ax2.plot(time[inter], Force[inter_force, 1], color='Purple', label=r'$F_y$')
 ax2.tick_params(axis='y', labelcolor='black')
-# ax2.xlim(1, 35)
-ax2.grid(True)
 
 # Set legend
-# lines, labels = ax1.get_legend_handles_labels()
-# lines2, labels2 = ax2.get_legend_handles_labels()
-# ax2.legend(lines + lines2, labels + labels2, fontsize=14)
+lines, labels = ax1.get_legend_handles_labels()
+lines2, labels2 = ax2.get_legend_handles_labels()
+ax2.legend(lines + lines2, labels + labels2, fontsize=14)
 
-# for i in range(len(landingTimes_in_range) - 1):
-# ax1.axvspan(landingTimes_in_range[i],
-# landingTimes_in_range[i + 1],
-# color=colors[i % len(colors)],
-# alpha=0.3)
+for i in range(len(landingTimes_in_range) - 1):
+    ax1.axvspan(landingTimes_in_range[i],
+                landingTimes_in_range[i + 1],
+                color=colors[i % len(colors)],
+                alpha=0.3)
 
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
@@ -192,8 +187,6 @@ ax1.plot(time[inter], Lx_m, color=color, label=r'$L_x$')
 ax1.plot(time[inter], Lxdes_m1, label=r'$L_{x}^{des,p}$', color='tab:orange')
 ax1.plot(time[inter], Lxdes_m2, label=r'$L_{x}^{des,m}$', color='tab:green')
 ax1.tick_params(axis='y', labelcolor='black')
-# ax1.xlim(1, 35)
-ax1.grid(True)
 
 # Create a single y-axis for Fx and Fy
 ax2 = ax1.twinx()
@@ -212,21 +205,71 @@ ax2.plot(time[inter],
          color='tab:purple',
          label=r'$F_y$')
 ax2.tick_params(axis='y', labelcolor='black')
-# ax2.xlim(1, 35)
-ax2.grid(True)
 
 # Set legend
-# lines, labels = ax1.get_legend_handles_labels()
-# lines2, labels2 = ax2.get_legend_handles_labels()
-# ax2.legend(lines + lines2, labels + labels2, fontsize=14)
+lines, labels = ax1.get_legend_handles_labels()
+lines2, labels2 = ax2.get_legend_handles_labels()
+ax2.legend(lines + lines2, labels + labels2, fontsize=14)
+
+for i in range(len(landingTimes_in_range) - 1):
+    ax1.axvspan(landingTimes_in_range[i],
+                landingTimes_in_range[i + 1],
+                color=colors[i % len(colors)],
+                alpha=0.3)
+
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+
+fig, ax1 = plt.subplots(figsize=(10, 6))
+# Plot vy and vx with the first y-axis
+color = 'tab:blue'
+ax1.set_xlabel('Time (s)', fontsize=20)
+ax1.set_ylabel(r'$\frac{L_{y}}{mz_{H}}$',
+               fontsize=20,
+               rotation='horizontal',
+               color='black')
+ax1.plot(time[inter], Ly_m, color=color, label=r'$L_y$')
+ax1.plot(time[inter], Lx_m, color='black', label=r'$L_x$')
+ax1.tick_params(axis='y', labelcolor='black')
+
+# Plot Lx_m with the first y-axis
+color = 'tab:orange'
+ax1.plot(time[inter], Lydes_m, color=color, label=r'$L_y^{des}$')
+ax1.plot(time[inter], Lxdes_m1, label=r'$L_{x}^{des,p}$', color='tab:pink')
+ax1.plot(time[inter], Lxdes_m2, label=r'$L_{x}^{des,m}$', color='tab:green')
+ax1.tick_params(axis='y', labelcolor='black')
+ax1.grid(True)
+
+# Create a single y-axis for Fx and Fy
+ax2 = ax1.twinx()
+ax2.set_ylabel(r'Force (N)', color='black', fontsize=20)
+
+print(inter)
+start_idx = inter.start + len(Force) - len(time)
+end_idx = inter.stop + len(Force) - len(time)
+inter_force = slice(start_idx, end_idx)
+print(len(time))
+print(len(Force))
+print(inter_force)
+ax2.plot(time[inter], Force[inter_force, 0], color='Red', label=r'$F_x$')
+ax2.plot(time[inter], Force[inter_force, 1], color='Purple', label=r'$F_y$')
+ax2.tick_params(axis='y', labelcolor='black')
+# ax2.grid(True)
+
+# Set legend
+lines, labels = ax1.get_legend_handles_labels()
+lines2, labels2 = ax2.get_legend_handles_labels()
+ax2.legend(lines + lines2, labels + labels2, fontsize=14)
 
 # for i in range(len(landingTimes_in_range) - 1):
 # ax1.axvspan(landingTimes_in_range[i],
 # landingTimes_in_range[i + 1],
 # color=colors[i % len(colors)],
-# alpha=0.3)
+# alpha=0.6)
 
+plt.xlim(3, 32)
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
+# plt.savefig('disturbance_tracking.pdf')
 
 plt.show()

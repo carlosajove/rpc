@@ -16,12 +16,11 @@ from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback,
 cwd = os.getcwd()
 sys.path.append(cwd)
 sys.path.append(cwd + "/build/lib")
-from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_2 import DracoEnvMpcFreq_Ly_range_new_reward_ss
-
+from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_tilted_ground_Ly_15 import DracoEnvMpcFreq_tilted_ground_Ly_15
 from config.draco.pybullet_simulation import Config
 
-model_dir = cwd + "/rl_model/freq_env/Ly_10/PPO"
-env_dir = cwd + "/rl_env/freq_env/Ly_10/PPO"
+model_dir = cwd + "/rl_model/freq_env/tilted_ground_Ly_15/PPO"
+env_dir = cwd + "/rl_env/freq_env/tilted_ground_Ly_15/PPO"
 #import tracemalloc
 import argparse
 import torch
@@ -38,48 +37,49 @@ if __name__ == "__main__":
         args = parser.parse_args()
         bash_timesteps = int(args.timesteps)
 
-    n_steps_ = 32768  #32768 #16384 #256
-    batch_size_ = 2048  #1024 #2048
+    n_steps_ = 8192  #256
+    batch_size_ = 1024
     learning_rate_ = 0.0003
     mpc_freq = 5
     sim_dt = 0.00175
     reduced_obs_size = True
 
     render = False
-    env = DracoEnvMpcFreq_Ly_range_new_reward_ss(
-        mpc_freq, sim_dt, reduced_obs_size=reduced_obs_size, render=False)
+    env = DracoEnvMpcFreq_tilted_ground_Ly_15(
+        mpc_freq, sim_dt, reduced_obs_size=reduced_obs_size, render=render)
 
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
 
     #MODEL EVALUATION
-    eval_env = DracoEnvMpcFreq_Ly_range_new_reward_ss(
-        mpc_freq, sim_dt, reduced_obs_size=reduced_obs_size, render=render)
-    eval_monitor_env = Monitor(eval_env)
-    eval_vec_env = DummyVecEnv([lambda: eval_monitor_env])
-    norm_eval_env = VecNormalize(eval_vec_env,
-                                 norm_obs=True,
-                                 norm_reward=False,
-                                 clip_obs=60,
-                                 gamma=0.99)
-    eval_callback = EvalCallback(norm_eval_env,
-                                 eval_freq=50000,
-                                 deterministic=True,
-                                 render=False)
+    # eval_env = DracoEnvMpcFreq_tilted_ground_Ly_15(
+    # mpc_freq, sim_dt, reduced_obs_size=reduced_obs_size, render=render)
+    # disturbance=False)
+    # eval_monitor_env = Monitor(eval_env)
+    # eval_vec_env = DummyVecEnv([lambda: eval_monitor_env])
+    # norm_eval_env = VecNormalize(eval_vec_env,
+    # norm_obs=True,
+    # norm_reward=False,
+    # clip_obs=60,
+    # gamma=0.99)
+    # eval_callback = EvalCallback(norm_eval_env,
+    # eval_freq=50000,
+    # deterministic=True,
+    # render=False)
 
     if reduced_obs_size:
         str1 = 'redObs'
     else:
         str1 = 'fullObs'
 
-    save_dir = str1 + f"Ly_range__batch_{batch_size_}_nsteps{n_steps_}_plus"
-    load_dir = str1 + f"Ly_range__batch_{batch_size_}_nsteps{n_steps_}_plus"
+    save_dir = str1 + f"Ly_15_tilted_5_downhill"
+    load_dir = str1 + f"Ly_15_tilted_5_downhill"
     load_path = os.path.join(model_dir, load_dir)
     save_path = os.path.join(model_dir, save_dir)
     ## train model
     #policy_kwargs = { 'full_std': False}
     if new_model:
-        tensorboard_dir = cwd + "/rl_log/freq_env/Ly_10/"
+        tensorboard_dir = cwd + "/rl_log/freq_env/Ly_15_tilted_ground/"
 
         norm_env = VecNormalize(vec_env,
                                 norm_obs=True,
@@ -136,8 +136,8 @@ if __name__ == "__main__":
             model.learn(total_timesteps=TIMESTEPS,
                         progress_bar=True,
                         reset_num_timesteps=False,
-                        tb_log_name=save_dir,
-                        callback=eval_callback)
+                        tb_log_name=save_dir)
+            # callback=eval_callback)
             endTime = time.time()
             print("Model train time: " +
                   str(datetime.timedelta(seconds=endTime - startTime)))

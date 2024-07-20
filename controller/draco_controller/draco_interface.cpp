@@ -15,11 +15,11 @@
 #endif
 
 DracoInterface::DracoInterface() : Interface() {
-  //std::string border = "=";
-  //for (unsigned int i = 0; i < 79; ++i)
-  //  border += "=";
-  //util::ColorPrint(color::kBoldRed, border);
-  //util::PrettyConstructor(0, "DracoInterface");
+  // std::string border = "=";
+  // for (unsigned int i = 0; i < 79; ++i)
+  //   border += "=";
+  // util::ColorPrint(color::kBoldRed, border);
+  // util::PrettyConstructor(0, "DracoInterface");
 
   sp_ = DracoStateProvider::GetStateProvider();
   try {
@@ -29,8 +29,7 @@ DracoInterface::DracoInterface() : Interface() {
     sp_->servo_dt_ =
         util::ReadParameter<double>(cfg, "servo_dt"); // set control frequency
 
-    //sp_->data_save_freq_ = util::ReadParameter<int>(cfg, "data_save_freq");
-
+    // sp_->data_save_freq_ = util::ReadParameter<int>(cfg, "data_save_freq");
 
 #if B_USE_ZMQ
     if (!DracoDataManager::GetDataManager()->IsInitialized()) {
@@ -108,11 +107,11 @@ void DracoInterface::_SafeCommand(DracoSensorData *data,
   command->joint_trq_cmd_.setZero();
 }
 
-void DracoInterface::Reset(){
+void DracoInterface::Reset() {
   ctrl_arch_->Reset();
-  //se_->Reset();
-  //robot_->Reset();
-  //sp_->Reset();
+  // se_->Reset();
+  // robot_->Reset();
+  // sp_->Reset();
   sp_->b_lf_contact_ = true;
   sp_->b_rf_contact_ = true;
 }

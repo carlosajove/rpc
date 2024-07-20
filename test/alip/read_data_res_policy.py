@@ -6,11 +6,6 @@ zH = 0.69
 lbound_time = 1  #5
 ubound_time = 100  #8
 
-script_directory = os.path.dirname(os.path.abspath(__file__))
-
-print(script_directory)
-
-# d = '/home/carlos/Desktop/TFG overleaf photos/PERFORMANCE/Ly_range/one_step_RL/'
 trAlip2 = all_trajectories('Alip2Swing_trajectory.txt')
 trRobotSwing = readRobotSwTr('robotSwingFootTraj.txt')
 #trSw = merge_swing_traj(trSw1, trSw2)
@@ -57,6 +52,18 @@ swingTimeCommand = RobotCommand[:, 9]
 end_foot_commandx = RobotCommand[:, 10]
 end_foot_commandy = RobotCommand[:, 11]
 end_foot_commandz = RobotCommand[:, 12]
+stance_leg_side = RobotCommand[:, 13]
+residual_action_x = RobotCommand[:, 14]
+residual_action_y = RobotCommand[:, 15]
+residual_action_yaw = RobotCommand[:, 16]
+mpc_sol_in_world_x = RobotCommand[:, 17]
+mpc_sol_in_world_y = RobotCommand[:, 18]
+mpc_sol_in_world_z = RobotCommand[:, 19]
+full_action_x = RobotCommand[:, 20]
+full_action_y = RobotCommand[:, 21]
+full_action_yaw = RobotCommand[:, 22]
+# action_time = RobotCommand[:, 23]
+action_time = time
 
 MpcxCOM = MpcComState[:, 0]
 MpcyCOM = MpcComState[:, 1]
@@ -73,13 +80,13 @@ MpczH = MpcComState[:, 11]
 MpcMassCom = MpcComState[:, 12]
 MpcTs = MpcComState[:, 13]
 
-with open('LandTime.txt', 'r') as file:
-    landingTime = [float(line.strip()) for line in file]
+# with open('LandTime.txt', 'r') as file:
+# landingTime = [float(line.strip()) for line in file]
 
 inter = sliceTime(time, lbound_time, ubound_time)
-landingTimes_in_range = [
-    t for t in landingTime if lbound_time <= t <= ubound_time
-]
+# landingTimes_in_range = [
+# t for t in landingTime if lbound_time <= t <= ubound_time
+# ]
 
 light_grey = [0.85, 0.85, 0.85]
 facecolors = [

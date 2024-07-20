@@ -45,6 +45,8 @@ if MEASEURE_TIME:
 
 def set_init_config_pybullet_robot(robot, client=None):
     # Upperbody
+    # note that here we initialize the robot on the 0.1 rad tilted plane
+    tilted_plane_angle_in_rad = 0.1
     #TODO: make a List of the torques that are 0
     for i in range(1, 36):
         client.resetJointState(robot, i, 0., 0.)
@@ -61,7 +63,8 @@ def set_init_config_pybullet_robot(robot, client=None):
     client.resetJointState(robot, DracoJointIdx.l_knee_fe_jp, np.pi / 4, 0.)
 
     client.resetJointState(robot, DracoJointIdx.l_knee_fe_jd, np.pi / 4, 0.)
-    client.resetJointState(robot, DracoJointIdx.l_ankle_fe, -np.pi / 4, 0.)
+    client.resetJointState(robot, DracoJointIdx.l_ankle_fe,
+                           -np.pi / 4 + tilted_plane_angle_in_rad, 0.)
     client.resetJointState(robot, DracoJointIdx.l_ankle_ie,
                            np.radians(-hip_yaw_angle), 0.)
 
@@ -70,7 +73,8 @@ def set_init_config_pybullet_robot(robot, client=None):
     client.resetJointState(robot, DracoJointIdx.r_hip_fe, -np.pi / 4, 0.)
     client.resetJointState(robot, DracoJointIdx.r_knee_fe_jp, np.pi / 4, 0.)
     client.resetJointState(robot, DracoJointIdx.r_knee_fe_jd, np.pi / 4, 0.)
-    client.resetJointState(robot, DracoJointIdx.r_ankle_fe, -np.pi / 4, 0.)
+    client.resetJointState(robot, DracoJointIdx.r_ankle_fe,
+                           -np.pi / 4 + tilted_plane_angle_in_rad, 0.)
     client.resetJointState(robot, DracoJointIdx.r_ankle_ie,
                            np.radians(hip_yaw_angle), 0.)
 
@@ -112,7 +116,7 @@ def dict_to_numpy(obs_dict):
     return np.array(obs)
 
 
-class DracoEnv_v2(gym.Env):
+class DracoEnv_tilted_plane_5_downhill(gym.Env):
     metadata = {
         "render.modes": ["human", "rgb_array"],
         "video.frames_per_second": 50
@@ -157,9 +161,9 @@ class DracoEnv_v2(gym.Env):
         if (self._render):
             self.client.resetDebugVisualizerCamera(
                 cameraDistance=1.0,
-                cameraYaw=120,
+                cameraYaw=180,
                 cameraPitch=-30,
-                cameraTargetPosition=[1, 0.5, 1.0])
+                cameraTargetPosition=[1, 11, 1.0])
         self.client.setPhysicsEngineParameter(
             fixedTimeStep=Config.CONTROLLER_DT, numSubSteps=Config.N_SUBSTEP)
         self.client.setGravity(0, 0, -9.81)
@@ -175,7 +179,8 @@ class DracoEnv_v2(gym.Env):
             useFixedBase=0,
             flags=p.URDF_USE_SELF_COLLISION)
 
-        ground = self.client.loadURDF(cwd + "/robot_model/ground/plane.urdf",
+        ground = self.client.loadURDF(cwd +
+                                      "/robot_model/ground/tilted_plane.urdf",
                                       useFixedBase=1)
 
         if self._video is not None:

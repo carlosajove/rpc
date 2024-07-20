@@ -227,14 +227,13 @@ private:
   Eigen::VectorXd output_;
 };
 
-
-class QuadraticBezierCurve{
+class QuadraticBezierCurve {
 public:
   QuadraticBezierCurve();
-  QuadraticBezierCurve(const Eigen::VectorXd &start_pos_, 
-                         const Eigen::VectorXd &mid_pos_, 
-                         const Eigen::VectorXd &end_pos_,
-                         const double &duration_);
+  QuadraticBezierCurve(const Eigen::VectorXd &start_pos_,
+                       const Eigen::VectorXd &mid_pos_,
+                       const Eigen::VectorXd &end_pos_,
+                       const double &duration_);
   ~QuadraticBezierCurve();
 
   Eigen::VectorXd Evaluate(const double t);
@@ -251,20 +250,16 @@ private:
   Eigen::VectorXd output;
 };
 
-
-class AlipSwing{
+class AlipSwing {
 public:
   AlipSwing();
-  AlipSwing(const Eigen::Vector3d &start_pos_, 
-              const Eigen::Vector3d &end_pos_,
-              const double &mid_z_pos_, 
-              const double &duration_);
+  AlipSwing(const Eigen::Vector3d &start_pos_, const Eigen::Vector3d &end_pos_,
+            const double &mid_z_pos_, const double &duration_);
   ~AlipSwing();
 
   Eigen::Vector3d Evaluate(const double t);
   Eigen::Vector3d EvaluateFirstDerivative(const double t);
   Eigen::Vector3d EvaluateSecondDerivative(const double t);
-
 
 private:
   Eigen::Vector3d start_pos;
@@ -280,44 +275,36 @@ private:
   double x;
   double y;
   double z;
- };
+};
 
-
-
-class QuadraticLagrangePol{
+class QuadraticLagrangePol {
 public:
   QuadraticLagrangePol();
-  QuadraticLagrangePol(const double &z0, const double &t0, 
-                       const double &z1, const double &t1,
-                       const double &z2, const double &t2);
+  QuadraticLagrangePol(const double &z0, const double &t0, const double &z1,
+                       const double &t1, const double &z2, const double &t2);
   ~QuadraticLagrangePol();
 
   double Evaluate(const double t);
   double EvaluateFirstDerivative(const double t);
   double EvaluateSecondDerivative(const double t);
 
-  private:
-    double a;  //z(t) = a*t²+b*t+c
-    double b;
-    double c;
-    double duration;
-
+private:
+  double a; // z(t) = a*t²+b*t+c
+  double b;
+  double c;
+  double duration;
 };
 
-
-class AlipSwing2{ //alip swing but with z  is a lagrange polinomial
+class AlipSwing2 { // alip swing but with z  is a lagrange polinomial
 public:
   AlipSwing2();
-  AlipSwing2(const Eigen::Vector3d &start_pos_, 
-              const Eigen::Vector3d &end_pos_,
-              const double &mid_z_pos_, 
-              const double &duration_);
+  AlipSwing2(const Eigen::Vector3d &start_pos_, const Eigen::Vector3d &end_pos_,
+             const double &mid_z_pos_, const double &duration_);
   ~AlipSwing2();
 
   Eigen::Vector3d Evaluate(const double t);
   Eigen::Vector3d EvaluateFirstDerivative(const double t);
   Eigen::Vector3d EvaluateSecondDerivative(const double t);
-
 
 private:
   Eigen::Vector3d start_pos;
@@ -332,7 +319,53 @@ private:
   double x;
   double y;
   double z;
- };
+};
 
+/*************************************************************************
+ * From MIT Cheetah Software
+ *************************************************************************/
+template <typename y_t, typename x_t> y_t Lerp(y_t y0, y_t yf, x_t x) {
+  static_assert(std::is_floating_point<x_t>::value,
+                "must use floating point value");
+  assert(x >= 0 && x <= 1);
+  return y0 + (yf - y0) * x;
+}
+/*!
+ * Cubic bezier interpolation between y0 and yf.  x is between 0 and 1
+ */
+template <typename y_t, typename x_t> y_t CubicBezier(y_t y0, y_t yf, x_t x) {
+  static_assert(std::is_floating_point<x_t>::value,
+                "must use floating point value");
+  assert(x >= 0 && x <= 1);
+  y_t yDiff = yf - y0;
+  x_t bezier = x * x * x + x_t(3) * (x * x * (x_t(1) - x));
+  return y0 + bezier * yDiff;
+}
 
+/*!
+ * Cubic bezier interpolation derivative between y0 and yf.  x is between 0 and
+ * 1
+ */
+template <typename y_t, typename x_t>
+y_t CubicBezierFirstDerivative(y_t y0, y_t yf, x_t x) {
+  static_assert(std::is_floating_point<x_t>::value,
+                "must use floating point value");
+  assert(x >= 0 && x <= 1);
+  y_t yDiff = yf - y0;
+  x_t bezier = x_t(6) * x * (x_t(1) - x);
+  return bezier * yDiff;
+}
 
+/*!
+ * Cubic bezier interpolation derivative between y0 and yf.  x is between 0 and
+ * 1
+ */
+template <typename y_t, typename x_t>
+y_t CubicBezierSecondDerivative(y_t y0, y_t yf, x_t x) {
+  static_assert(std::is_floating_point<x_t>::value,
+                "must use floating point value");
+  assert(x >= 0 && x <= 1);
+  y_t yDiff = yf - y0;
+  x_t bezier = x_t(6) - x_t(12) * x;
+  return bezier * yDiff;
+}

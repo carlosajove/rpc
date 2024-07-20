@@ -5,8 +5,8 @@ servo_dt: 0.00175
 
 ip_address: "tcp://127.0.0.1:5557"
 
-#data_save_freq: 1
-data_save_freq: 50
+data_save_freq: 1
+#data_save_freq: 50
 
 b_sim: true ## if false, all the "exp_" parameters are used
 #b_sim: false ## if false, all the "exp_" parameters are used
@@ -277,7 +277,7 @@ wbc:
     ########################################################################
     ## sim params
     ########################################################################
-    sim_max_rf_z: 400.
+    sim_max_rf_z: 600.
 
     sim_mu: 0.4
     sim_foot_half_length: 0.08
@@ -315,13 +315,14 @@ state_machine:
     initialize:
       init_duration: 5.
       #target_joint_pos: [0., 0.040, -0.785, 0.785, 0.785, -0.785, -0.040, 0., 0.523, 0., -1.57, 0., 0., 0., 0., -0.040, -0.785, 0.785, 0.785, -0.785, 0.040, 0., -0.523, 0., -1.57, 0., 0.] #pinocchio robotsystem joint order
-      target_joint_pos: [0., 0.160, -0.785, 0.785, 0.785, -0.785, -0.160, 0., 0.523, 0., -1.57, 0., 0., 0., 0., -0.160, -0.785, 0.785, 0.785, -0.785, 0.160, 0., -0.523, 0., -1.57, 0., 0.] #pinocchio robotsystem joint order
+      #target_joint_pos: [0., 0.160, -0.785, 0.785, 0.785, -0.785, -0.160, 0., 0.523, 0., -1.57, 0., 0., 0., 0., -0.160, -0.785, 0.785, 0.785, -0.785, 0.160, 0., -0.523, 0., -1.57, 0., 0.] #pinocchio robotsystem joint order
+      target_joint_pos: [0., 0.160, -0.785, 0.785, 0.785, -0.585, -0.160, 0., 0.523, 0., -1.57, 0., 0., 0., 0., -0.160, -0.785, 0.785, 0.785, -0.585, 0.160, 0., -0.523, 0., -1.57, 0., 0.] #pinocchio robotsystem joint order
       b_only_joint_pos_control: false
       wait_time: 15.
 
     stand_up:
-      standup_duration: 0.2
-      target_com_height: 0.685
+      standup_duration: 0.3
+      target_com_height: 0.69
       target_base_height: 0.90
 
       rf_z_max_interp_duration: 0.1
@@ -396,8 +397,11 @@ alip_mpc_walking:
   step_horizon: "4"
   intervals: "2"
   Ts: 0.275    #0.25  #Greater Ts makes offset increase also
+  #Ts: 0.35    #0.25  #Greater Ts makes offset increase also
   stance_leg: -1 # -1: RIGHT SWING TO START; 1: LEFT SWING TO START
-  leg_width: 0.1 #0.1 0.05
+  #leg_width: 0.15 #0.1 0.05
+  leg_width: 0.05 #0.1 0.05
+  #leg_width: 0.1 #0.1 0.05
   zH: 0.69   #this will be the reference height target. The height for the mpc will be another
   mu: 0.2
   total_mass: 39.15342    
@@ -407,7 +411,7 @@ alip_mpc_walking:
   #Lx_offset: 0 #0
   #Ly_des: 0 #3
   #com_yaw: 10  #degrees
-  kx: 0
+  kx: -0.2 # tan(deg2rad(~5))
   ky: 0
   #old solver:
   y_mech_max: 0.15
@@ -417,10 +421,12 @@ alip_mpc_walking:
   new_ufp_x_max: 0.5
   new_ufp_y_max: 0.2
 
-  q_term_0: 10
+  q_term_0: 10 
   q_term_1: 10
   q_term_2: 10.1
   q_term_3: 10.1
+  #q_term_2: 10.1
+  #q_term_3: 10.1
 
   variable_height: 0
   swing_height: 0.05   #0.07  higher swing_height can work for lower zH
