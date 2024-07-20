@@ -125,11 +125,19 @@ class DracoEnv_v2(gym.Env):
                  reduced_obs_size: bool = False,
                  render: bool = False,
                  disturbance: bool = False,
-                 video=None) -> None:
+                 video=None,
+                 b_video_jpg: bool = False,
+                 record_freq: int = 1) -> None:
         self._render = render
         self._video = video
+        self._b_video_jpg = b_video_jpg
+        self._video_record_freq = record_freq
         self._reduced_obs_size = reduced_obs_size
         self._mpc_freq = mpc_freq
+        print("--------------------------------")
+        print("boolean video jpg: ", self._b_video_jpg)
+        print("video record frequency: ", self._video_record_freq)
+        print("--------------------------------")
         self._sim_dt = sim_dt
         assert Config.CONTROLLER_DT == sim_dt
         if (eval is None) and (disturbance):
@@ -181,6 +189,16 @@ class DracoEnv_v2(gym.Env):
         if self._video is not None:
             self.client.startStateLogging(self.client.STATE_LOGGING_VIDEO_MP4,
                                           self._video, [self.robot])
+        # Video record with jpg params
+        if self._b_video_jpg:
+            self._video_dir = 'video/draco'
+            if os.path.exists(self._video_dir):
+                shutil.rmtree(self._video_dir)
+            os.makedirs(self._video_dir)
+        self._wbc_count = 0
+        self._jpg_count = 0
+        self._render_width = 1920  #jpg image
+        self._render_height = 1080  #jpg image
 
         if (self.render):
             self.client.configureDebugVisualizer(
@@ -374,6 +392,31 @@ class DracoEnv_v2(gym.Env):
 
             self.client.stepSimulation()
             #if self._render: self.rate.sleep()
+
+            if self._b_video_jpg and (self._wbc_count % self._video_record_freq
+                                      == 0):
+                # save frame
+                cam_data = self.client.getDebugVisualizerCamera()
+                view_mat = cam_data[2]
+                proj_mat = cam_data[3]
+                (_, _, px, _, _) = self.client.getCameraImage(
+                    self._render_width,
+                    self._render_height,
+                    viewMatrix=view_mat,
+                    projectionMatrix=proj_mat,
+                    renderer=self.client.ER_BULLET_HARDWARE_OPENGL)
+                frame = np.array(px, dtype=np.uint8)
+                frame = np.reshape(
+                    np.array(px),
+                    (self._render_height, self._render_width, -1))
+                frame = frame[:, :, :3]
+                frame = frame[:, :, [2, 1, 0]]  # << RGB to BGR
+                filename = self._video_dir + '/step%06d.jpg' % self._jpg_count
+                cv2.imwrite(filename, frame)
+                self._jpg_count += 1
+
+            self._wbc_count += 1
+
             done = self._compute_termination(self._rpc_draco_command.wbc_obs_)
             if done: break
 

@@ -22,13 +22,17 @@ class DracoEnvMpcFreq_Lx_range_action_scale_high_Lx_w_8(DracoEnv_v2):
                  burn_in: bool = False,
                  reduced_obs_size: bool = False,
                  render: bool = False,
-                 disturbance: bool = False) -> None:
+                 disturbance: bool = False,
+                 b_video_jpg: bool = False,
+                 record_freq: int = 1) -> None:
         super().__init__(mpc_freq=mpc_freq,
                          sim_dt=sim_dt,
                          reduced_obs_size=reduced_obs_size,
                          render=render,
                          eval=eval,
-                         disturbance=disturbance)
+                         disturbance=disturbance,
+                         b_video_jpg=b_video_jpg,
+                         record_freq=record_freq)
 
         self._burn_in = burn_in
         if mpc_freq == 0:

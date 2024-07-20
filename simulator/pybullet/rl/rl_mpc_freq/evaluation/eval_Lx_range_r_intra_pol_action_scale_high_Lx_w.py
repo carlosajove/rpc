@@ -26,18 +26,23 @@ from stable_baselines3.common.monitor import Monitor
 
 from util.python_utils.util import read_config
 
-from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_Lx_range_action_scale_high_Lx_w import DracoEnvMpcFreq_Lx_range_action_scale_high_Lx_w
+# from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_Lx_range_action_scale_high_Lx_w import DracoEnvMpcFreq_Lx_range_action_scale_high_Lx_w
+from simulator.pybullet.rl.rl_mpc_freq.envs.freq_env_Lx_range_action_scale_high_Lx_w_8 import DracoEnvMpcFreq_Lx_range_action_scale_high_Lx_w_8
 
 if __name__ == "__main__":
     #from stable_baselines3.common.env_checker import check_env
     #check_env(env)
 
     #load_path = os.path.join('/home/carlos/Desktop/Austin/RL results/Ly_range/PPO', 'redObsLy_range_std_2')
+    # load_path = os.path.join(cwd, 'rl_model/freq_env/Lx_range_action_scale_high_Lx_w/PPO/redObsLy_range__batch_2048_nsteps32768_plus')
     # load_path = os.path.join(cwd, 'rl_model/freq_env/Lx_range_action_scale_high_Lx_w_128/PPO/redObsLy_range__batch_2048_nsteps32768_plus')
-    load_path = os.path.join(cwd, 'rl_model/freq_env/Lx_range_action_scale_high_Lx_w/PPO/redObsLy_range__batch_2048_nsteps32768_plus')
+    load_path = os.path.join(cwd, 'rl_model/freq_env/Lx_range_action_scale_high_Lx_w_8/PPO/redObsLy_range__batch_2048_nsteps32768_plus')
+    # load_path = os.path.join(cwd, 'rl_model/freq_env/Lx_range_action_scale_high_Lx_w_8_new/PPO/redObsLy_range__batch_2048_nsteps32768_plus')
     
     # CURR_TIMESTEP = 46800000
-    CURR_TIMESTEP = 44400000
+    # CURR_TIMESTEP = 42000000
+    CURR_TIMESTEP = 25200000
+    # CURR_TIMESTEP = 3000000
     model_name = f'_TIME{CURR_TIMESTEP}.zip'
     norm_name = f'TIME{CURR_TIMESTEP}.pkl'
     norm_path = os.path.join(load_path, norm_name)
@@ -47,8 +52,11 @@ if __name__ == "__main__":
     mpc_freq = 5
     sim_dt = Config.CONTROLLER_DT
 
-    env = DracoEnvMpcFreq_Lx_range_action_scale_high_Lx_w(mpc_freq, sim_dt, eval = [0,0,0],reduced_obs_size=reduced_obs_size, 
-                                              render = True)
+    b_video_jpg = Config.VIDEO_RECORD
+    record_freq = Config.RECORD_FREQ
+
+    env = DracoEnvMpcFreq_Lx_range_action_scale_high_Lx_w_8(mpc_freq, sim_dt, eval = [0,0,0],reduced_obs_size=reduced_obs_size, 
+                                              render = True, b_video_jpg=b_video_jpg, record_freq = record_freq)
                                               # video = 'freq_env_RL_Lx_range.mp4')
     monitor_env = Monitor(env)
     vec_env = DummyVecEnv([lambda: monitor_env])
@@ -70,7 +78,7 @@ if __name__ == "__main__":
         step_counter+=1
         #action = torch.ones(AlipParams.N_BATCH,3)
         action, _ = model.predict(obs, deterministic=True)
-        action = 0*action
+        action = 0*action #TODO: always check this!!!!
 
         ini_st_leg = np.random.choice([1, -1])  
         env._set_command_policy_sim(Lx_des[des_counter],0, 0, ini_st_leg)
@@ -85,7 +93,7 @@ if __name__ == "__main__":
             print(obs)
             obs = norm_env.normalize_obs(obs)
             print(obs)
-        if step_counter > 32*20:
+        if step_counter > 32*15:
             des_counter+=1
             step_counter = 0
             if des_counter >= len(Lx_des): 
